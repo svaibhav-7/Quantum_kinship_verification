@@ -1,11 +1,26 @@
-qiskit>=1.0.0
-qiskit-aer
-qiskit-machine-learning
-torch>=2.0.0
-torchvision
-numpy
-matplotlib
-scipy
-Pillow
-scikit-learn
-facenet-pytorch
+# Core quantum computing
+qiskit>=1.0.0,<2.0.0
+qiskit-aer>=0.13.0
+qiskit-machine-learning>=0.8.0
+
+# Deep learning
+torch>=2.0.0,<3.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Scientific computing
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+
+# Visualization and utilities
+matplotlib>=3.7.0
+Pillow>=9.5.0
+
+# Face detection and recognition
+facenet-pytorch>=2.3.0
+
+# Optional but recommended
+jupyter>=1.0.0
+ipython>=8.0.0
+tqdm>=4.65.0

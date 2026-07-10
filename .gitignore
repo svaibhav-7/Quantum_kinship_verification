@@ -38,7 +38,15 @@ wheels/
 weights/*.npy
 weights/*.pkl
 weights/*.bak
+weights/*.pt
+weights/*.pth
 *.log
+
+# Result files that can be regenerated
+results/**/*.png
+results/**/*.jpg
+results/**/*.jpeg
+results/**/*.json
 
 # OS
 .DS_Store
