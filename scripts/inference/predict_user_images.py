@@ -26,10 +26,21 @@ import numpy as np
 import torch
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Robust project root resolution
+current_dir = os.path.dirname(os.path.abspath(__file__))
+while os.path.basename(current_dir) in ["scripts", "training", "evaluation", "inference", "archive"]:
+    current_dir = os.path.dirname(current_dir)
+project_root = current_dir
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from src.data_loaders import get_relation_category
-from src.models import FaceFeatureExtractor, HybridKinshipClassifier
+from src.models_improved import (
+    EnsembleKinshipClassifier,
+    FaceFeatureExtractor,
+    HybridKinshipClassifier,
+)
 
 # --- Constants ----------------------------------------------------------------
 
@@ -81,16 +92,44 @@ def detect_checkpoint_config(state_dict):
 
 def load_ensemble_models(weights_dir):
     """
-    Load all available fold models for ensemble inference.
-
-    Falls back to a single model if fold weights are not found.
+    Load all available fold models or bundled ensemble for inference.
     Returns a list of (model, config_dict) tuples.
     """
     models = []
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    # Try fold models first (ensemble)
-    fold_pattern = os.path.join(weights_dir, "hybrid_kinship_fold*.pt")
-    fold_paths = sorted(glob.glob(fold_pattern))
+    # 1. Try single bundled ensemble first
+    bundled_path = os.path.join(weights_dir, "active_ensemble", "ensemble_kinship_full.pt")
+    if not os.path.exists(bundled_path):
+        bundled_path = os.path.join(weights_dir, "ensemble_kinship_full.pt")
+
+    meta_path = os.path.join(os.path.dirname(bundled_path), "ensemble_metadata.json")
+    if os.path.exists(bundled_path) and os.path.exists(meta_path):
+        try:
+            import json as _json
+            with open(meta_path) as f:
+                meta = _json.load(f)
+            n_models = meta["n_models"]
+            sub_models = [
+                HybridKinshipClassifier(
+                    n_qubits=meta.get("n_qubits", 8),
+                    encoding_mode=meta.get("encoding_mode", "entangled"),
+                    projection_type=meta.get("projection_type", "quantum_inspired_attention"),
+                )
+                for _ in range(n_models)
+            ]
+            ensemble_model = EnsembleKinshipClassifier(sub_models)
+            state_dict = torch.load(bundled_path, map_location="cpu", weights_only=True)
+            ensemble_model.load_state_dict(state_dict)
+            ensemble_model.eval()
+            print(f"  Loaded bundled ensemble model ({n_models} sub-models)")
+            return [(ensemble_model, {"path": os.path.basename(bundled_path), "n_qubits": 8, "encoding_mode": "entangled", "projection_type": "quantum_inspired_attention"})]
+        except Exception as e:
+            print(f"  [WARN] Failed to load bundled ensemble: {e}")
+
+    # 2. Try fold models in weights/folds/ or weights/
+    folds_dir = os.path.join(weights_dir, "folds")
+    fold_paths = sorted(glob.glob(os.path.join(folds_dir, "hybrid_kinship*.pt"))) or sorted(glob.glob(os.path.join(weights_dir, "hybrid_kinship*.pt")))
 
     if len(fold_paths) >= 2:
         print(f"  Found {len(fold_paths)} fold models -- using ensemble inference")
@@ -116,14 +155,16 @@ def load_ensemble_models(weights_dir):
                 )
             )
     else:
-        # Fallback: single best model
-        for name in [
-            "hybrid_kinship_entangled.pt",
-            "hybrid_kinship.pt",
-        ]:
-            single_path = os.path.join(weights_dir, name)
+        # 3. Fallback: single best model
+        search_paths = [
+            os.path.join(weights_dir, "active_ensemble", "hybrid_kinship_improved_entangled.pt"),
+            os.path.join(weights_dir, "hybrid_kinship_improved_entangled.pt"),
+            os.path.join(weights_dir, "hybrid_kinship_entangled.pt"),
+        ]
+        for single_path in search_paths:
             if os.path.exists(single_path):
-                print(f"  No fold models found -- using single model: {name}")
+                name = os.path.basename(single_path)
+                print(f"  Using single model: {name}")
                 state_dict = torch.load(
                     single_path, map_location="cpu", weights_only=True
                 )
@@ -151,7 +192,7 @@ def load_ensemble_models(weights_dir):
     if len(models) == 0:
         raise FileNotFoundError(
             f"No model weights found in {weights_dir}. "
-            "Please train first with: python scripts/train_hybrid.py"
+            "Please check weight directory."
         )
 
     return models

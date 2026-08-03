@@ -411,7 +411,7 @@ class HybridKinshipClassifier(nn.Module):
                 z1_np,
                 z2_np,
                 ent_params1=ent1_np,
-                ent2_np=ent2_np,
+                ent_params2=ent2_np,
                 shots=shots,
             )
         else:
@@ -471,6 +471,42 @@ class HybridKinshipClassifier(nn.Module):
                 reg_loss += 0.02 * orthogonality_loss
 
         return reg_loss
+
+
+# =============================================================================
+# 5. ENSEMBLE KINSHIP CLASSIFIER (Single-file deployment)
+# =============================================================================
+
+
+class EnsembleKinshipClassifier(nn.Module):
+    """
+    Wraps N HybridKinshipClassifier fold models into a single nn.Module.
+    Forward pass averages all fold predictions (soft voting).
+    Can be saved/loaded as a single .pt file for easy deployment.
+    """
+
+    def __init__(self, models):
+        super().__init__()
+        self.models = nn.ModuleList(models)
+        self.n_models = len(models)
+        self.n_qubits = models[0].n_qubits
+        self.encoding_mode = models[0].encoding_mode
+
+    def forward(self, emb1, emb2, rels):
+        """Average fidelity predictions across all fold models."""
+        preds = []
+        for model in self.models:
+            pred = model(emb1, emb2, rels)
+            preds.append(pred)
+        return torch.stack(preds, dim=0).mean(dim=0)
+
+    def forward_per_model(self, emb1, emb2, rels):
+        """Return individual model predictions (for analysis)."""
+        preds = []
+        for model in self.models:
+            pred = model(emb1, emb2, rels)
+            preds.append(pred)
+        return preds
 
 
 class PairFusionKinshipClassifier(nn.Module):
