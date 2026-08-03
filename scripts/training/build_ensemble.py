@@ -14,13 +14,19 @@ import torch
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Robust project root resolution
+current_dir = os.path.dirname(os.path.abspath(__file__))
+while os.path.basename(current_dir) in ["scripts", "training", "evaluation", "inference", "archive"]:
+    current_dir = os.path.dirname(current_dir)
+project_root = current_dir
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from src.models_improved import HybridKinshipClassifier, EnsembleKinshipClassifier
 
 
 def main():
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     weights_dir = os.path.join(project_root, "weights")
 
     print("=" * 70)

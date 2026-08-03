@@ -37,8 +37,14 @@ import torch
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Add project root to sys.path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Robust project root resolution
+current_dir = os.path.dirname(os.path.abspath(__file__))
+while os.path.basename(current_dir) in ["scripts", "training", "evaluation", "inference", "archive"]:
+    current_dir = os.path.dirname(current_dir)
+project_root = current_dir
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from sklearn.metrics import (
     accuracy_score,
@@ -70,14 +76,35 @@ RELATION_SHORT = {0: "FD", 1: "FS", 2: "MD", 3: "MS"}
 # Model Loading
 # =============================================================================
 
+def find_weight_file(filename, project_root):
+    """Search for weight/cache file across weights subdirectories."""
+    search_dirs = [
+        os.path.join(project_root, "weights", "active_ensemble"),
+        os.path.join(project_root, "weights", "folds"),
+        os.path.join(project_root, "weights", "caches"),
+        os.path.join(project_root, "weights"),
+        os.path.join(project_root, "weights", "archive"),
+    ]
+    for s_dir in search_dirs:
+        candidate = os.path.join(s_dir, filename)
+        if os.path.exists(candidate):
+            return candidate
+    return os.path.join(project_root, "weights", filename)
+
+
 def load_ensemble(weights_dir):
     """
     Load the ensemble model. Tries the single bundled file first,
     falls back to loading individual fold checkpoints.
     """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    while os.path.basename(current_dir) in ["scripts", "training", "evaluation", "inference", "archive"]:
+        current_dir = os.path.dirname(current_dir)
+    project_root = current_dir
+
     # Try single bundled ensemble file first
-    ensemble_path = os.path.join(weights_dir, "ensemble_kinship_full.pt")
-    meta_path = os.path.join(weights_dir, "ensemble_metadata.json")
+    ensemble_path = find_weight_file("ensemble_kinship_full.pt", project_root)
+    meta_path = find_weight_file("ensemble_metadata.json", project_root)
     if os.path.exists(ensemble_path) and os.path.exists(meta_path):
         print(f"  Loading single bundled ensemble from: {os.path.basename(ensemble_path)}")
         try:
@@ -104,8 +131,9 @@ def load_ensemble(weights_dir):
             print(f"  [WARN] Failed to load bundled ensemble: {e}")
             print(f"  Falling back to individual fold files...")
 
-    # Fallback: load individual checkpoints
-    model_paths = sorted(glob.glob(os.path.join(weights_dir, "hybrid_kinship_improved*.pt")))
+    # Fallback: load individual checkpoints from weights/folds/ or weights/
+    folds_dir = os.path.join(project_root, "weights", "folds")
+    model_paths = sorted(glob.glob(os.path.join(folds_dir, "hybrid_kinship_improved*.pt"))) or sorted(glob.glob(os.path.join(weights_dir, "hybrid_kinship_improved*.pt")))
 
     if len(model_paths) == 0:
         print(f"  [ERROR] No model weights found in {weights_dir}")
@@ -320,14 +348,15 @@ def run_full_evaluation(models, extractor, kfw1_dir):
 # User Image Prediction (From Scratch)
 # =============================================================================
 
-def predict_user_images(models, extractor, img1_path, img2_path, relation=None):
+def predict_user_images(models, extractor, img1_path, img2_path):
     """
     Predict kinship between two user-provided face images.
     Extracts FaceNet embeddings from scratch (no cache).
-    If no relation is specified, tests all 4 relation types and reports best match.
+    Tests all 4 relation types, averages scores, and returns a single
+    binary KIN / NON-KIN decision.
     """
     print("\n" + "=" * 72)
-    print("  LIVE PREDICTION -- USER-PROVIDED IMAGES")
+    print("  LIVE PREDICTION -- BINARY KINSHIP CLASSIFIER")
     print("=" * 72)
 
     # Validate images exist
@@ -357,67 +386,34 @@ def predict_user_images(models, extractor, img1_path, img2_path, relation=None):
     emb1_t = torch.tensor(emb1, dtype=torch.float32).unsqueeze(0)
     emb2_t = torch.tensor(emb2, dtype=torch.float32).unsqueeze(0)
 
-    # Prediction
+    # Prediction: test all 4 relation types, average the scores
     print("\n  [2/2] Running ensemble quantum SWAP-test inference...")
+    print("         (Averaging across all 4 relation conditionings)\n")
 
-    if relation:
-        # Single relation prediction
-        rel_map = {"fd": 0, "fs": 1, "md": 2, "ms": 3,
-                   "father-daughter": 0, "father-son": 1,
-                   "mother-daughter": 2, "mother-son": 3}
-        cat = rel_map.get(relation.lower(), 0)
+    relation_scores = []
+    for cat in range(4):
         rel_vec = [0.0] * 4
         rel_vec[cat] = 1.0
         rel_t = torch.tensor([rel_vec], dtype=torch.float32)
 
-        avg_score, fold_scores = ensemble_predict(models, emb1_t, emb2_t, rel_t)
-        decision = "RELATED (KIN)" if avg_score >= OPTIMAL_THRESHOLD else "NOT RELATED (NON-KIN)"
-        confidence = abs(avg_score - OPTIMAL_THRESHOLD) / OPTIMAL_THRESHOLD * 100
+        avg_score, _ = ensemble_predict(models, emb1_t, emb2_t, rel_t)
+        relation_scores.append(avg_score)
+        print(f"    {RELATION_LABELS[cat]:<25}: {avg_score*100:.2f}%")
 
-        print(f"\n  Relation Tested: {RELATION_LABELS[cat]}")
-        print(f"  Per-Model Fidelity Scores:")
-        for i, s in enumerate(fold_scores):
-            print(f"    - Model {i+1}: {s*100:.2f}%")
-        print(f"\n  ============================================")
-        print(f"  | Ensemble Quantum Fidelity:  {avg_score*100:.2f}%")
-        print(f"  | Decision Threshold:         {OPTIMAL_THRESHOLD*100:.2f}%")
-        print(f"  | PREDICTION:                 {decision}")
-        print(f"  | Confidence:                 {confidence:.1f}%")
-        print(f"  ============================================")
+    # Final binary decision: average across all relation types
+    overall_fidelity = float(np.mean(relation_scores))
+    decision = "RELATED (KIN)" if overall_fidelity >= OPTIMAL_THRESHOLD else "NOT RELATED (NON-KIN)"
+    confidence = abs(overall_fidelity - OPTIMAL_THRESHOLD) / OPTIMAL_THRESHOLD * 100
 
-    else:
-        # Test ALL 4 relation types and report best match
-        print(f"\n  No relation specified -- testing all 4 relation types...\n")
-        results = []
-
-        for cat in range(4):
-            rel_vec = [0.0] * 4
-            rel_vec[cat] = 1.0
-            rel_t = torch.tensor([rel_vec], dtype=torch.float32)
-
-            avg_score, fold_scores = ensemble_predict(models, emb1_t, emb2_t, rel_t)
-            decision = "RELATED (KIN)" if avg_score >= OPTIMAL_THRESHOLD else "NOT RELATED (NON-KIN)"
-            results.append((cat, avg_score, decision, fold_scores))
-
-        # Sort by highest fidelity
-        results.sort(key=lambda x: x[1], reverse=True)
-
-        print(f"  {'Rank':<6} {'Relation':<25} {'Fidelity':>10} {'Decision':<25}")
-        print(f"  {'-'*70}")
-        for rank, (cat, score, dec, _) in enumerate(results, 1):
-            marker = " << BEST MATCH" if rank == 1 else ""
-            print(f"  {rank:<6} {RELATION_LABELS[cat]:<25} {score*100:>9.2f}% {dec:<25}{marker}")
-
-        best_cat, best_score, best_dec, best_folds = results[0]
-        confidence = abs(best_score - OPTIMAL_THRESHOLD) / OPTIMAL_THRESHOLD * 100
-
-        print(f"\n  ============================================")
-        print(f"  | Best Match Relation: {RELATION_LABELS[best_cat]}")
-        print(f"  | Quantum Fidelity:    {best_score*100:.2f}%")
-        print(f"  | PREDICTION:          {best_dec}")
-        print(f"  | Confidence:          {confidence:.1f}%")
-        print(f"  ============================================")
-
+    print(f"\n  ================================================")
+    print(f"  |                                              |")
+    print(f"  |  Overall Quantum Fidelity:  {overall_fidelity*100:>6.2f}%          |")
+    print(f"  |  Decision Threshold:        {OPTIMAL_THRESHOLD*100:>6.2f}%          |")
+    print(f"  |  Confidence:                {confidence:>6.1f}%          |")
+    print(f"  |                                              |")
+    print(f"  |  PREDICTION:  {decision:<30} |")
+    print(f"  |                                              |")
+    print(f"  ================================================")
     print("=" * 72)
 
 
@@ -427,7 +423,7 @@ def predict_user_images(models, extractor, img1_path, img2_path, relation=None):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Quantum Kinship Verification -- Comprehensive Ensemble Evaluation & Live Prediction"
+        description="Quantum Kinship Verification -- Ensemble Binary Classifier & Live Prediction"
     )
     parser.add_argument(
         "--mode",
@@ -437,12 +433,6 @@ def parse_args():
     )
     parser.add_argument("--img1", type=str, default=None, help="Path to first face image (for predict mode)")
     parser.add_argument("--img2", type=str, default=None, help="Path to second face image (for predict mode)")
-    parser.add_argument(
-        "--relation",
-        type=str,
-        default=None,
-        help="Relation type: fd, fs, md, ms (optional, tests all if omitted)",
-    )
     return parser.parse_args()
 
 
@@ -487,7 +477,7 @@ def main():
             print("\n  [ERROR] --img1 and --img2 are required for predict mode.")
             print("  Usage: python scripts/test_ensemble_live.py --mode predict --img1 face1.jpg --img2 face2.jpg")
             sys.exit(1)
-        predict_user_images(models, extractor, args.img1, args.img2, args.relation)
+        predict_user_images(models, extractor, args.img1, args.img2)
 
     print("\n  DONE!")
 

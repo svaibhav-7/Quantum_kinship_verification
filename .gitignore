@@ -7,6 +7,7 @@ env/
 KinFaceW-I/
 KinFaceW-II/
 TSKinFace_Data/
+public/
 
 # Python
 __pycache__/
@@ -35,6 +36,11 @@ wheels/
 .ipynb_checkpoints
 
 # Weights (large binary files)
+weights/**/*.npy
+weights/**/*.pkl
+weights/**/*.bak
+weights/**/*.pt
+weights/**/*.pth
 weights/*.npy
 weights/*.pkl
 weights/*.bak

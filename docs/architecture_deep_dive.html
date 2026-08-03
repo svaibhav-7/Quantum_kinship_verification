@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Kinship Verification — Architecture & Pipeline Deep Dive</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8B83FF;
+            --secondary: #00C9A7;
+            --accent: #FF6B6B;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --text: #2d3748;
+            --text-light: #718096;
+            --bg: #ffffff;
+            --bg-alt: #f7fafc;
+            --border: #e2e8f0;
+            --code-bg: #1e1e3f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            font-size: 11pt;
+        }
+
+        @media print {
+            body { font-size: 10pt; }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+            .header-section { background: var(--dark) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            table { font-size: 9pt; }
+            pre { font-size: 8pt; }
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            font-size: 28pt;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .header-section .subtitle {
+            font-size: 14pt;
+            font-weight: 300;
+            opacity: 0.85;
+            margin-bottom: 20px;
+        }
+
+        .header-section .meta {
+            font-size: 10pt;
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 40px 60px;
+        }
+
+        h2 {
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 40px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid var(--primary);
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 13pt;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 28px 0 12px;
+        }
+
+        h4 {
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--text);
+            margin: 20px 0 8px;
+        }
+
+        p { margin: 10px 0; }
+
+        .overview-box {
+            background: linear-gradient(135deg, #f0f0ff, #e8f4fd);
+            border-left: 4px solid var(--primary);
+            padding: 20px 24px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+            font-size: 11pt;
+        }
+
+        .overview-box strong { color: var(--primary); }
+
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 24px 0;
+            padding: 20px;
+            background: var(--bg-alt);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .pipeline-step {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 9pt;
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .pipeline-step.quantum {
+            background: linear-gradient(135deg, #6C63FF15, #00C9A715);
+            border-color: var(--secondary);
+        }
+
+        .pipeline-arrow {
+            font-size: 16pt;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        pre {
+            background: var(--code-bg);
+            color: #a9b7c6;
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            line-height: 1.5;
+            margin: 12px 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9pt;
+            color: #e53e3e;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .keyword { color: #cc7832; }
+        .string { color: #6a8759; }
+        .comment { color: #808080; font-style: italic; }
+        .number { color: #6897bb; }
+        .func { color: #ffc66d; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 10pt;
+        }
+
+        th {
+            background: var(--dark);
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:nth-child(even) { background: var(--bg-alt); }
+
+        .stage-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin: 32px 0 16px;
+            font-size: 14pt;
+            font-weight: 700;
+        }
+
+        .stage-header span {
+            font-size: 10pt;
+            font-weight: 400;
+            opacity: 0.85;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .insight-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 10pt;
+        }
+
+        .insight-box::before {
+            content: "💡 Key Insight: ";
+            font-weight: 700;
+            color: #b45309;
+        }
+
+        .physics-box {
+            background: #f0fdf4;
+            border-left: 4px solid var(--secondary);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 10pt;
+        }
+
+        .physics-box::before {
+            content: "⚛️ Physics: ";
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .circuit-diagram {
+            background: #1a1a2e;
+            color: #00ff88;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 8.5pt;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 16px 0;
+        }
+
+        .math {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 12pt;
+            text-align: center;
+            padding: 12px;
+            margin: 12px 0;
+            background: var(--bg-alt);
+            border-radius: 8px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .col-box {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .col-box h4 { margin-top: 0; color: var(--primary); }
+
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+            font-size: 9pt;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .toc {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 32px;
+            margin: 24px 0;
+        }
+
+        .toc h3 { margin-top: 0; color: var(--dark); }
+
+        .toc ol {
+            padding-left: 20px;
+        }
+
+        .toc li {
+            padding: 4px 0;
+            font-weight: 500;
+        }
+
+        .toc li ol { font-weight: 400; }
+
+        .highlight { color: var(--primary); font-weight: 600; }
+        .highlight-green { color: var(--secondary); font-weight: 600; }
+        .highlight-red { color: var(--accent); font-weight: 600; }
+
+        .dimension {
+            display: inline-block;
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .flow-diagram {
+            text-align: center;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 8px 0;
+        }
+
+        .flow-box {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 9pt;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .flow-box.green { border-color: var(--secondary); background: #f0fdf4; }
+        .flow-box.red { border-color: var(--accent); background: #fff5f5; }
+        .flow-box.purple { border-color: var(--primary); background: #f0f0ff; }
+
+        .flow-down {
+            font-size: 14pt;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== TITLE PAGE ========== -->
+<div class="header-section">
+    <h1>Quantum Kinship Verification</h1>
+    <div class="subtitle">Architecture & Pipeline Deep Dive</div>
+    <div class="meta">
+        Hybrid Classical-Quantum Model using SWAP Test Fidelity<br>
+        FaceNet + Quantum-Inspired Cross-Attention + Entangled SWAP Test Ensemble<br><br>
+        Project: Quantum_kinship &nbsp;|&nbsp; August 2026
+    </div>
+</div>
+
+<div class="container">
+
+<!-- ========== OVERVIEW ========== -->
+<div class="overview-box">
+    <strong>What the system does:</strong> Given two face images (Person A, Person B) and a claimed relationship type 
+    (Father-Daughter, Father-Son, Mother-Daughter, Mother-Son), the system outputs a <strong>quantum fidelity score</strong> 
+    ∈ [0, 1] that represents how likely they are to be biologically related.
+</div>
+
+<!-- High-level pipeline flow -->
+<div class="pipeline-flow">
+    <div class="pipeline-step">📷 Face Image A<br><small>Any size</small></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step">FaceNet<br><small>512-d embedding</small></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step quantum">Cross-Attention<br><small>+ Relation</small></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step quantum">8 Quantum<br><small>Angles z ∈ [-π, π]</small></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step quantum">SWAP Test<br><small>Fidelity |⟨ψ₁|ψ₂⟩|²</small></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step" style="border-color: var(--secondary);">Kin / Non-Kin<br><small>Score ≥ 0.528</small></div>
+</div>
+
+<!-- ========== TABLE OF CONTENTS ========== -->
+<div class="toc">
+    <h3>📋 Table of Contents</h3>
+    <ol>
+        <li>Stage 1: Face Feature Extraction (Classical)</li>
+        <li>Stage 2: Quantum-Inspired Cross-Attention Projection
+            <ol type="a">
+                <li>Relation Conditioning</li>
+                <li>Multi-Head Cross-Attention</li>
+                <li>MLP Projection to Quantum Angles</li>
+                <li>Quantum-Inspired Interference</li>
+            </ol>
+        </li>
+        <li>Stage 3: Quantum SWAP Test Fidelity
+            <ol type="a">
+                <li>What is a SWAP Test?</li>
+                <li>The Quantum Circuit (17 qubits)</li>
+                <li>Entangled State Preparation</li>
+                <li>Differentiable PyTorch Simulation</li>
+                <li>Qiskit AerSimulator Verification</li>
+            </ol>
+        </li>
+        <li>Stage 4: Ensemble Inference</li>
+        <li>Training Methodology</li>
+        <li>What Makes This "Quantum"?</li>
+        <li>Parameter Count Summary</li>
+    </ol>
+</div>
+
+<!-- ========== STAGE 1 ========== -->
+<div class="page-break"></div>
+<div class="stage-header">
+    Stage 1: Face Feature Extraction
+    <span>File: src/models_improved.py — Class: FaceFeatureExtractor</span>
+</div>
+
+<h3>What Happens</h3>
+<p>Each face image goes through <strong>FaceNet (InceptionResnetV1)</strong> pretrained on <strong>VGGFace2</strong> (3.3 million face images of 9,131 identities).</p>
+
+<pre><code>Raw Image (any size) → Resize to 224×224 → Normalize → FaceNet → 512-d vector → L2 normalize</code></pre>
+
+<h3>Technical Details</h3>
+<ol>
+    <li>Image is resized to <span class="dimension">224 × 224</span> pixels and converted to RGB</li>
+    <li>Pixel values are normalized using ImageNet statistics: <code>mean=[0.485, 0.456, 0.406]</code>, <code>std=[0.229, 0.224, 0.225]</code></li>
+    <li>FaceNet's InceptionResnetV1 processes it through ~20M parameters</li>
+    <li>Output is a <span class="dimension">512</span>-dimensional embedding vector</li>
+    <li><strong>L2 normalization</strong> ensures <code>||emb|| = 1</code> — maps all embeddings onto a unit hypersphere</li>
+</ol>
+
+<h3>Why FaceNet?</h3>
+<ul>
+    <li>Trained specifically for <strong>face verification</strong> (not general image classification)</li>
+    <li>VGGFace2 gives it knowledge of facial identity across age, pose, and lighting</li>
+    <li>The 512-d embedding captures <strong>identity-discriminative features</strong> (face shape, eye distance, nose bridge, jawline)</li>
+</ul>
+
+<div class="insight-box">
+    FaceNet is <strong>frozen</strong> (no gradient updates). It acts purely as a fixed feature extractor. 
+    All the "learning" happens in Stage 2 — the quantum-inspired projection.
+</div>
+
+<!-- ========== STAGE 2 ========== -->
+<div class="page-break"></div>
+<div class="stage-header">
+    Stage 2: Quantum-Inspired Cross-Attention Projection
+    <span>File: src/models_improved.py — Class: QuantumInspiredCrossAttention (~660K trainable params)</span>
+</div>
+
+<p>This is the <strong>most novel and important part</strong> of the architecture. It transforms 512-d face embeddings into 8 quantum angle parameters that will be used to prepare quantum states.</p>
+
+<h3>Step 2.1: Relation Conditioning</h3>
+
+<pre><code><span class="comment"># One-hot relation vector: [FD, FS, MD, MS]</span>
+rel_bias = rel_embed(rels)   <span class="comment"># (B, 4) → Linear(4,64) → GELU → Linear(64,512) → (B, 512)</span>
+e1 = emb1 + rel_bias         <span class="comment"># (B, 512) — Person A + relation context</span>
+e2 = emb2 + rel_bias         <span class="comment"># (B, 512) — Person B + relation context</span></code></pre>
+
+<p>The 4-dimensional one-hot relation vector is projected to 512-d and <strong>added</strong> to both embeddings. This tells the model: "evaluate these faces under the hypothesis that they are Father-Daughter" (or whichever relation).</p>
+
+<div class="insight-box">
+    A father-son pair might share jaw structure while a mother-daughter pair might share eye shape. 
+    Relation conditioning lets the model learn <strong>different similarity patterns</strong> for different relationship types.
+</div>
+
+<h3>Step 2.2: Multi-Head Cross-Attention (8 heads × 64-d)</h3>
+
+<pre><code><span class="comment"># Person 1 attends to Person 2 — "What in B is relevant to A?"</span>
+attn_out1 = CrossAttention(query=e1, key=e2, value=e2)   <span class="comment"># (B, 512)</span>
+
+<span class="comment"># Person 2 attends to Person 1 — "What in A is relevant to B?"</span>
+attn_out2 = CrossAttention(query=e2, key=e1, value=e1)   <span class="comment"># (B, 512)</span>
+
+<span class="comment"># Residual connection + Layer Normalization</span>
+h1 = LayerNorm(e1 + attn_out1)   <span class="comment"># Preserves original information</span>
+h2 = LayerNorm(e2 + attn_out2)</code></pre>
+
+<p>Each person's embedding is enriched by <strong>"looking at" the other person's features</strong>. The attention mechanism learns which aspects of Person A's face to compare with which aspects of Person B's face.</p>
+
+<h3>Step 2.3: MLP Projection to Quantum Angles</h3>
+
+<pre><code><span class="comment"># Compress 512-d representation to 8 quantum rotation angles</span>
+z = Linear(512, 256) → GELU → Dropout(0.3)
+  → Linear(256, 128) → GELU → Dropout(0.3)
+  → Linear(128, 8) → LayerNorm
+
+<span class="comment"># Scale to valid quantum rotation range</span>
+z = tanh(z) × π       <span class="comment"># Output: z ∈ [-π, π]⁸</span></code></pre>
+
+<h3>Step 2.4: Quantum-Inspired Interference (Novel Contribution)</h3>
+
+<pre><code><span class="comment"># Learnable phase matrix: 8×8 parameters</span>
+interference1 = cos(z₁ @ phase_matrix)   <span class="comment"># (B, 8) — cross-qubit coupling</span>
+interference2 = cos(z₂ @ phase_matrix)   <span class="comment"># (B, 8)</span>
+
+<span class="comment"># Modulate angles with interference pattern</span>
+z₁ = z₁ × interference1                 <span class="comment"># Element-wise multiplication</span>
+z₂ = z₂ × interference2</code></pre>
+
+<div class="physics-box">
+    In a real quantum computer, entanglement creates correlations between qubit measurements. Here, the learnable 
+    <code>phase_matrix</code> creates similar correlations — changing one angle affects the effective value of all others 
+    through the cosine coupling.
+</div>
+
+<h3>Stage 2 Summary</h3>
+<div class="pipeline-flow" style="flex-direction: column; gap: 4px;">
+    <div class="flow-row">
+        <div class="flow-box">Person A: 512-d</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">+ relation bias</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">cross-attend to B</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">residual + norm</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box green">MLP → 8 angles</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box green">× interference</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box red">z₁ ∈ ℝ⁸</div>
+    </div>
+    <div class="flow-row">
+        <div class="flow-box">Person B: 512-d</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">+ relation bias</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">cross-attend to A</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box purple">residual + norm</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box green">MLP → 8 angles</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box green">× interference</div>
+        <span class="pipeline-arrow">→</span>
+        <div class="flow-box red">z₂ ∈ ℝ⁸</div>
+    </div>
+</div>
+
+<!-- ========== STAGE 3 ========== -->
+<div class="page-break"></div>
+<div class="stage-header">
+    Stage 3: Quantum SWAP Test Fidelity
+    <span>File: src/quantum_core.py — The Core Physics</span>
+</div>
+
+<h3>3.1: What is a SWAP Test?</h3>
+<p>The SWAP test is a quantum algorithm that measures how <strong>similar</strong> two quantum states are. Given states |ψ₁⟩ and |ψ₂⟩:</p>
+
+<div class="math">
+    Fidelity = |⟨ψ₁|ψ₂⟩|²
+</div>
+
+<p>This equals <strong>1</strong> when states are identical and <strong>0</strong> when states are orthogonal (completely different).</p>
+
+<h3>3.2: The Quantum Circuit (17 Qubits)</h3>
+<p>The full circuit uses <strong>1 ancilla qubit + 8 register-1 qubits + 8 register-2 qubits = 17 qubits total</strong>:</p>
+
+<div class="circuit-diagram">Ancilla (q₀):  ──H──●──●──●──●──●──●──●──●──H──M──
+                     │  │  │  │  │  │  │  │
+Register 1:    Ry(z₁)─Rz(e₁)─CX────────────────×  ×  ×  ×  ×  ×  ×  ×
+  (Person A)                                     │  │  │  │  │  │  │  │
+Register 2:    Ry(z₂)─Rz(e₂)─CX────────────────×  ×  ×  ×  ×  ×  ×  ×
+  (Person B)
+
+Legend: H = Hadamard | Ry = Y-rotation | Rz = Z-rotation | CX = CNOT | × = CSWAP | M = Measure</div>
+
+<h4>Circuit Steps:</h4>
+<ol>
+    <li><strong>Hadamard on Ancilla</strong>: Put ancilla in superposition |+⟩ = (|0⟩ + |1⟩)/√2</li>
+    <li><strong>State Preparation</strong> (for each register):
+        <ul>
+            <li>Ry(zᵢ) angle encoding on each qubit (encodes face similarity information)</li>
+            <li>CNOT chain connecting adjacent qubits (creates entanglement)</li>
+            <li>Rz(ent_paramᵢ) learnable phase rotations (adds learned structure)</li>
+        </ul>
+    </li>
+    <li><strong>Controlled-SWAP gates</strong>: For each qubit pair, CSWAP controlled by ancilla</li>
+    <li><strong>Hadamard on Ancilla</strong>: Interfere the two branches</li>
+    <li><strong>Measure Ancilla</strong>: P(ancilla = 0) = (1 + |⟨ψ₁|ψ₂⟩|²) / 2</li>
+</ol>
+
+<div class="math">
+    Fidelity = 2 × P(ancilla measures 0) − 1
+</div>
+
+<h3>3.3: Entangled State Preparation</h3>
+<p>For each register, the quantum state is prepared via <strong>3 layers</strong>:</p>
+
+<table>
+    <tr>
+        <th>Layer</th>
+        <th>Gate</th>
+        <th>Purpose</th>
+        <th>Parameters</th>
+    </tr>
+    <tr>
+        <td><strong>Layer 1</strong></td>
+        <td>Ry(zᵢ) on each qubit</td>
+        <td>Angle encoding — embeds face features as rotation angles</td>
+        <td>8 angles from Stage 2 (data-dependent)</td>
+    </tr>
+    <tr>
+        <td><strong>Layer 2</strong></td>
+        <td>CNOT chain: q₀→q₁→q₂→...→q₇</td>
+        <td>Creates entanglement — correlations between qubits</td>
+        <td>None (fixed structure)</td>
+    </tr>
+    <tr>
+        <td><strong>Layer 3</strong></td>
+        <td>Rz(ent_paramᵢ) on each qubit</td>
+        <td>Learnable phase shifts — adds structure to quantum state</td>
+        <td>8 learnable params per register (16 total)</td>
+    </tr>
+</table>
+
+<div class="insight-box">
+    Register 1 uses <code>ent_params1</code> and Register 2 uses <code>ent_params2</code> — these are 
+    <strong>different</strong> learnable parameters. This means the two registers undergo different transformations, 
+    making the fidelity <strong>NOT equivalent</strong> to the simple product-state cosine formula. This is what 
+    makes the "entangled" encoding more expressive than the "product" baseline.
+</div>
+
+<h3>3.4: Two Computation Modes</h3>
+
+<div class="two-col no-break">
+    <div class="col-box">
+        <h4>Mode A: PyTorch (Training)</h4>
+        <p>Fully differentiable statevector simulation in pure PyTorch. Gradients flow through Ry, CNOT, and Rz gates.</p>
+        <pre><code>state = |0⟩⊗8  (256-d vector)
+for i in 0..7:
+  state = Ry(z[i]) @ state
+for i in 0..6:
+  state = CNOT(i,i+1) @ state
+for i in 0..7:
+  state = Rz(ent[i]) @ state
+
+fidelity = |⟨state1|state2⟩|²</code></pre>
+    </div>
+    <div class="col-box">
+        <h4>Mode B: Qiskit (Verification)</h4>
+        <p>Actual quantum circuit simulation on Qiskit AerSimulator with 1024 shots. Used to verify PyTorch matches "real" quantum.</p>
+        <pre><code>circuit = build_circuit(
+    n_qubits=8,
+    z1, z2,
+    ent_params1,
+    ent_params2
+)
+job = AerSimulator().run(
+    circuit, shots=1024
+)
+fidelity = 2*P(0) - 1</code></pre>
+    </div>
+</div>
+
+<h3>3.5: Product-State Analytical Shortcut (Ablation Only)</h3>
+<p>When <code>encoding_mode="product"</code> (no entanglement, no Rz), fidelity has a closed-form:</p>
+
+<div class="math">
+    F = ∏ᵢ₌₁⁸ cos²((z₁ᵢ − z₂ᵢ) / 2)
+</div>
+
+<p>This is used only for <strong>ablation experiments</strong> to demonstrate that the entangled version with learnable Rz parameters outperforms the product-state baseline.</p>
+
+<!-- ========== STAGE 4 ========== -->
+<div class="page-break"></div>
+<div class="stage-header">
+    Stage 4: Ensemble Inference
+    <span>File: src/models_improved.py — Class: EnsembleKinshipClassifier</span>
+</div>
+
+<p>The deployed model is an <strong>ensemble of 5 independently trained models</strong> (one per cross-validation fold).</p>
+
+<pre><code><span class="keyword">class</span> <span class="func">EnsembleKinshipClassifier</span>:
+    <span class="keyword">def</span> <span class="func">forward</span>(self, emb1, emb2, rels):
+        predictions = []
+        <span class="keyword">for</span> model <span class="keyword">in</span> self.models:           <span class="comment"># 5 sub-models</span>
+            pred = model(emb1, emb2, rels)  <span class="comment"># Each gives fidelity ∈ [0,1]</span>
+            predictions.append(pred)
+        <span class="keyword">return</span> mean(predictions)            <span class="comment"># Soft voting: average fidelity</span></code></pre>
+
+<div class="insight-box">
+    Each fold model sees slightly different training data, so they learn slightly different decision boundaries. 
+    Averaging reduces variance and improves generalization — from ~67% single-model to ~70%+ ensemble on unseen data.
+</div>
+
+<!-- ========== TRAINING ========== -->
+<div class="stage-header">
+    Training Methodology
+    <span>Loss Function, Optimizer, and Cross-Validation Strategy</span>
+</div>
+
+<h3>Loss Function (3 Components)</h3>
+
+<h4>1. Binary Cross-Entropy (Main Loss)</h4>
+<pre><code>loss = BCE(predicted_fidelity, smoothed_label)
+<span class="comment"># Labels smoothed: 1 → 0.95, 0 → 0.05 (prevents overconfidence)</span></code></pre>
+
+<h4>2. Quantum Discrimination Loss (Weight: 0.3)</h4>
+<pre><code>mean_kin    = mean(fidelity[kin_pairs])
+mean_nonkin = mean(fidelity[nonkin_pairs])
+loss += max(0, 0.2 − (mean_kin − mean_nonkin))
+<span class="comment"># Forces a margin of at least 0.2 between kin and non-kin average fidelities</span></code></pre>
+
+<h4>3. Physics-Informed Regularization (Weight: 0.1)</h4>
+<pre><code><span class="comment"># Keep Rz angles in reasonable range</span>
+angle_penalty = relu(|ent_params| − 0.9π)
+
+<span class="comment"># Encourage moderate difference between register params</span>
+ent_reg = |mean_diff(ent_params1, ent_params2) − 0.5|
+
+<span class="comment"># Encourage orthogonal relation embeddings</span>
+orthogonality_loss = ‖R × Rᵀ − I‖</code></pre>
+
+<h3>Training Hyperparameters</h3>
+<table>
+    <tr><th>Parameter</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td>Optimizer</td><td>Adam</td><td>lr=2e-4, weight_decay=1e-5</td></tr>
+    <tr><td>Scheduler</td><td>CosineAnnealingWarmRestarts</td><td>T₀=20, T_mult=2, η_min=1e-6</td></tr>
+    <tr><td>Gradient Clipping</td><td>max_norm=1.0</td><td>Prevents exploding gradients from statevector ops</td></tr>
+    <tr><td>Early Stopping</td><td>patience=20</td><td>Stops if validation accuracy doesn't improve</td></tr>
+    <tr><td>Data Augmentation</td><td>Gaussian noise σ=0.01</td><td>Added to embeddings during training</td></tr>
+    <tr><td>Label Smoothing</td><td>ε=0.05</td><td>1→0.95, 0→0.05</td></tr>
+    <tr><td>Batch Size</td><td>64</td><td>Per training iteration</td></tr>
+    <tr><td>Cross-Validation</td><td>5 folds</td><td>Each fold trains on 80%, validates on 20%</td></tr>
+</table>
+
+<!-- ========== QUANTUM COMPARISON ========== -->
+<div class="page-break"></div>
+<div class="stage-header">
+    What Makes This Architecture "Quantum"?
+    <span>Classical vs. Quantum-Inspired Components</span>
+</div>
+
+<table>
+    <tr>
+        <th>Component</th>
+        <th>Classical Equivalent</th>
+        <th>Quantum Inspiration</th>
+    </tr>
+    <tr>
+        <td>FaceNet embeddings</td>
+        <td>Standard face features</td>
+        <td>None (purely classical)</td>
+    </tr>
+    <tr>
+        <td>Cross-Attention + MLP</td>
+        <td>Feature transformation</td>
+        <td>Output represents <strong>quantum rotation angles</strong></td>
+    </tr>
+    <tr>
+        <td>Phase Matrix interference</td>
+        <td>No direct analogue</td>
+        <td>Mimics <strong>quantum interference</strong> between qubits</td>
+    </tr>
+    <tr>
+        <td>Ry + CNOT + Rz encoding</td>
+        <td>Feature concatenation</td>
+        <td>Creates <strong>entangled quantum states</strong> from face features</td>
+    </tr>
+    <tr>
+        <td>SWAP Test fidelity</td>
+        <td>Cosine similarity</td>
+        <td>Quantum <strong>state overlap</strong> — different similarity metric</td>
+    </tr>
+    <tr>
+        <td>Ensemble averaging</td>
+        <td>Standard bagging</td>
+        <td>None (classical ensemble)</td>
+    </tr>
+</table>
+
+<div class="physics-box">
+    Instead of computing <code>cosine_similarity(face_A, face_B)</code> like standard approaches, this model:
+    (1) Encodes faces as <strong>quantum states</strong> via learned rotations,
+    (2) Measures similarity as <strong>quantum fidelity</strong> (state overlap),
+    (3) The entangled encoding with learnable Rz parameters creates a <strong>non-linear, learnable similarity metric</strong> 
+    that can capture complex kinship patterns beyond what cosine similarity can.
+</div>
+
+<!-- ========== PARAMETER COUNT ========== -->
+<div class="stage-header">
+    Parameter Count Summary
+    <span>Total model size and component breakdown</span>
+</div>
+
+<table>
+    <tr>
+        <th>Component</th>
+        <th>Parameters</th>
+        <th>Trainable?</th>
+    </tr>
+    <tr>
+        <td>FaceNet (InceptionResnetV1)</td>
+        <td>~20,000,000</td>
+        <td>❌ Frozen</td>
+    </tr>
+    <tr>
+        <td>Relation Embedding (4 → 64 → 512)</td>
+        <td>~33,000</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr>
+        <td>Multi-Head Cross-Attention (8 heads)</td>
+        <td>~1,050,000</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr>
+        <td>LayerNorm (×2)</td>
+        <td>~2,000</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr>
+        <td>MLP Projection (512 → 256 → 128 → 8)</td>
+        <td>~166,000</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr>
+        <td>Phase Matrix (8 × 8)</td>
+        <td>64</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr>
+        <td>Entanglement Params (ent_params1 + ent_params2)</td>
+        <td>16</td>
+        <td>✅ Yes</td>
+    </tr>
+    <tr style="background: #edf2f7; font-weight: 700;">
+        <td>Total trainable per model</td>
+        <td>~1,250,000</td>
+        <td>✅</td>
+    </tr>
+    <tr style="background: #e8f4fd; font-weight: 700;">
+        <td>Ensemble (5 models)</td>
+        <td>~6,250,000</td>
+        <td>✅</td>
+    </tr>
+</table>
+
+<!-- ========== FOOTER ========== -->
+<div class="footer">
+    <strong>Quantum Kinship Verification — Architecture Deep Dive</strong><br>
+    Generated August 2026 &nbsp;|&nbsp; Project: Quantum_kinship<br>
+    Hybrid Classical-Quantum Model using SWAP Test Fidelity
+</div>
+
+</div><!-- /container -->
+
+</body>
+</html>
