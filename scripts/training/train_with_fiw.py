@@ -81,6 +81,33 @@ from src.data_loaders import (
 # FIW Data Loading (family-level split)
 # =============================================================================
 
+def get_mid_images(fpath, mid_id):
+    """Find all image files in MID folder regardless of folder/file casing or extension."""
+    target_mid = f"mid{mid_id}".lower()
+    mid_dir = None
+    if os.path.exists(fpath):
+        for d in os.listdir(fpath):
+            d_clean = d.lower()
+            try:
+                if d_clean == target_mid or d_clean == f"mid{int(mid_id)}":
+                    mid_dir = os.path.join(fpath, d)
+                    break
+            except ValueError:
+                if d_clean == target_mid:
+                    mid_dir = os.path.join(fpath, d)
+                    break
+    if not mid_dir or not os.path.exists(mid_dir):
+        return []
+
+    valid_exts = {".jpg", ".jpeg", ".png", ".bmp"}
+    images = []
+    for f in os.listdir(mid_dir):
+        ext = os.path.splitext(f)[1].lower()
+        if ext in valid_exts:
+            images.append(os.path.join(mid_dir, f))
+    return images
+
+
 def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
     """
     Load FIW dataset and split at the FAMILY level into train/test sets.
@@ -116,6 +143,12 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
         fpath = os.path.join(fids_dir, fid)
         mid_csv = os.path.join(fpath, "mid.csv")
         if not os.path.exists(mid_csv):
+            # Try case-insensitive lookup for mid.csv
+            for item in os.listdir(fpath) if os.path.exists(fpath) else []:
+                if item.lower() == "mid.csv":
+                    mid_csv = os.path.join(fpath, item)
+                    break
+        if not os.path.exists(mid_csv):
             continue
 
         with open(mid_csv, "r") as f:
@@ -143,8 +176,7 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
                         rel_matrix[mid_id][m] = int(row[col_idx].strip())
                     except ValueError:
                         pass
-            m_imgs = glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.jpg")) + \
-                     glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.png"))
+            m_imgs = get_mid_images(fpath, mid_id)
             all_family_images[fid].extend(m_imgs)
 
         # Generate parent-child kin pairs for this family
@@ -163,8 +195,8 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
                     parent_gender = genders.get(parent_id, "m")
                     child_gender = genders.get(child_id, "f")
 
-                    p_imgs = glob.glob(os.path.join(fpath, f"MID{parent_id}", "*.jpg"))
-                    c_imgs = glob.glob(os.path.join(fpath, f"MID{child_id}", "*.jpg"))
+                    p_imgs = get_mid_images(fpath, parent_id)
+                    c_imgs = get_mid_images(fpath, child_id)
 
                     if parent_gender == "m" and child_gender == "f":
                         rel_str = "fd"
