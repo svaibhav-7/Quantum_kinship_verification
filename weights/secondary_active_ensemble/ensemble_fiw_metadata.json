@@ -1,0 +1,15 @@
+{
+  "n_models": 5,
+  "n_qubits": 8,
+  "encoding_mode": "entangled",
+  "projection_type": "quantum_inspired_attention",
+  "training_data": "KinFaceW-II + TSKinFace + FIW-train-50%",
+  "test_data": "FIW-test-50%",
+  "source_models": [
+    "fiw_retrained_fold0_entangled.pt",
+    "fiw_retrained_fold1_entangled.pt",
+    "fiw_retrained_fold2_entangled.pt",
+    "fiw_retrained_fold3_entangled.pt",
+    "fiw_retrained_fold4_entangled.pt"
+  ]
+}
