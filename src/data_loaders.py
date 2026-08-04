@@ -6,6 +6,24 @@ from PIL import Image
 import torch
 
 
+def resolve_image_path(path):
+    """Resolves an image path, handling extension casing mismatches on Linux/Colab."""
+    if os.path.exists(path):
+        return path
+    base, ext = os.path.splitext(path)
+    for alt_ext in [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]:
+        candidate = base + alt_ext
+        if os.path.exists(candidate):
+            return candidate
+    parent = os.path.dirname(path)
+    filename = os.path.basename(path).lower()
+    if os.path.exists(parent):
+        for f in os.listdir(parent):
+            if f.lower() == filename:
+                return os.path.join(parent, f)
+    return None
+
+
 def load_kinfacew_pairs(root):
     """
     Parses KinFaceW-I or KinFaceW-II datasets and returns lists of image paths and labels.
@@ -16,6 +34,13 @@ def load_kinfacew_pairs(root):
     Returns:
         pairs (list of tuples): List of (img1_path, img2_path, label, relation_type)
     """
+    # Auto-detect nested root directories (e.g., KinFaceW-II/KinFaceW-II or KinFaceW-I/KinFaceW-I)
+    if os.path.exists(root):
+        base_name = os.path.basename(root.rstrip("/\\"))
+        nested = os.path.join(root, base_name)
+        if os.path.exists(nested) and os.path.exists(os.path.join(nested, "meta_data")):
+            root = nested
+
     relations = ["fd", "fs", "md", "ms"]
     rel_dirs = {
         "fd": "father-dau",
@@ -44,10 +69,10 @@ def load_kinfacew_pairs(root):
             img1 = str(row[2].flat[0])
             img2 = str(row[3].flat[0])
 
-            p1 = os.path.join(img_dir, img1)
-            p2 = os.path.join(img_dir, img2)
+            p1 = resolve_image_path(os.path.join(img_dir, img1))
+            p2 = resolve_image_path(os.path.join(img_dir, img2))
 
-            if not os.path.exists(p1) or not os.path.exists(p2):
+            if p1 is None or p2 is None:
                 skipped += 1
                 continue
 

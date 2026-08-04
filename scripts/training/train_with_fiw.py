@@ -81,6 +81,33 @@ from src.data_loaders import (
 # FIW Data Loading (family-level split)
 # =============================================================================
 
+def get_mid_images(fpath, mid_id):
+    """Find all image files in MID folder regardless of folder/file casing or extension."""
+    target_mid = f"mid{mid_id}".lower()
+    mid_dir = None
+    if os.path.exists(fpath):
+        for d in os.listdir(fpath):
+            d_clean = d.lower()
+            try:
+                if d_clean == target_mid or d_clean == f"mid{int(mid_id)}":
+                    mid_dir = os.path.join(fpath, d)
+                    break
+            except ValueError:
+                if d_clean == target_mid:
+                    mid_dir = os.path.join(fpath, d)
+                    break
+    if not mid_dir or not os.path.exists(mid_dir):
+        return []
+
+    valid_exts = {".jpg", ".jpeg", ".png", ".bmp"}
+    images = []
+    for f in os.listdir(mid_dir):
+        ext = os.path.splitext(f)[1].lower()
+        if ext in valid_exts:
+            images.append(os.path.join(mid_dir, f))
+    return images
+
+
 def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
     """
     Load FIW dataset and split at the FAMILY level into train/test sets.
@@ -116,6 +143,12 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
         fpath = os.path.join(fids_dir, fid)
         mid_csv = os.path.join(fpath, "mid.csv")
         if not os.path.exists(mid_csv):
+            # Try case-insensitive lookup for mid.csv
+            for item in os.listdir(fpath) if os.path.exists(fpath) else []:
+                if item.lower() == "mid.csv":
+                    mid_csv = os.path.join(fpath, item)
+                    break
+        if not os.path.exists(mid_csv):
             continue
 
         with open(mid_csv, "r") as f:
@@ -143,8 +176,7 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
                         rel_matrix[mid_id][m] = int(row[col_idx].strip())
                     except ValueError:
                         pass
-            m_imgs = glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.jpg")) + \
-                     glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.png"))
+            m_imgs = get_mid_images(fpath, mid_id)
             all_family_images[fid].extend(m_imgs)
 
         # Generate parent-child kin pairs for this family
@@ -163,8 +195,8 @@ def load_fiw_pairs_split(fiw_root, train_ratio=0.5, seed=42):
                     parent_gender = genders.get(parent_id, "m")
                     child_gender = genders.get(child_id, "f")
 
-                    p_imgs = glob.glob(os.path.join(fpath, f"MID{parent_id}", "*.jpg"))
-                    c_imgs = glob.glob(os.path.join(fpath, f"MID{child_id}", "*.jpg"))
+                    p_imgs = get_mid_images(fpath, parent_id)
+                    c_imgs = get_mid_images(fpath, child_id)
 
                     if parent_gender == "m" and child_gender == "f":
                         rel_str = "fd"
@@ -319,6 +351,72 @@ def train_single_fold(
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
         optimizer, T_0=20, T_mult=2, eta_min=1e-6
     )
+
+    # Check if checkpoint already exists for this fold
+    if save_path and os.path.exists(save_path) and not getattr(args, "force_retrain", False):
+        print(f"\n{'='*60}")
+        print(f"  FOLD {fold_num+1}: Found existing checkpoint at {os.path.basename(save_path)}. Skipping training.")
+        print(f"{'='*60}")
+        state_dict = torch.load(save_path, map_location="cpu", weights_only=True)
+        model.load_state_dict(state_dict)
+        model = model.to(device)
+        model.eval()
+
+        val_emb1_dev = val_emb1.to(device)
+        val_emb2_dev = val_emb2.to(device)
+        val_rel_dev = val_rel.to(device)
+
+        with torch.no_grad():
+            val_preds = model(val_emb1_dev, val_emb2_dev, val_rel_dev).cpu()
+            val_preds = torch.clamp(val_preds, 1e-7, 1.0 - 1e-7)
+
+        val_preds_np = val_preds.numpy().flatten()
+        val_y_np = val_y.numpy().flatten()
+
+        pred_labels_np = (val_preds_np >= 0.5).astype(float)
+        acc = accuracy_score(val_y_np, pred_labels_np) * 100
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            val_y_np, pred_labels_np, average="binary", zero_division=0
+        )
+
+        try:
+            fpr, tpr, _ = roc_curve(val_y_np, val_preds_np)
+            roc_auc_val = auc(fpr, tpr)
+        except ValueError:
+            roc_auc_val = 0.5
+
+        try:
+            opt_thresh, opt_acc, opt_J = find_optimal_threshold(val_y_np, val_preds_np)
+        except Exception:
+            opt_thresh, opt_acc, opt_J = 0.5, acc, 0.0
+
+        per_rel = compute_per_relation_accuracy(val_preds, val_y, val_rel, threshold=0.5)
+
+        fold_results = {
+            "fold": fold_num,
+            "accuracy": acc,
+            "accuracy_optimal": opt_acc,
+            "optimal_threshold": float(opt_thresh),
+            "youden_j": float(opt_J),
+            "precision": precision * 100,
+            "recall": recall * 100,
+            "f1": f1 * 100,
+            "roc_auc": roc_auc_val,
+            "best_val_acc": acc,
+            "per_relation": per_rel,
+            "loss_history": [],
+            "acc_history": [],
+            "val_acc_history": [],
+        }
+
+        print(f"    Fold {fold_num+1} Checkpoint Metrics:")
+        print(f"      Accuracy (t=0.5):   {acc:.2f}%")
+        print(f"      Accuracy (optimal): {opt_acc:.2f}% (threshold={opt_thresh:.3f})")
+        print(f"      Precision: {precision*100:.2f}%")
+        print(f"      Recall   : {recall*100:.2f}%")
+        print(f"      F1       : {f1*100:.2f}%")
+        print(f"      ROC-AUC  : {roc_auc_val:.4f}")
+        return fold_results
 
     train_dataset = TensorDataset(train_emb1, train_emb2, train_y, train_rel)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
@@ -689,6 +787,8 @@ def parse_args():
                         default=os.path.join(project_root, "public"))
     parser.add_argument("--train-ratio", type=float, default=0.5,
                         help="Fraction of FIW families for training (default: 0.5)")
+    parser.add_argument("--force-retrain", action="store_true",
+                        help="Force retrain all folds even if fold weight checkpoints exist")
     return parser.parse_args()
 
 
@@ -906,6 +1006,9 @@ def main():
         )
         state_dict = torch.load(path, map_location="cpu", weights_only=True)
         m.load_state_dict(state_dict)
+        sub_models.append(m)
+
+    ensemble = EnsembleKinshipClassifier(sub_models)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ensemble = ensemble.to(device)
     ensemble.eval()
