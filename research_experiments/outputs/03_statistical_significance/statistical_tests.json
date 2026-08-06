@@ -8,7 +8,7 @@
   ],
   "mcnemar_chi2": 0.0,
   "mcnemar_p_value": 1.0,
-  "paired_ttest_stat": 11.535818650215376,
-  "paired_ttest_p_value": 1.871173135162224e-27,
+  "paired_ttest_stat": 11.53581714630127,
+  "paired_ttest_p_value": 1.8711880820199508e-27,
   "statistically_significant": false
 }
