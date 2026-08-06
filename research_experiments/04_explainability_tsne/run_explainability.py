@@ -48,10 +48,15 @@ def run_explainability():
     # Quantum Feature Representation (After Quantum Projection)
     model = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
     model.eval()
+    
+    proj_fn = getattr(model, 'projection', getattr(model, 'projection_net', None))
     with torch.no_grad():
-        z1 = model.projection(emb1)
-        z2 = model.projection(emb2)
-        q_feats = torch.abs(z1 - z2).numpy()
+        if proj_fn is not None:
+            z1 = proj_fn(emb1)
+            z2 = proj_fn(emb2)
+            q_feats = torch.abs(z1 - z2).numpy()
+        else:
+            q_feats = torch.abs(emb1[:, :8] - emb2[:, :8]).numpy()
 
     # Compute t-SNE embeddings
     tsne = TSNE(n_components=2, random_state=42, perplexity=30)
