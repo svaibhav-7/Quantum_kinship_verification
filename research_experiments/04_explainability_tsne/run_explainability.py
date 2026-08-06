@@ -45,18 +45,23 @@ def run_explainability():
     # Raw Feature Representation (Before Quantum Module): Elementwise Absolute Difference
     raw_feats = torch.abs(emb1 - emb2).numpy()
 
-    # Quantum Feature Representation (After Quantum Projection)
+    # Quantum Feature Representation (After Quantum Hilbert Space Projection)
     model = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
     model.eval()
     
-    proj_fn = getattr(model, 'projection', getattr(model, 'projection_net', None))
     with torch.no_grad():
-        if proj_fn is not None:
-            z1 = proj_fn(emb1)
-            z2 = proj_fn(emb2)
-            q_feats = torch.abs(z1 - z2).numpy()
-        else:
-            q_feats = torch.abs(emb1[:, :8] - emb2[:, :8]).numpy()
+        rel_bias = model.rel_embed(rels)
+        e1 = emb1 + rel_bias
+        e2 = emb2 + rel_bias
+        e1_seq = e1.unsqueeze(1)
+        e2_seq = e2.unsqueeze(1)
+        attn_out1, _ = model.cross_attn(e1_seq, e2_seq, e2_seq)
+        attn_out2, _ = model.cross_attn(e2_seq, e1_seq, e1_seq)
+        h1 = model.norm1(e1 + attn_out1.squeeze(1))
+        h2 = model.norm1(e2 + attn_out2.squeeze(1))
+        z1 = model.norm2(model.projection(h1))
+        z2 = model.norm2(model.projection(h2))
+        q_feats = torch.abs(z1 - z2).cpu().numpy()
 
     # Compute t-SNE embeddings
     tsne = TSNE(n_components=2, random_state=42, perplexity=30)
