@@ -1,0 +1,206 @@
+{
+  "Model 1 (Base Ensemble)": {
+    "n_samples": 1066,
+    "roc_auc": 0.7672278757713252,
+    "optimal_threshold": 0.45301541686058044,
+    "optimal_accuracy": 70.91932457786116,
+    "optimal_precision": 66.56760772659732,
+    "optimal_recall": 84.05253283302065,
+    "optimal_f1_score": 74.29519071310115,
+    "default_05_accuracy": 70.45028142589118,
+    "default_05_precision": 68.41216216216216,
+    "default_05_recall": 75.98499061913697,
+    "default_05_f1_score": 72.0,
+    "confusion_matrix_optimal": [
+      [
+        308,
+        225
+      ],
+      [
+        85,
+        448
+      ]
+    ],
+    "confusion_matrix_default": [
+      [
+        346,
+        187
+      ],
+      [
+        128,
+        405
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 65.29850746268657,
+        "sample_count": 268
+      },
+      "Father-Son (FS)": {
+        "accuracy": 76.92307692307693,
+        "sample_count": 312
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 72.44094488188976,
+        "sample_count": 254
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 67.67241379310344,
+        "sample_count": 232
+      }
+    }
+  },
+  "Model 2 (FIW Ensemble)": {
+    "n_samples": 1066,
+    "roc_auc": 0.6751510970153719,
+    "optimal_threshold": 0.5403149724006653,
+    "optimal_accuracy": 62.94559099437148,
+    "optimal_precision": 61.855670103092784,
+    "optimal_recall": 67.54221388367729,
+    "optimal_f1_score": 64.57399103139014,
+    "default_05_accuracy": 61.63227016885553,
+    "default_05_precision": 59.171597633136095,
+    "default_05_recall": 75.046904315197,
+    "default_05_f1_score": 66.17038875103391,
+    "confusion_matrix_optimal": [
+      [
+        311,
+        222
+      ],
+      [
+        173,
+        360
+      ]
+    ],
+    "confusion_matrix_default": [
+      [
+        257,
+        276
+      ],
+      [
+        133,
+        400
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 61.56716417910447,
+        "sample_count": 268
+      },
+      "Father-Son (FS)": {
+        "accuracy": 61.21794871794872,
+        "sample_count": 312
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 64.96062992125984,
+        "sample_count": 254
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 64.65517241379311,
+        "sample_count": 232
+      }
+    }
+  },
+  "Model 3 (Fine-Tuned Checkpoint)": {
+    "n_samples": 1066,
+    "roc_auc": 0.5922985402461904,
+    "optimal_threshold": 0.6548670530319214,
+    "optimal_accuracy": 57.692307692307686,
+    "optimal_precision": 56.59163987138264,
+    "optimal_recall": 66.04127579737336,
+    "optimal_f1_score": 60.952380952380956,
+    "default_05_accuracy": 56.47279549718574,
+    "default_05_precision": 54.811715481171554,
+    "default_05_recall": 73.73358348968105,
+    "default_05_f1_score": 62.88,
+    "confusion_matrix_optimal": [
+      [
+        263,
+        270
+      ],
+      [
+        181,
+        352
+      ]
+    ],
+    "confusion_matrix_default": [
+      [
+        209,
+        324
+      ],
+      [
+        140,
+        393
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 55.59701492537313,
+        "sample_count": 268
+      },
+      "Father-Son (FS)": {
+        "accuracy": 55.44871794871795,
+        "sample_count": 312
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 62.99212598425197,
+        "sample_count": 254
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 57.327586206896555,
+        "sample_count": 232
+      }
+    }
+  },
+  "Meta-Ensemble (Saved Model)": {
+    "n_samples": 1066,
+    "roc_auc": 0.7364980692670255,
+    "optimal_threshold": 0.5195881128311157,
+    "optimal_accuracy": 67.7298311444653,
+    "optimal_precision": 65.07177033492823,
+    "optimal_recall": 76.54784240150094,
+    "optimal_f1_score": 70.34482758620689,
+    "default_05_accuracy": 67.3545966228893,
+    "default_05_precision": 63.90977443609023,
+    "default_05_recall": 79.73733583489681,
+    "default_05_f1_score": 70.95158597662771,
+    "confusion_matrix_optimal": [
+      [
+        314,
+        219
+      ],
+      [
+        125,
+        408
+      ]
+    ],
+    "confusion_matrix_default": [
+      [
+        293,
+        240
+      ],
+      [
+        108,
+        425
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 62.31343283582089,
+        "sample_count": 268
+      },
+      "Father-Son (FS)": {
+        "accuracy": 67.94871794871796,
+        "sample_count": 312
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 74.40944881889764,
+        "sample_count": 254
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 66.37931034482759,
+        "sample_count": 232
+      }
+    }
+  }
+}

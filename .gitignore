@@ -35,7 +35,7 @@ wheels/
 # Jupyter
 .ipynb_checkpoints
 
-# Weights (large binary files)
+# Weights & Binary Checkpoints (large binary files)
 weights/**/*.npy
 weights/**/*.pkl
 weights/**/*.bak
@@ -46,13 +46,14 @@ weights/*.pkl
 weights/*.bak
 weights/*.pt
 weights/*.pth
+outputs/**/*.pt
+outputs/**/*.pkl
 *.log
 
 # Result files that can be regenerated
 results/**/*.png
 results/**/*.jpg
 results/**/*.jpeg
-results/**/*.json
 
 # OS
 .DS_Store

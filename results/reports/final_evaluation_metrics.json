@@ -1,0 +1,51 @@
+{
+  "model_architecture": "Hybrid Quantum-Classical Cross-Attention Classifier",
+  "encoding_mode": "entangled",
+  "projection": "quantum_inspired_attention",
+  "n_qubits": 8,
+  "epochs": 100,
+  "summary": {
+    "accuracy_mean": 67.35904523715502,
+    "accuracy_std": 3.572619414216311,
+    "accuracy_optimal_mean": 68.67228291869597,
+    "accuracy_optimal_std": 3.0683068722057802,
+    "auc_mean": 0.7098429547250448,
+    "auc_std": 0.04678275379194053,
+    "f1_mean": 66.92543557607496,
+    "f1_std": 5.206107493172592
+  },
+  "ensemble": {
+    "accuracy": 78.23639774859286,
+    "accuracy_optimal": 78.51782363977486,
+    "optimal_threshold": 0.5279678702354431,
+    "precision": 78.13084112149534,
+    "recall": 78.42401500938087,
+    "f1": 78.27715355805243,
+    "roc_auc": 0.8554467086018819,
+    "confusion": {
+      "tp": 418,
+      "fp": 117,
+      "fn": 115,
+      "tn": 416
+    },
+    "n_models": 5
+  },
+  "per_relation_averages": {
+    "FD": {
+      "standard_mean": 62.00717675832093,
+      "optimal_mean": 63.591375782451294
+    },
+    "FS": {
+      "standard_mean": 70.21102101068145,
+      "optimal_mean": 70.18194482371054
+    },
+    "MD": {
+      "standard_mean": 71.55294931531935,
+      "optimal_mean": 73.20555702506991
+    },
+    "MS": {
+      "standard_mean": 65.67912939773404,
+      "optimal_mean": 68.08169350029814
+    }
+  }
+}

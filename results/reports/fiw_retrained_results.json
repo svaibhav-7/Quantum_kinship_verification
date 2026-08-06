@@ -1,0 +1,41 @@
+{
+  "ensemble_test_results": {
+    "n_pairs": 35420,
+    "accuracy_05": 62.46470920383964,
+    "accuracy_optimal": 62.82608695652174,
+    "optimal_threshold": 0.43000000000000005,
+    "roc_auc": 0.6803249447383195,
+    "precision": 64.47635910551512,
+    "recall": 55.51665725578769,
+    "f1": 59.662004308383146,
+    "confusion": {
+      "tp": 12234,
+      "fp": 7691,
+      "fn": 5476,
+      "tn": 10019
+    },
+    "kin_mean_fidelity": 0.5164530873298645,
+    "nonkin_mean_fidelity": 0.39793407917022705
+  },
+  "cross_validation": {
+    "folds_completed": 5,
+    "accuracy_mean": 75.06,
+    "accuracy_std": 1.96,
+    "accuracy_optimal_mean": 75.67,
+    "accuracy_optimal_std": 2.0,
+    "auc_mean": 0.8267,
+    "auc_std": 0.0179,
+    "f1_mean": 76.15,
+    "f1_std": 2.83
+  },
+  "comparison_with_old": {
+    "old_model": "ensemble_kinship_full.pt (trained on KFW-II + TSKinFace only)",
+    "old_fiw_accuracy": 65.07,
+    "old_fiw_auc": 0.7217,
+    "new_model": "ensemble_kinship_fiw.pt (trained on KFW-II + TSKinFace + FIW-50%)",
+    "new_fiw_accuracy": 62.46470920383964,
+    "new_fiw_auc": 0.6803249447383195,
+    "improvement_accuracy": -2.6052907961603538,
+    "improvement_auc": -0.041375055261680505
+  }
+}

@@ -1,75 +1,71 @@
-# Quantum Kinship Verification
+# Quantum Kinship Verification System
 
-Clean project snapshot for the latest trained architecture:
+An advanced quantum-inspired facial kinship verification framework leveraging entangled state vector representations (`n_qubits=8`), relation-conditioned attention projection, and a **Hierarchical Meta-Ensemble Classifier** for cross-domain generalization.
 
-- Encoding: `entangled`
-- Projection: `cross_attention`
-- Qubits: `8`
-- Training script: `scripts/train_hybrid.py`
-- Latest run metrics: `results/training_metrics/fold_results.json`
-- Ensemble checkpoints: `weights/hybrid_kinship_fold0.pt` through `weights/hybrid_kinship_fold4.pt`
-- Best checkpoint: `weights/hybrid_kinship_entangled.pt`
+---
 
-## Structure
+## 📁 Repository Structure
 
-```text
-src/
-  data_loaders.py       Dataset parsing and embedding tensor preparation
-  models.py             Face extractor, cross-attention projection, hybrid classifier
-  quantum_core.py       Product and entangled SWAP-test simulation paths
-
-scripts/
-  train_hybrid.py       Latest 5-fold training pipeline
-  predict_user_images.py  Ensemble inference for custom image pairs
-  validate_quantum_circuit.py  Circuit sanity checks
-
-weights/
-  hybrid_kinship_entangled.pt
-  hybrid_kinship_fold0.pt ... hybrid_kinship_fold4.pt
-  embeddings_cache.pkl
-
-results/training_metrics/
-  fold_results.json
-  final_evaluation_metrics.json
-  training_metrics.png
-  roc_curve.png
-  score_distribution.png
+```
+Quantum_kinship/
+├── src/                          # Core Python source packages
+│   ├── models_improved.py        # HybridKinshipClassifier & MetaEnsembleKinshipClassifier
+│   ├── quantum_core.py           # Quantum circuit & simulator components
+│   └── data_loaders.py           # Pair loading & embedding cache utilities
+├── scripts/                      # Categorical execution scripts
+│   ├── training/                 # Model training & meta-ensemble building scripts
+│   │   ├── build_meta_ensemble.py     # Bundles 11 sub-models into meta_ensemble_kinship.pt
+│   │   ├── train_with_fiw.py        # FIW dataset retraining pipeline
+│   │   └── build_ensemble.py        # Package fold models into 5-fold ensemble
+│   ├── evaluation/               # Metric evaluation & plot generation scripts
+│   │   ├── generate_meta_ensemble_plots_and_json.py # Comprehensive plot generator
+│   │   ├── test_ensemble_on_unseen.py # Benchmark evaluation suite
+│   │   └── validate_quantum_circuit.py# Circuit timing & simulation check
+│   ├── inference/                # Real-time prediction scripts
+│   │   ├── predict_user_images.py   # CLI tool for custom user face pairs
+│   │   └── test_ensemble_live.py    # Simulated live API test
+│   └── archive/                  # Legacy training iterations (v1–v3)
+├── weights/                      # Model weights & embedding caches
+│   ├── active_ensemble/          # Meta-Ensemble checkpoint (meta_ensemble_kinship.pt)
+│   ├── secondary_active_ensemble/# FIW 5-fold ensemble checkpoint
+│   └── caches/                   # Pre-computed FaceNet embedding caches
+├── results/                      # Evaluation artifacts, plots & reports
+│   ├── plots/                    # High-res ROC curves, metric comparisons & per-relation charts
+│   ├── reports/                  # PDF reports & comprehensive evaluation metrics JSON
+│   └── meta_ensemble_comprehensive_metrics.json
+├── tests/                        # Unit tests & verification scripts
+│   ├── test_fix.py               # Physics regularization test suite
+│   └── test_family_split.py      # FIW family split verification
+├── docs/                         # Architecture documentation & deep-dives
+├── paper/                        # Academic paper LaTeX source code
+└── main.py                       # Project entry point & quick demo
 ```
 
-Dataset folders are expected at the project root:
+---
 
-- `KinFaceW-I/`
-- `KinFaceW-II/`
-- `TSKinFace_Data/`
+## 🚀 Quick Start & Common Commands
 
-## Run
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Train the current architecture:
-
-```bash
-python scripts/train_hybrid.py --encoding-mode entangled --projection cross_attention --epochs 100
-```
-
-Run ensemble prediction on two images:
-
-```bash
-python scripts/predict_user_images.py path/to/face1.jpg path/to/face2.jpg
-```
-
-Run the sample demo:
-
+### 1. Run Demo Prediction
 ```bash
 python main.py
 ```
 
-## Current Metrics
+### 2. Build Meta-Ensemble Model (11 Sub-Models)
+```bash
+python scripts/training/build_meta_ensemble.py
+```
 
-The latest cross-validation summary is stored in `results/training_metrics/fold_results.json`.
+### 3. Generate Comprehensive Metrics & Plots
+```bash
+python scripts/evaluation/generate_meta_ensemble_plots_and_json.py
+```
 
-The final evaluation summary is stored in `results/training_metrics/final_evaluation_metrics.json`.
+### 4. Run Custom Face Pair Prediction
+```bash
+python scripts/inference/predict_user_images.py --img1 photo1.jpg --img2 photo2.jpg --relation fd
+```
+
+### 5. Run Unit Tests
+```bash
+python -m unittest discover -s tests
+```

@@ -1,0 +1,279 @@
+{
+  "config": {
+    "encoding_mode": "entangled",
+    "projection": "cross_attention",
+    "n_qubits": 8,
+    "folds": 5,
+    "lr": 0.0002,
+    "epochs": 100,
+    "label_smoothing": 0.05
+  },
+  "summary": {
+    "accuracy_mean": 66.7943486463955,
+    "accuracy_std": 2.7889212098502756,
+    "accuracy_optimal_mean": 67.45074810232109,
+    "accuracy_optimal_std": 2.531496393317425,
+    "auc_mean": 0.689828752581417,
+    "auc_std": 0.029853946369900998,
+    "f1_mean": 67.73254007868007,
+    "f1_std": 2.3975622368214076
+  },
+  "ensemble": {
+    "accuracy": 77.11069418386491,
+    "accuracy_optimal": 77.57973733583489,
+    "optimal_threshold": 0.47812095284461975,
+    "precision": 77.00934579439253,
+    "recall": 77.29831144465291,
+    "f1": 77.15355805243446,
+    "roc_auc": 0.8249175434458921,
+    "confusion": {
+      "tp": 412,
+      "fp": 123,
+      "fn": 121,
+      "tn": 410
+    },
+    "n_models": 5
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "accuracy": 66.66666666666666,
+      "accuracy_optimal": 66.66666666666666,
+      "optimal_threshold": 0.5003088116645813,
+      "youden_j": 0.3327452364149612,
+      "precision": 66.01941747572816,
+      "recall": 65.38461538461539,
+      "f1": 65.70048309178745,
+      "roc_auc": 0.6783697953422724,
+      "best_val_acc": 66.66666666666666,
+      "per_relation": {
+        "FD": {
+          "accuracy": 61.111111111111114,
+          "count": 54
+        },
+        "FS": {
+          "accuracy": 70.17543859649122,
+          "count": 57
+        },
+        "MD": {
+          "accuracy": 72.0,
+          "count": 50
+        },
+        "MS": {
+          "accuracy": 63.46153846153846,
+          "count": 52
+        }
+      },
+      "per_relation_optimal": {
+        "FD": {
+          "accuracy": 61.111111111111114,
+          "count": 54
+        },
+        "FS": {
+          "accuracy": 70.17543859649122,
+          "count": 57
+        },
+        "MD": {
+          "accuracy": 72.0,
+          "count": 50
+        },
+        "MS": {
+          "accuracy": 63.46153846153846,
+          "count": 52
+        }
+      }
+    },
+    {
+      "fold": 1,
+      "accuracy": 63.84976525821596,
+      "accuracy_optimal": 65.25821596244131,
+      "optimal_threshold": 0.4824223816394806,
+      "youden_j": 0.30820105820105814,
+      "precision": 61.111111111111114,
+      "recall": 73.33333333333333,
+      "f1": 66.66666666666666,
+      "roc_auc": 0.6665784832451499,
+      "best_val_acc": 63.84976525821596,
+      "per_relation": {
+        "FD": {
+          "accuracy": 61.904761904761905,
+          "count": 63
+        },
+        "FS": {
+          "accuracy": 61.81818181818181,
+          "count": 55
+        },
+        "MD": {
+          "accuracy": 64.44444444444444,
+          "count": 45
+        },
+        "MS": {
+          "accuracy": 68.0,
+          "count": 50
+        }
+      },
+      "per_relation_optimal": {
+        "FD": {
+          "accuracy": 61.904761904761905,
+          "count": 63
+        },
+        "FS": {
+          "accuracy": 67.27272727272727,
+          "count": 55
+        },
+        "MD": {
+          "accuracy": 64.44444444444444,
+          "count": 45
+        },
+        "MS": {
+          "accuracy": 68.0,
+          "count": 50
+        }
+      }
+    },
+    {
+      "fold": 2,
+      "accuracy": 68.07511737089203,
+      "accuracy_optimal": 68.54460093896714,
+      "optimal_threshold": 0.5030962824821472,
+      "youden_j": 0.36500177746178464,
+      "precision": 70.0,
+      "recall": 72.41379310344827,
+      "f1": 71.1864406779661,
+      "roc_auc": 0.7016530394596516,
+      "best_val_acc": 68.07511737089203,
+      "per_relation": {
+        "FD": {
+          "accuracy": 63.04347826086957,
+          "count": 46
+        },
+        "FS": {
+          "accuracy": 60.0,
+          "count": 60
+        },
+        "MD": {
+          "accuracy": 76.27118644067797,
+          "count": 59
+        },
+        "MS": {
+          "accuracy": 72.91666666666666,
+          "count": 48
+        }
+      },
+      "per_relation_optimal": {
+        "FD": {
+          "accuracy": 67.3913043478261,
+          "count": 46
+        },
+        "FS": {
+          "accuracy": 58.333333333333336,
+          "count": 60
+        },
+        "MD": {
+          "accuracy": 76.27118644067797,
+          "count": 59
+        },
+        "MS": {
+          "accuracy": 72.91666666666666,
+          "count": 48
+        }
+      }
+    },
+    {
+      "fold": 3,
+      "accuracy": 71.36150234741784,
+      "accuracy_optimal": 71.83098591549296,
+      "optimal_threshold": 0.4948002099990845,
+      "youden_j": 0.43705799151343705,
+      "precision": 69.6078431372549,
+      "recall": 70.29702970297029,
+      "f1": 69.95073891625616,
+      "roc_auc": 0.7423974540311175,
+      "best_val_acc": 71.36150234741784,
+      "per_relation": {
+        "FD": {
+          "accuracy": 68.42105263157895,
+          "count": 57
+        },
+        "FS": {
+          "accuracy": 75.80645161290323,
+          "count": 62
+        },
+        "MD": {
+          "accuracy": 72.54901960784314,
+          "count": 51
+        },
+        "MS": {
+          "accuracy": 67.44186046511628,
+          "count": 43
+        }
+      },
+      "per_relation_optimal": {
+        "FD": {
+          "accuracy": 66.66666666666666,
+          "count": 57
+        },
+        "FS": {
+          "accuracy": 79.03225806451613,
+          "count": 62
+        },
+        "MD": {
+          "accuracy": 72.54901960784314,
+          "count": 51
+        },
+        "MS": {
+          "accuracy": 67.44186046511628,
+          "count": 43
+        }
+      }
+    },
+    {
+      "fold": 4,
+      "accuracy": 64.01869158878505,
+      "accuracy_optimal": 64.95327102803739,
+      "optimal_threshold": 0.5456963181495667,
+      "youden_j": 0.29906542056074764,
+      "precision": 63.1578947368421,
+      "recall": 67.28971962616822,
+      "f1": 65.15837104072398,
+      "roc_auc": 0.6601449908288933,
+      "best_val_acc": 64.01869158878505,
+      "per_relation": {
+        "FD": {
+          "accuracy": 56.25,
+          "count": 48
+        },
+        "FS": {
+          "accuracy": 65.38461538461539,
+          "count": 78
+        },
+        "MD": {
+          "accuracy": 69.38775510204081,
+          "count": 49
+        },
+        "MS": {
+          "accuracy": 64.1025641025641,
+          "count": 39
+        }
+      },
+      "per_relation_optimal": {
+        "FD": {
+          "accuracy": 54.166666666666664,
+          "count": 48
+        },
+        "FS": {
+          "accuracy": 69.23076923076923,
+          "count": 78
+        },
+        "MD": {
+          "accuracy": 69.38775510204081,
+          "count": 49
+        },
+        "MS": {
+          "accuracy": 64.1025641025641,
+          "count": 39
+        }
+      }
+    }
+  ]
+}
