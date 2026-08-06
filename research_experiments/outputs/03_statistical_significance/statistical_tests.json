@@ -1,0 +1,14 @@
+{
+  "dataset": "Families In the Wild (FIW)",
+  "sample_count": 500,
+  "accuracy": 77.2,
+  "bootstrap_95_ci": [
+    73.6,
+    80.80000000000001
+  ],
+  "mcnemar_chi2": 0.0,
+  "mcnemar_p_value": 1.0,
+  "paired_ttest_stat": 11.535818650215376,
+  "paired_ttest_p_value": 1.871173135162224e-27,
+  "statistically_significant": false
+}

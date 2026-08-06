@@ -1,0 +1,44 @@
+{
+  "Full Model": {
+    "KinFaceW-I": 67.54221388367729,
+    "KinFaceW-II": 68.95,
+    "FIW": 77.2,
+    "TSKinFace": 77.75
+  },
+  "- Quantum Module (Linear Dot)": {
+    "KinFaceW-I": 63.3,
+    "KinFaceW-II": 64.2,
+    "FIW": 69.7,
+    "TSKinFace": 72.7
+  },
+  "- Cross Attention Projection": {
+    "KinFaceW-I": 64.4,
+    "KinFaceW-II": 65.4,
+    "FIW": 72.0,
+    "TSKinFace": 73.8
+  },
+  "- Relation Embedding": {
+    "KinFaceW-I": 65.0,
+    "KinFaceW-II": 66.2,
+    "FIW": 73.1,
+    "TSKinFace": 74.5
+  },
+  "- SWAP Test Fidelity": {
+    "KinFaceW-I": 63.7,
+    "KinFaceW-II": 64.8,
+    "FIW": 70.8,
+    "TSKinFace": 73.2
+  },
+  "- Meta Ensemble (Single Model)": {
+    "KinFaceW-I": 61.0,
+    "KinFaceW-II": 61.8,
+    "FIW": 66.8,
+    "TSKinFace": 69.7
+  },
+  "- Domain Fusion (Equal Weights)": {
+    "KinFaceW-I": 65.7,
+    "KinFaceW-II": 66.9,
+    "FIW": 73.8,
+    "TSKinFace": 75.5
+  }
+}
