@@ -1,0 +1,40 @@
+{
+  "accuracy_standard": 70.45028142589118,
+  "accuracy_optimal": 69.7936210131332,
+  "roc_auc": 0.7672278757713252,
+  "precision": 69.009009009009,
+  "recall": 71.85741088180112,
+  "f1": 70.40441176470588,
+  "confusion": {
+    "tp": 383,
+    "fp": 172,
+    "fn": 150,
+    "tn": 361
+  },
+  "computed_threshold": 0.45301541686058044,
+  "per_relation": {
+    "FD": {
+      "correct": 177,
+      "total": 268,
+      "accuracy": 66.04477611940298
+    },
+    "FS": {
+      "correct": 221,
+      "total": 312,
+      "accuracy": 70.83333333333334
+    },
+    "MD": {
+      "correct": 185,
+      "total": 254,
+      "accuracy": 72.83464566929135
+    },
+    "MS": {
+      "correct": 161,
+      "total": 232,
+      "accuracy": 69.39655172413794
+    }
+  },
+  "kin_mean_fidelity": 0.6242795265078769,
+  "nonkin_mean_fidelity": 0.42588114226149576,
+  "inference_time_seconds": 233.73447160000796
+}

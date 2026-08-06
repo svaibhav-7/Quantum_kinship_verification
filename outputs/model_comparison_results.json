@@ -1,0 +1,48 @@
+{
+  "Model 1: ensemble_kinship_full.pt (Base Ensemble)": {
+    "KinFaceW-I Benchmark": {
+      "n": 1066,
+      "auc": 0.7672278757713252,
+      "acc_05": 70.45028142589118,
+      "acc_opt": 70.91932457786116,
+      "opt_thresh": 0.45301541686058044,
+      "prec_opt": 66.56760772659732,
+      "rec_opt": 84.05253283302065,
+      "f1_opt": 74.29519071310115
+    }
+  },
+  "Model 2: ensemble_kinship_fiw.pt (FIW 5-Fold Ensemble)": {
+    "KinFaceW-I Benchmark": {
+      "n": 1066,
+      "auc": 0.6751510970153719,
+      "acc_05": 61.63227016885553,
+      "acc_opt": 62.94559099437148,
+      "opt_thresh": 0.5403149724006653,
+      "prec_opt": 61.855670103092784,
+      "rec_opt": 67.54221388367729,
+      "f1_opt": 64.57399103139014
+    }
+  },
+  "Model 3: best_checkpoint.pt (Newly Fine-Tuned Model)": {
+    "KinFaceW-I Benchmark": {
+      "n": 1066,
+      "auc": 0.5922985402461904,
+      "acc_05": 56.47279549718574,
+      "acc_opt": 57.692307692307686,
+      "opt_thresh": 0.6548670530319214,
+      "prec_opt": 56.59163987138264,
+      "rec_opt": 66.04127579737336,
+      "f1_opt": 60.952380952380956
+    },
+    "FIW Test Split": {
+      "n": 8932,
+      "auc": 0.7250116770207262,
+      "acc_05": 66.04343931930138,
+      "acc_opt": 66.04343931930138,
+      "opt_thresh": 0.5,
+      "prec_opt": 68.66371450898671,
+      "rec_opt": 59.02373488580385,
+      "f1_opt": 63.4798314268513
+    }
+  }
+}

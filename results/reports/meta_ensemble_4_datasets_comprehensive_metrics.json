@@ -1,0 +1,150 @@
+{
+  "KinFaceW-I Benchmark": {
+    "n_samples": 1066,
+    "roc_auc": 0.7364980692670255,
+    "optimal_threshold": 0.5195879936218262,
+    "optimal_accuracy": 67.7298311444653,
+    "optimal_precision": 65.07177033492823,
+    "optimal_recall": 76.54784240150094,
+    "optimal_f1_score": 70.34482758620689,
+    "confusion_matrix_optimal": [
+      [
+        314,
+        219
+      ],
+      [
+        125,
+        408
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 62.31343283582089,
+        "sample_count": 268
+      },
+      "Father-Son (FS)": {
+        "accuracy": 67.94871794871796,
+        "sample_count": 312
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 74.40944881889764,
+        "sample_count": 254
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 66.37931034482759,
+        "sample_count": 232
+      }
+    }
+  },
+  "KinFaceW-II Benchmark": {
+    "n_samples": 2000,
+    "roc_auc": 0.767435,
+    "optimal_threshold": 0.5490418672561646,
+    "optimal_accuracy": 70.1,
+    "optimal_precision": 68.9622641509434,
+    "optimal_recall": 73.1,
+    "optimal_f1_score": 70.97087378640776,
+    "confusion_matrix_optimal": [
+      [
+        671,
+        329
+      ],
+      [
+        269,
+        731
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 68.8,
+        "sample_count": 500
+      },
+      "Father-Son (FS)": {
+        "accuracy": 69.19999999999999,
+        "sample_count": 500
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 70.0,
+        "sample_count": 500
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 72.39999999999999,
+        "sample_count": 500
+      }
+    }
+  },
+  "TSKinFace Dataset": {
+    "n_samples": 1200,
+    "roc_auc": 0.8397718750000001,
+    "optimal_threshold": 0.6741014122962952,
+    "optimal_accuracy": 76.58333333333334,
+    "optimal_precision": 85.49931600547195,
+    "optimal_recall": 78.125,
+    "optimal_f1_score": 81.64598301763554,
+    "confusion_matrix_optimal": [
+      [
+        294,
+        106
+      ],
+      [
+        175,
+        625
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 80.0,
+        "sample_count": 105
+      },
+      "Father-Son (FS)": {
+        "accuracy": 87.36842105263159,
+        "sample_count": 95
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 69.46107784431138,
+        "sample_count": 501
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 80.96192384769539,
+        "sample_count": 499
+      }
+    }
+  },
+  "Families In the Wild (FIW)": {
+    "n_samples": 500,
+    "roc_auc": 0.8596159999999999,
+    "optimal_threshold": 0.5525639653205872,
+    "optimal_accuracy": 78.0,
+    "optimal_precision": 82.71028037383178,
+    "optimal_recall": 70.8,
+    "optimal_f1_score": 76.29310344827587,
+    "confusion_matrix_optimal": [
+      [
+        213,
+        37
+      ],
+      [
+        73,
+        177
+      ]
+    ],
+    "per_relation_breakdown": {
+      "Father-Daughter (FD)": {
+        "accuracy": 78.84615384615384,
+        "sample_count": 52
+      },
+      "Father-Son (FS)": {
+        "accuracy": 72.88135593220339,
+        "sample_count": 177
+      },
+      "Mother-Daughter (MD)": {
+        "accuracy": 81.38528138528139,
+        "sample_count": 231
+      },
+      "Mother-Son (MS)": {
+        "accuracy": 80.0,
+        "sample_count": 40
+      }
+    }
+  }
+}

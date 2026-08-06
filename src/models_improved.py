@@ -586,3 +586,36 @@ class PairFusionKinshipClassifier(nn.Module):
 
     def forward(self, emb1, emb2, rels):
         return torch.sigmoid(self.forward_logits(emb1, emb2, rels))
+
+
+# =============================================================================
+# 6. META-ENSEMBLE KINSHIP CLASSIFIER (Hierarchical Multi-Domain Fusion)
+# =============================================================================
+
+
+class MetaEnsembleKinshipClassifier(nn.Module):
+    """
+    Meta-Ensemble combining Base Kinship Ensemble (5 folds), FIW Ensemble (5 folds),
+    and Fine-Tuned Checkpoint (1 model) with learned domain weights.
+
+    Provides robust predictions across clean benchmarks and noisy in-the-wild datasets.
+    """
+
+    def __init__(self, ensemble_full, ensemble_fiw, single_fiw, weights=(0.45, 0.35, 0.20)):
+        super().__init__()
+        self.ensemble_full = ensemble_full
+        self.ensemble_fiw = ensemble_fiw
+        self.single_fiw = single_fiw
+        self.register_buffer("weights", torch.tensor(weights, dtype=torch.float32))
+
+    def forward(self, emb1, emb2, rels):
+        w1, w2, w3 = self.weights[0], self.weights[1], self.weights[2]
+        p1 = self.ensemble_full(emb1, emb2, rels)
+        p2 = self.ensemble_fiw(emb1, emb2, rels)
+        p3 = self.single_fiw(emb1, emb2, rels)
+        return w1 * p1 + w2 * p2 + w3 * p3
+
+    def set_weights(self, w1, w2, w3):
+        """Update domain fusion weights dynamically."""
+        total = w1 + w2 + w3
+        self.weights = torch.tensor([w1 / total, w2 / total, w3 / total], dtype=torch.float32)
