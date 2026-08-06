@@ -98,7 +98,7 @@ def generate_pdf_report():
         "This master research report presents a comprehensive empirical evaluation of the <b>Quantum-Inspired "
         "Hierarchical Meta-Ensemble Classifier</b> across 12 distinct priority dimensions required for top-tier journal "
         "publication. The evaluation encompasses 4 major facial kinship datasets (KinFaceW-I, KinFaceW-II, TSKinFace, "
-        "and Families In the Wild). Key results confirm an <b>87.53% ROC-AUC / 83.00% Accuracy on FIW</b>, robust "
+        "and Families In the Wild). Key results confirm an <b>86.00% ROC-AUC / 78.00% Accuracy on FIW</b>, robust "
         "noise immunity under image degradation, clear t-SNE quantum feature separability, and statistically "
         "significant performance gains (p &lt; 0.05)."
     )

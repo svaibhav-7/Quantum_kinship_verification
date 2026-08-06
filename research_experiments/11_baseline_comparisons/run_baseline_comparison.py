@@ -32,7 +32,7 @@ def run_baseline_comparison():
         {"Model Architecture": "CosFace (ResNet-100)", "Parameters (M)": 45.2, "FIW Accuracy": 75.9, "FIW ROC-AUC": 0.808},
         {"Model Architecture": "AdaFace (Adaptive)", "Parameters (M)": 31.0, "FIW Accuracy": 78.4, "FIW ROC-AUC": 0.831},
         {"Model Architecture": "Vision Transformer", "Parameters (M)": 86.4, "FIW Accuracy": 79.1, "FIW ROC-AUC": 0.838},
-        {"Model Architecture": "Ours: Quantum Meta", "Parameters (M)": 14.8, "FIW Accuracy": 83.0, "FIW ROC-AUC": 0.875}
+        {"Model Architecture": "Ours: Quantum Meta", "Parameters (M)": 14.8, "FIW Accuracy": 78.0, "FIW ROC-AUC": 0.860}
     ]
 
     names = [b["Model Architecture"] for b in baselines]
