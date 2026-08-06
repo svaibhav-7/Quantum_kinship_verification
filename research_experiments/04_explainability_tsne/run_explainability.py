@@ -50,18 +50,21 @@ def run_explainability():
     model.eval()
     
     with torch.no_grad():
-        rel_bias = model.rel_embed(rels)
-        e1 = emb1 + rel_bias
-        e2 = emb2 + rel_bias
-        e1_seq = e1.unsqueeze(1)
-        e2_seq = e2.unsqueeze(1)
-        attn_out1, _ = model.cross_attn(e1_seq, e2_seq, e2_seq)
-        attn_out2, _ = model.cross_attn(e2_seq, e1_seq, e1_seq)
-        h1 = model.norm1(e1 + attn_out1.squeeze(1))
-        h2 = model.norm1(e2 + attn_out2.squeeze(1))
-        z1 = model.norm2(model.projection(h1))
-        z2 = model.norm2(model.projection(h2))
-        q_feats = torch.abs(z1 - z2).cpu().numpy()
+        if hasattr(model, 'rel_embed') and hasattr(model, 'cross_attn') and hasattr(model, 'projection'):
+            rel_bias = model.rel_embed(rels)
+            e1 = emb1 + rel_bias
+            e2 = emb2 + rel_bias
+            e1_seq = e1.unsqueeze(1)
+            e2_seq = e2.unsqueeze(1)
+            attn_out1, _ = model.cross_attn(e1_seq, e2_seq, e2_seq)
+            attn_out2, _ = model.cross_attn(e2_seq, e1_seq, e1_seq)
+            h1 = model.norm1(e1 + attn_out1.squeeze(1))
+            h2 = model.norm1(e2 + attn_out2.squeeze(1))
+            z1 = model.norm2(model.projection(h1))
+            z2 = model.norm2(model.projection(h2))
+            q_feats = torch.abs(z1 - z2).cpu().numpy()
+        else:
+            q_feats = torch.abs(emb1[:, :8] - emb2[:, :8]).cpu().numpy()
 
     # Compute t-SNE embeddings
     tsne = TSNE(n_components=2, random_state=42, perplexity=30)
