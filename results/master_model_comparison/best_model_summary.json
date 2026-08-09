@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-08-09 13:42:29",
+  "models": {
+    "ensemble_kinship_full": {
+      "label": "Base Ensemble (5 folds)",
+      "mean_accuracy": 63.04,
+      "mean_roc_auc": 0.7225,
+      "n_accuracy_signals": 7,
+      "n_auc_signals": 3
+    },
+    "meta_ensemble_kinship": {
+      "label": "Meta-Ensemble (11 models)",
+      "mean_accuracy": 75.63,
+      "mean_roc_auc": 0.8388,
+      "n_accuracy_signals": 7,
+      "n_auc_signals": 3
+    },
+    "ensemble_kinship_fiw": {
+      "label": "FIW Ensemble (5 folds)",
+      "mean_accuracy": 68.76,
+      "mean_roc_auc": 0.7904,
+      "n_accuracy_signals": 7,
+      "n_auc_signals": 3
+    },
+    "best_checkpoint": {
+      "label": "Best Checkpoint (1 model)",
+      "mean_accuracy": 70.61,
+      "mean_roc_auc": 0.7988,
+      "n_accuracy_signals": 7,
+      "n_auc_signals": 3
+    }
+  },
+  "ranking": [
+    "meta_ensemble_kinship",
+    "best_checkpoint",
+    "ensemble_kinship_fiw",
+    "ensemble_kinship_full"
+  ],
+  "best_model": "meta_ensemble_kinship",
+  "best_model_label": "Meta-Ensemble (11 models)"
+}

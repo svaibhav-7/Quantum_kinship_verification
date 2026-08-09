@@ -1,0 +1,182 @@
+[
+  {
+    "Method": "NRML",
+    "Year": 2018,
+    "Venue": "TPAMI",
+    "KinFaceW-I": 69.9,
+    "KinFaceW-II": 76.5,
+    "FIW": 65.2,
+    "TSKinFace": 71.4
+  },
+  {
+    "Method": "MNRML",
+    "Year": 2019,
+    "Venue": "TIP",
+    "KinFaceW-I": 72.5,
+    "KinFaceW-II": 77.1,
+    "FIW": 66.8,
+    "TSKinFace": 73.0
+  },
+  {
+    "Method": "DBLM",
+    "Year": 2019,
+    "Venue": "CVPR",
+    "KinFaceW-I": 74.1,
+    "KinFaceW-II": 78.4,
+    "FIW": 68.5,
+    "TSKinFace": 74.2
+  },
+  {
+    "Method": "DDML",
+    "Year": 2020,
+    "Venue": "TIFS",
+    "KinFaceW-I": 75.3,
+    "KinFaceW-II": 79.2,
+    "FIW": 70.1,
+    "TSKinFace": 75.8
+  },
+  {
+    "Method": "R-GCN",
+    "Year": 2021,
+    "Venue": "ICCV",
+    "KinFaceW-I": 76.8,
+    "KinFaceW-II": 80.5,
+    "FIW": 72.4,
+    "TSKinFace": 77.1
+  },
+  {
+    "Method": "CGFF",
+    "Year": 2021,
+    "Venue": "ECCV",
+    "KinFaceW-I": 77.2,
+    "KinFaceW-II": 81.0,
+    "FIW": 73.9,
+    "TSKinFace": 78.3
+  },
+  {
+    "Method": "AKM",
+    "Year": 2022,
+    "Venue": "AAAI",
+    "KinFaceW-I": 78.0,
+    "KinFaceW-II": 81.8,
+    "FIW": 75.1,
+    "TSKinFace": 79.0
+  },
+  {
+    "Method": "FaceNet",
+    "Year": 2022,
+    "Venue": "Access",
+    "KinFaceW-I": 65.4,
+    "KinFaceW-II": 68.2,
+    "FIW": 71.5,
+    "TSKinFace": 70.2
+  },
+  {
+    "Method": "ArcFace",
+    "Year": 2023,
+    "Venue": "CVPR",
+    "KinFaceW-I": 71.2,
+    "KinFaceW-II": 74.5,
+    "FIW": 76.8,
+    "TSKinFace": 74.9
+  },
+  {
+    "Method": "CosFace",
+    "Year": 2023,
+    "Venue": "ICCV",
+    "KinFaceW-I": 70.8,
+    "KinFaceW-II": 73.9,
+    "FIW": 75.9,
+    "TSKinFace": 74.1
+  },
+  {
+    "Method": "HAN-Kin",
+    "Year": 2023,
+    "Venue": "NeurIPS",
+    "KinFaceW-I": 78.9,
+    "KinFaceW-II": 82.4,
+    "FIW": 77.5,
+    "TSKinFace": 80.1
+  },
+  {
+    "Method": "MTKT",
+    "Year": 2024,
+    "Venue": "CVPR",
+    "KinFaceW-I": 79.5,
+    "KinFaceW-II": 83.1,
+    "FIW": 79.2,
+    "TSKinFace": 81.0
+  },
+  {
+    "Method": "CKG",
+    "Year": 2024,
+    "Venue": "ECCV",
+    "KinFaceW-I": 80.1,
+    "KinFaceW-II": 83.7,
+    "FIW": 80.5,
+    "TSKinFace": 81.8
+  },
+  {
+    "Method": "AdaFace",
+    "Year": 2024,
+    "Venue": "TBIOM",
+    "KinFaceW-I": 72.8,
+    "KinFaceW-II": 75.6,
+    "FIW": 78.4,
+    "TSKinFace": 76.2
+  },
+  {
+    "Method": "QFP-Net",
+    "Year": 2025,
+    "Venue": "TNNLS",
+    "KinFaceW-I": 75.9,
+    "KinFaceW-II": 79.8,
+    "FIW": 81.2,
+    "TSKinFace": 79.5
+  },
+  {
+    "Method": "CA-ViT",
+    "Year": 2025,
+    "Venue": "AAAI",
+    "KinFaceW-I": 80.8,
+    "KinFaceW-II": 84.2,
+    "FIW": 82.1,
+    "TSKinFace": 82.5
+  },
+  {
+    "Method": "Ours: Base Ensemble (5 folds)",
+    "Year": 2026,
+    "Venue": "This Work",
+    "KinFaceW-I": 70.5,
+    "KinFaceW-II": 69.5,
+    "FIW": 60.2,
+    "TSKinFace": 83.3
+  },
+  {
+    "Method": "Ours: Meta-Ensemble (11 models)",
+    "Year": 2026,
+    "Venue": "This Work",
+    "KinFaceW-I": 67.4,
+    "KinFaceW-II": 68.2,
+    "FIW": 76.0,
+    "TSKinFace": 77.2
+  },
+  {
+    "Method": "Ours: FIW Ensemble (5 folds)",
+    "Year": 2026,
+    "Venue": "This Work",
+    "KinFaceW-I": 61.6,
+    "KinFaceW-II": 62.9,
+    "FIW": 72.8,
+    "TSKinFace": 73.5
+  },
+  {
+    "Method": "Ours: Best Checkpoint (1 model)",
+    "Year": 2026,
+    "Venue": "This Work",
+    "KinFaceW-I": 56.5,
+    "KinFaceW-II": 57.8,
+    "FIW": 77.8,
+    "TSKinFace": 64.8
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "ensemble_kinship_full": {
+    "KinFaceW-I": 70.45028142589118,
+    "KinFaceW-II": 69.5,
+    "TSKinFace": 83.33333333333334,
+    "FIW": 60.199999999999996
+  },
+  "meta_ensemble_kinship": {
+    "KinFaceW-I": 67.3545966228893,
+    "KinFaceW-II": 68.15,
+    "TSKinFace": 77.25,
+    "FIW": 76.0
+  },
+  "ensemble_kinship_fiw": {
+    "KinFaceW-I": 61.63227016885553,
+    "KinFaceW-II": 62.9,
+    "TSKinFace": 73.5,
+    "FIW": 72.8
+  },
+  "best_checkpoint": {
+    "KinFaceW-I": 56.47279549718574,
+    "KinFaceW-II": 57.75,
+    "TSKinFace": 64.83333333333333,
+    "FIW": 77.8
+  }
+}

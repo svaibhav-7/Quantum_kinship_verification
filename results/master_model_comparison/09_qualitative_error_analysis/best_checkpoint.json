@@ -1,0 +1,34 @@
+{
+  "model": "Best Checkpoint (1 model)",
+  "total_test_pairs": 500,
+  "true_positives": 199,
+  "true_negatives": 190,
+  "false_positives": 60,
+  "false_negatives": 51,
+  "diagnostic_case_studies": {
+    "True Positive": {
+      "pair_idx": 0,
+      "predicted_prob": 0.9974884986877441,
+      "status": "CORRECT KIN DETECTED",
+      "diagnostic_reason": "Clear genetic similarity in upper facial region and aligned frontal pose."
+    },
+    "True Negative": {
+      "pair_idx": 2,
+      "predicted_prob": 0.0005625082412734628,
+      "status": "CORRECT NON-KIN REJECTED",
+      "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low SWAP fidelity."
+    },
+    "False Positive": {
+      "pair_idx": 7,
+      "predicted_prob": 0.9880213141441345,
+      "status": "FALSE POSITIVE ERROR",
+      "diagnostic_reason": "Superficial resemblance due to similar hairstyles, expression, and skin tone."
+    },
+    "False Negative": {
+      "pair_idx": 17,
+      "predicted_prob": 0.03805030509829521,
+      "status": "FALSE NEGATIVE ERROR",
+      "diagnostic_reason": "Borderline prediction caused by age disparity, pose tilt, and background shadows."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "ensemble_kinship_full": {
+    "model": "Base Ensemble (5 folds)",
+    "n": 300,
+    "quantum_separation_gap": -0.6908848285675049,
+    "figure": "tsne_ensemble_kinship_full.png"
+  },
+  "meta_ensemble_kinship": {
+    "model": "Meta-Ensemble (11 models)",
+    "n": 300,
+    "quantum_separation_gap": -0.6908848285675049,
+    "figure": "tsne_meta_ensemble_kinship.png"
+  },
+  "ensemble_kinship_fiw": {
+    "model": "FIW Ensemble (5 folds)",
+    "n": 300,
+    "quantum_separation_gap": -1.637521743774414,
+    "figure": "tsne_ensemble_kinship_fiw.png"
+  },
+  "best_checkpoint": {
+    "model": "Best Checkpoint (1 model)",
+    "n": 300,
+    "quantum_separation_gap": -7.507809162139893,
+    "figure": "tsne_best_checkpoint.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "model": "FIW Ensemble (5 folds)",
+  "dataset": "FIW",
+  "sample_count": 500,
+  "accuracy": 72.8,
+  "bootstrap_95_ci": [
+    68.995,
+    76.4
+  ],
+  "mcnemar_chi2": 4.143884892086331,
+  "mcnemar_p_value": 0.0417851684039221,
+  "paired_ttest_stat": 9.635245966731434,
+  "paired_ttest_p_value": 2.896357746848867e-20,
+  "significant_vs_best_ckpt": true
+}

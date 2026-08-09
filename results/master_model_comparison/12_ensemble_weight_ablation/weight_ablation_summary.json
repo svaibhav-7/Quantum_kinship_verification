@@ -1,0 +1,62 @@
+{
+  "Base Ensemble (5 folds)": {
+    "accuracy": 60.199999999999996,
+    "roc_auc": 0.6919040000000001,
+    "f1_score": 63.35174953959485
+  },
+  "Meta-Ensemble (11 models)": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999,
+    "f1_score": 76.65369649805449
+  },
+  "FIW Ensemble (5 folds)": {
+    "accuracy": 72.8,
+    "roc_auc": 0.817456,
+    "f1_score": 72.46963562753037
+  },
+  "Best Checkpoint (1 model)": {
+    "accuracy": 77.8,
+    "roc_auc": 0.863648,
+    "f1_score": 78.1925343811395
+  },
+  "Equal Weighting (0.33,0.33,0.33)": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999,
+    "f1_score": 76.65369649805449,
+    "weights": [
+      0.333,
+      0.333,
+      0.334
+    ]
+  },
+  "Base-Dominant (0.70,0.20,0.10)": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999,
+    "f1_score": 76.65369649805449,
+    "weights": [
+      0.7,
+      0.2,
+      0.1
+    ]
+  },
+  "FIW-Dominant (0.20,0.70,0.10)": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999,
+    "f1_score": 76.65369649805449,
+    "weights": [
+      0.2,
+      0.7,
+      0.1
+    ]
+  },
+  "Learned Optimal (0.45,0.35,0.20)": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999,
+    "f1_score": 76.65369649805449,
+    "weights": [
+      0.45,
+      0.35,
+      0.2
+    ]
+  }
+}

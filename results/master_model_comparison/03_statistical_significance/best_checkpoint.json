@@ -1,0 +1,15 @@
+{
+  "model": "Best Checkpoint (1 model)",
+  "dataset": "FIW",
+  "sample_count": 500,
+  "accuracy": 77.8,
+  "bootstrap_95_ci": [
+    74.2,
+    81.39999999999999
+  ],
+  "mcnemar_chi2": 0.0,
+  "mcnemar_p_value": 1.0,
+  "paired_ttest_stat": 0.0,
+  "paired_ttest_p_value": 1.0,
+  "significant_vs_best_ckpt": false
+}

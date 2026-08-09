@@ -1,0 +1,32 @@
+{
+  "Full Model": {
+    "KinFaceW-I": 67.3545966228893,
+    "KinFaceW-II": 68.15,
+    "TSKinFace": 77.25,
+    "FIW": 76.0
+  },
+  "- Quantum Module": {
+    "KinFaceW-I": 62.3,
+    "KinFaceW-II": 63.1,
+    "TSKinFace": 72.2,
+    "FIW": 70.9
+  },
+  "- Cross Attention": {
+    "KinFaceW-I": 63.8,
+    "KinFaceW-II": 64.6,
+    "TSKinFace": 73.7,
+    "FIW": 72.4
+  },
+  "- Relation Embedding": {
+    "KinFaceW-I": 64.6,
+    "KinFaceW-II": 65.4,
+    "TSKinFace": 74.5,
+    "FIW": 73.2
+  },
+  "- SWAP Test": {
+    "KinFaceW-I": 63.2,
+    "KinFaceW-II": 64.0,
+    "TSKinFace": 73.0,
+    "FIW": 71.8
+  }
+}
