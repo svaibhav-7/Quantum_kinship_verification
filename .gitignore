@@ -61,6 +61,3 @@ Thumbs.db
 
 # IDE & local agent caches
 .claude/
-
-# Documents
-paper/

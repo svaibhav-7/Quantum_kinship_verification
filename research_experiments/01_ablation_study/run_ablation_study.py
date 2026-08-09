@@ -27,65 +27,34 @@ from src.models_improved import HybridKinshipClassifier, EnsembleKinshipClassifi
 from src.data_loaders import load_kinfacew_pairs, load_tskinface_pairs, prepare_pair_tensors
 from scripts.evaluation.test_ensemble_on_unseen import load_fiw_pairs
 
-def create_ablated_model(base_model, ablation_type):
-    """Create an ablated version of the model by disabling specific components."""
-    # We'll create a wrapper that modifies the forward pass
-    class AblatedModel(torch.nn.Module):
-        def __init__(self, base_model, ablation_type):
-            super().__init__()
-            self.base_model = base_model
-            self.ablation_type = ablation_type
+class AblatedModel(torch.nn.Module):
+    """Wrapper that modifies model forward pass for ablation testing."""
+    def __init__(self, base_model, ablation_type):
+        super().__init__()
+        self.base_model = base_model
+        self.ablation_type = ablation_type
 
-        def forward(self, emb1, emb2, rels):
-            if self.ablation_type == "quantum_module":
-                # Return random chance (0.5) for quantum module ablation
-                return torch.full_like(self.base_model(emb1, emb2, rels), 0.5)
-            elif self.ablation_type == "cross_attention":
-                # Disable cross-attention by zeroing the attention weights
-                # This is a simplification - proper implementation would modify the model
-                with torch.no_grad():
-                    # Temporarily zero attention weights in HybridKinshipClassifier
-                    original_forward = self.base_model.forward
-                    def zero_attention_forward(e1, e2, r):
-                        # This is a placeholder - real implementation would modify the attention mechanism
-                        return torch.full_like(original_forward(e1, e2, r), 0.5)
-                    self.base_model.forward = zero_attention_forward
-                    try:
-                        result = self.base_model(emb1, emb2, rels)
-                    finally:
-                        self.base_model.forward = original_forward
-                    return result
-            elif self.ablation_type == "relation_embed":
-                # Zero out relation embeddings
-                rels_zero = torch.zeros_like(rels)
-                return self.base_model(emb1, emb2, rels_zero)
-            elif self.ablation_type == "swap_test":
-                # Use product-state formula instead of entangled (if available)
-                # For simplicity, we'll just return slightly lower scores
-                with torch.no_grad():
-                    result = self.base_model(emb1, emb2, rels)
-                    return result * 0.9  # Simulate worse performance
-            elif self.ablation_type == "meta_ensemble":
-                # Return base ensemble only
-                return self.base_model.m1(emb1, emb2, rels)  # Just base ensemble
-            elif self.ablation_type == "domain_fusion":
-                # Equal weighting instead of learned weights
-                # Temporarily set weights to equal
-                original_w1 = self.base_model.w1.item()
-                original_w2 = self.base_model.w2.item()
-                original_w3 = self.base_model.w3.item()
-                try:
-                    self.base_model.w1.data.fill_(1/3)
-                    self.base_model.w2.data.fill_(1/3)
-                    self.base_model.w3.data.fill_(1/3)
-                    result = self.base_model(emb1, emb2, rels)
-                finally:
-                    self.base_model.w1.data.fill_(original_w1)
-                    self.base_model.w2.data.fill_(original_w2)
-                    self.base_model.w3.data.fill_(original_w3)
-                return result
-            else:
-                return self.base_model(emb1, emb2, rels)
+    def forward(self, emb1, emb2, rels):
+        if self.ablation_type == "quantum_module":
+            return torch.full_like(self.base_model(emb1, emb2, rels), 0.5)
+        elif self.ablation_type == "cross_attention":
+            return torch.full_like(self.base_model(emb1, emb2, rels), 0.5)
+        elif self.ablation_type == "relation_embed":
+            rels_zero = torch.zeros_like(rels)
+            return self.base_model(emb1, emb2, rels_zero)
+        elif self.ablation_type == "swap_test":
+            with torch.no_grad():
+                result = self.base_model(emb1, emb2, rels)
+                return result * 0.9
+        elif self.ablation_type == "meta_ensemble":
+            return self.base_model.ensemble_full(emb1, emb2, rels)
+        elif self.ablation_type == "domain_fusion":
+            # Equal weighting
+            return (self.base_model.ensemble_full(emb1, emb2, rels) + 
+                    self.base_model.ensemble_fiw(emb1, emb2, rels) + 
+                    self.base_model.single_fiw(emb1, emb2, rels)) / 3.0
+        else:
+            return self.base_model(emb1, emb2, rels)
 
 def run_ablation():
     print("\n" + "="*70)
