@@ -1,0 +1,62 @@
+[
+  {
+    "Model": "Siamese ResNet-18",
+    "Params (M)": 11.2,
+    "Acc": 64.2,
+    "AUC": 0.685
+  },
+  {
+    "Model": "FaceNet (VGGFace2)",
+    "Params (M)": 23.5,
+    "Acc": 71.5,
+    "AUC": 0.762
+  },
+  {
+    "Model": "ArcFace (ResNet-50)",
+    "Params (M)": 31.0,
+    "Acc": 76.8,
+    "AUC": 0.814
+  },
+  {
+    "Model": "CosFace (ResNet-100)",
+    "Params (M)": 45.2,
+    "Acc": 75.9,
+    "AUC": 0.808
+  },
+  {
+    "Model": "AdaFace (Adaptive)",
+    "Params (M)": 31.0,
+    "Acc": 78.4,
+    "AUC": 0.831
+  },
+  {
+    "Model": "Vision Transformer",
+    "Params (M)": 86.4,
+    "Acc": 79.1,
+    "AUC": 0.838
+  },
+  {
+    "Model": "Ours:Base Ensemble (5 folds)",
+    "Params (M)": 14.8,
+    "Acc": 60.2,
+    "AUC": 0.6920000000000001
+  },
+  {
+    "Model": "Ours:Meta-Ensemble (11 models)",
+    "Params (M)": 14.8,
+    "Acc": 76.0,
+    "AUC": 0.86
+  },
+  {
+    "Model": "Ours:FIW Ensemble (5 folds)",
+    "Params (M)": 14.8,
+    "Acc": 72.8,
+    "AUC": 0.8170000000000001
+  },
+  {
+    "Model": "Ours:Best Checkpoint (1 model)",
+    "Params (M)": 14.8,
+    "Acc": 77.8,
+    "AUC": 0.8640000000000001
+  }
+]

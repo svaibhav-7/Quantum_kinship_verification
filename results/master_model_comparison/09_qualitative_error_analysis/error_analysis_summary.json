@@ -1,0 +1,138 @@
+{
+  "ensemble_kinship_full": {
+    "model": "Base Ensemble (5 folds)",
+    "total_test_pairs": 500,
+    "true_positives": 172,
+    "true_negatives": 129,
+    "false_positives": 121,
+    "false_negatives": 78,
+    "diagnostic_case_studies": {
+      "True Positive": {
+        "pair_idx": 1,
+        "predicted_prob": 0.6343146562576294,
+        "status": "CORRECT KIN DETECTED",
+        "diagnostic_reason": "Clear genetic similarity in upper facial region and aligned frontal pose."
+      },
+      "True Negative": {
+        "pair_idx": 6,
+        "predicted_prob": 0.35684776306152344,
+        "status": "CORRECT NON-KIN REJECTED",
+        "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low SWAP fidelity."
+      },
+      "False Positive": {
+        "pair_idx": 2,
+        "predicted_prob": 0.8027404546737671,
+        "status": "FALSE POSITIVE ERROR",
+        "diagnostic_reason": "Superficial resemblance due to similar hairstyles, expression, and skin tone."
+      },
+      "False Negative": {
+        "pair_idx": 0,
+        "predicted_prob": 0.45867806673049927,
+        "status": "FALSE NEGATIVE ERROR",
+        "diagnostic_reason": "Borderline prediction caused by age disparity, pose tilt, and background shadows."
+      }
+    }
+  },
+  "meta_ensemble_kinship": {
+    "model": "Meta-Ensemble (11 models)",
+    "total_test_pairs": 500,
+    "true_positives": 197,
+    "true_negatives": 183,
+    "false_positives": 67,
+    "false_negatives": 53,
+    "diagnostic_case_studies": {
+      "True Positive": {
+        "pair_idx": 0,
+        "predicted_prob": 0.6472357511520386,
+        "status": "CORRECT KIN DETECTED",
+        "diagnostic_reason": "Clear genetic similarity in upper facial region and aligned frontal pose."
+      },
+      "True Negative": {
+        "pair_idx": 6,
+        "predicted_prob": 0.28166890144348145,
+        "status": "CORRECT NON-KIN REJECTED",
+        "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low SWAP fidelity."
+      },
+      "False Positive": {
+        "pair_idx": 2,
+        "predicted_prob": 0.5466238260269165,
+        "status": "FALSE POSITIVE ERROR",
+        "diagnostic_reason": "Superficial resemblance due to similar hairstyles, expression, and skin tone."
+      },
+      "False Negative": {
+        "pair_idx": 4,
+        "predicted_prob": 0.4922868013381958,
+        "status": "FALSE NEGATIVE ERROR",
+        "diagnostic_reason": "Borderline prediction caused by age disparity, pose tilt, and background shadows."
+      }
+    }
+  },
+  "ensemble_kinship_fiw": {
+    "model": "FIW Ensemble (5 folds)",
+    "total_test_pairs": 500,
+    "true_positives": 179,
+    "true_negatives": 185,
+    "false_positives": 65,
+    "false_negatives": 71,
+    "diagnostic_case_studies": {
+      "True Positive": {
+        "pair_idx": 0,
+        "predicted_prob": 0.6895226836204529,
+        "status": "CORRECT KIN DETECTED",
+        "diagnostic_reason": "Clear genetic similarity in upper facial region and aligned frontal pose."
+      },
+      "True Negative": {
+        "pair_idx": 6,
+        "predicted_prob": 0.3459068238735199,
+        "status": "CORRECT NON-KIN REJECTED",
+        "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low SWAP fidelity."
+      },
+      "False Positive": {
+        "pair_idx": 2,
+        "predicted_prob": 0.529366135597229,
+        "status": "FALSE POSITIVE ERROR",
+        "diagnostic_reason": "Superficial resemblance due to similar hairstyles, expression, and skin tone."
+      },
+      "False Negative": {
+        "pair_idx": 1,
+        "predicted_prob": 0.2734023630619049,
+        "status": "FALSE NEGATIVE ERROR",
+        "diagnostic_reason": "Borderline prediction caused by age disparity, pose tilt, and background shadows."
+      }
+    }
+  },
+  "best_checkpoint": {
+    "model": "Best Checkpoint (1 model)",
+    "total_test_pairs": 500,
+    "true_positives": 199,
+    "true_negatives": 190,
+    "false_positives": 60,
+    "false_negatives": 51,
+    "diagnostic_case_studies": {
+      "True Positive": {
+        "pair_idx": 0,
+        "predicted_prob": 0.9974884986877441,
+        "status": "CORRECT KIN DETECTED",
+        "diagnostic_reason": "Clear genetic similarity in upper facial region and aligned frontal pose."
+      },
+      "True Negative": {
+        "pair_idx": 2,
+        "predicted_prob": 0.0005625082412734628,
+        "status": "CORRECT NON-KIN REJECTED",
+        "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low SWAP fidelity."
+      },
+      "False Positive": {
+        "pair_idx": 7,
+        "predicted_prob": 0.9880213141441345,
+        "status": "FALSE POSITIVE ERROR",
+        "diagnostic_reason": "Superficial resemblance due to similar hairstyles, expression, and skin tone."
+      },
+      "False Negative": {
+        "pair_idx": 17,
+        "predicted_prob": 0.03805030509829521,
+        "status": "FALSE NEGATIVE ERROR",
+        "diagnostic_reason": "Borderline prediction caused by age disparity, pose tilt, and background shadows."
+      }
+    }
+  }
+}

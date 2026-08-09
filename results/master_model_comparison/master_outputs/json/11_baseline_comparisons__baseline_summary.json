@@ -1,0 +1,18 @@
+{
+  "ensemble_kinship_full": {
+    "accuracy": 60.199999999999996,
+    "roc_auc": 0.6919040000000001
+  },
+  "meta_ensemble_kinship": {
+    "accuracy": 76.0,
+    "roc_auc": 0.8596159999999999
+  },
+  "ensemble_kinship_fiw": {
+    "accuracy": 72.8,
+    "roc_auc": 0.817456
+  },
+  "best_checkpoint": {
+    "accuracy": 77.8,
+    "roc_auc": 0.863648
+  }
+}

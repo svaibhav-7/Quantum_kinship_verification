@@ -38,7 +38,7 @@
   {
     "Model Architecture": "Ours: Quantum Meta",
     "Parameters (M)": 14.8,
-    "FIW Accuracy": 83.0,
-    "FIW ROC-AUC": 0.875
+    "FIW Accuracy": 78.0,
+    "FIW ROC-AUC": 0.86
   }
 ]

@@ -3,9 +3,9 @@
   "Meta Ensemble Total Parameters": 13756600,
   "Parameter Memory Footprint (FP32 MB)": 52.48,
   "Estimated GFLOPs per Pair": 0.042,
-  "Single Pair Latency (CPU ms)": 209.77,
-  "Single Pair Throughput (FPS)": 4.8,
-  "Batch-128 Total Latency (ms)": 14976.27,
-  "Batch-128 Per-Pair Latency (ms)": 117.0,
-  "Batch-128 Throughput (FPS)": 8.5
+  "Single Pair Latency (CPU ms)": 123.18,
+  "Single Pair Throughput (FPS)": 8.1,
+  "Batch-128 Total Latency (ms)": 8289.72,
+  "Batch-128 Per-Pair Latency (ms)": 64.76,
+  "Batch-128 Throughput (FPS)": 15.4
 }

@@ -1,0 +1,9 @@
+{
+  "parameters": 1250600,
+  "memory_footprint_mb": 4.77,
+  "single_pair_latency_ms": 31.65,
+  "single_pair_fps": 31.6,
+  "batch128_total_ms": 1308.57,
+  "batch128_per_pair_ms": 10.22,
+  "batch128_fps": 97.8
+}

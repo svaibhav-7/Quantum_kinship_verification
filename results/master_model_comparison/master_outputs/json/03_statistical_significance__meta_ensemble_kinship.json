@@ -1,0 +1,15 @@
+{
+  "model": "Meta-Ensemble (11 models)",
+  "dataset": "FIW",
+  "sample_count": 500,
+  "accuracy": 76.0,
+  "bootstrap_95_ci": [
+    72.6,
+    79.80000000000001
+  ],
+  "mcnemar_chi2": 0.9014084507042254,
+  "mcnemar_p_value": 0.3424043343095283,
+  "paired_ttest_stat": 11.535818042420887,
+  "paired_ttest_p_value": 1.8711835690049404e-27,
+  "significant_vs_best_ckpt": false
+}
