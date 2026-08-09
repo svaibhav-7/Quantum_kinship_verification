@@ -40,9 +40,14 @@ def apply_embedding_perturbation(emb_tensor, noise_type, severity):
         noise = np.random.normal(0, 0.03 * severity, emb_np.shape)
         degraded = emb_np + noise
     elif noise_type == "Gaussian Blur":
-        # NOTE: This is actually just scaling, not true blurring
-        # In embedding space, true blurring would require re-running the CNN
-        degraded = emb_np * (1.0 - 0.05 * severity)
+        # 1D Gaussian smoothing across embedding dimensions
+        kernel_size = max(3, 2 * severity + 1)
+        sigma = 0.5 * severity + 0.1
+        k = np.exp(-0.5 * (np.arange(kernel_size) - kernel_size // 2) ** 2 / (sigma ** 2))
+        k = k / k.sum()
+        degraded = np.zeros_like(emb_np)
+        for i in range(emb_np.shape[0]):
+            degraded[i] = np.convolve(emb_np[i], k, mode='same')
     elif noise_type == "JPEG Compression":
         # Quantization-like effect
         factor = 10.0 / (severity + 1e-5)

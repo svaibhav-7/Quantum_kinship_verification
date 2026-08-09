@@ -83,14 +83,26 @@ def run_ablation():
         print(f"  [WARNING] Error loading KinFaceW/TSKinFace datasets: {e}")
         k1_t = k2_t = ts_t = None
 
-    try:
-        fiw_cache_path = os.path.join(project_root, "weights", "caches", "fiw_emb_cache.pkl")
-        with open(fiw_cache_path, "rb") as f:
-            fiw_cache = pickle.load(f)
+    fiw_cache_paths = [
+        os.path.join(project_root, "weights", "caches", "fiw_emb_cache.pkl"),
+        os.path.join(project_root, "outputs", "fiw_retraining_improved", "fiw_improved_cache.pkl"),
+        os.path.join(project_root, "weights", "caches", "embeddings_cache.pkl"),
+    ]
+    fiw_cache = {}
+    for p in fiw_cache_paths:
+        if os.path.exists(p):
+            try:
+                with open(p, "rb") as f:
+                    fiw_cache = pickle.load(f)
+                print(f"  Loaded FIW cache from {p}")
+                break
+            except Exception:
+                pass
+
+    if fiw_cache:
         norm_fiw = {os.path.normcase(os.path.abspath(k)): v for k, v in fiw_cache.items()}
         fiw_t = prepare_pair_tensors(load_fiw_pairs(os.path.join(project_root, "public"), max_pairs=500), norm_fiw)
-    except Exception as e:
-        print(f"  [WARNING] Error loading FIW dataset: {e}")
+    else:
         fiw_t = None
 
     datasets = {}
