@@ -128,7 +128,7 @@ def load_fiw_pairs(fiw_root, max_pairs=None):
                     if code == 1:
                         child_id, parent_id = m1, m2
                     else:
-                        parent_id, child_id = m1, m1
+                        parent_id, child_id = m1, m2
 
                     parent_gender = genders.get(parent_id, "m")
                     child_gender = genders.get(child_id, "f")

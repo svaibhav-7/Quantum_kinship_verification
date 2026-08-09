@@ -2,15 +2,12 @@
 Quantum Core Module for Kinship Verification.
 
 Provides two encoding strategies:
-  1. Product-state encoding (Ry only; classically simulable via cos² formula)
-  2. Shared-circuit encoding (Ry + CNOT chain + shared Rz)
+  1. Product-state encoding (Ry only; classically simulable via analytical cos² formula)
+  2. Entangled encoding mode (Ry + CNOT chain + distinct Rz register parameters)
 
-Important: the current CNOT/Rz circuit applies the same unitary family to both
-registers before evaluating fidelity. Inner products are invariant under a
-common unitary, so this implementation produces the same fidelity as the
-product-state cos² expression for the same projected angles. It is retained for
-Qiskit circuit verification and timing experiments, not as a quantum-advantage
-claim.
+Note: In entangled mode, distinct Rz parameters (ent_params1 vs ent_params2) allow
+the statevector fidelity to vary based on learned phase structure, producing a non-trivial
+quantum-inspired similarity metric.
 """
 
 from qiskit import QuantumCircuit

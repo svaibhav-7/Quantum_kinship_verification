@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 MASTER RESEARCH RUNNER — SEQUENTIAL EXECUTION OF ALL 12 PRIORITY MODULES
-Executes Module 1 through Module 12 sequentially, aggregates outputs, copies figures to artifacts,
-and compiles the final PDF and Markdown master report.
+Executes Module 1 through Module 12 sequentially, aggregates outputs.
+NOTE: This version has been corrected to remove hard-coded paths and focus on local reproducibility.
 """
 
 import os
 import sys
-import shutil
 import time
 import importlib
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
-brain_dir = r"C:\Users\svrao\.gemini\antigravity-ide\brain\a7cfb6c9-bc14-475d-823d-b240d3fe6363"
 
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -66,28 +64,42 @@ def main():
     # Module 12
     run_module_by_path("research_experiments.12_ensemble_weight_ablation.run_weight_ablation", "run_weight_ablation")
 
-    # Copy all PNG figures to brain artifact directory
+    # Count output files for reporting
     outputs_dir = os.path.join(current_dir, "outputs")
-    os.makedirs(brain_dir, exist_ok=True)
     png_count = 0
-    for root, _, files in os.walk(outputs_dir):
-        for f in files:
-            if f.endswith(".png"):
-                src_path = os.path.join(root, f)
-                dst_path = os.path.join(brain_dir, f)
-                shutil.copy(src_path, dst_path)
-                png_count += 1
+    json_count = 0
+    if os.path.exists(outputs_dir):
+        for root, _, files in os.walk(outputs_dir):
+            for f in files:
+                if f.endswith(".png"):
+                    png_count += 1
+                elif f.endswith(".json"):
+                    json_count += 1
 
-    print(f"\n[COPIED {png_count} PNG FIGURES TO ARTIFACT DIRECTORY]")
+    print(f"\n[OUTPUT STATS] {png_count} PNG figures, {json_count} JSON results in {outputs_dir}")
 
     # Generate Master PDF & Markdown Report
-    mod_rep = importlib.import_module("research_experiments.master_report_generator")
-    mod_rep.generate_pdf_report()
+    try:
+        mod_rep = importlib.import_module("research_experiments.master_report_generator")
+        mod_rep.generate_pdf_report()
+    except Exception as e:
+        print(f"  [WARNING] Could not generate master report: {e}")
 
     t_end = time.time()
     print("\n=================================================================")
     print(f" [SUCCESS] ALL 12 PRIORITY MODULES EXECUTED IN {t_end - t_start:.2f} SECONDS!")
-    print("=================================================================\n")
+    print("=================================================================")
+    print("")
+    print("NEXT STEPS FOR REPRODUCIBLE RESEARCH:")
+    print("1. Verify all outputs are in research_experiments/outputs/")
+    print("2. Check master_research_summary.md for limitations and next steps")
+    print("3. Address known issues before attempting publication:")
+    print("   - FIW dataset contamination (same-person pairs)")
+    print("   - Data leakage in training/test splits")
+    print("   - FaceNet preprocessing mismatches")
+    print("   - TSKinFace label errors")
+    print("   - Need for retraining with corrected pipelines")
+    print("")
 
 if __name__ == "__main__":
     main()

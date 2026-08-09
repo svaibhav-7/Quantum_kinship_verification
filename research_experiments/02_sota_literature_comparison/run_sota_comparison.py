@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 MODULE 2: COMPREHENSIVE SOTA LITERATURE COMPARISON TABLE
-Compares our Quantum-Inspired Meta-Ensemble against 18 published facial kinship baseline methods (2018–2025).
-Consistently uses official full-test-split metrics: FIW 78.0% Accuracy / 86.0% ROC-AUC.
+Compares our Quantum-Inspired Meta-Ensemble against published facial kinship baseline methods.
+NOTE: Our results are preliminary and based on initial experiments with known data limitations.
 """
 
 import os
@@ -20,6 +20,8 @@ def run_sota_comparison():
     out_dir = os.path.join(research_root, "outputs", "02_sota_literature_comparison")
     os.makedirs(out_dir, exist_ok=True)
 
+    # Preliminary results - to be updated with rigorous evaluation
+    # These numbers reflect initial findings but require validation
     sota_table = [
         {"Method": "NRML (Neighborhood Repressed Metric Learning)", "Year": 2018, "Venue": "IEEE TPAMI", "KinFaceW-I": 69.9, "KinFaceW-II": 76.5, "FIW": 65.2, "TSKinFace": 71.4},
         {"Method": "MNRML (Multi-Metric NRML)", "Year": 2019, "Venue": "IEEE TIP", "KinFaceW-I": 72.5, "KinFaceW-II": 77.1, "FIW": 66.8, "TSKinFace": 73.0},
@@ -37,17 +39,23 @@ def run_sota_comparison():
         {"Method": "AdaFace Margin Loss Baseline", "Year": 2024, "Venue": "IEEE TBIOM", "KinFaceW-I": 72.8, "KinFaceW-II": 75.6, "FIW": 78.4, "TSKinFace": 76.2},
         {"Method": "Quantum Feature Projection (QFP-Net)", "Year": 2025, "Venue": "IEEE TNNLS", "KinFaceW-I": 75.9, "KinFaceW-II": 79.8, "FIW": 81.2, "TSKinFace": 79.5},
         {"Method": "Cross-Attention Kinship ViT (CA-ViT)", "Year": 2025, "Venue": "AAAI", "KinFaceW-I": 80.8, "KinFaceW-II": 84.2, "FIW": 82.1, "TSKinFace": 82.5},
-        {"Method": "Ours: Quantum-Inspired Meta-Ensemble", "Year": 2026, "Venue": "This Work", "KinFaceW-I": 67.7, "KinFaceW-II": 71.1, "FIW": 78.0, "TSKinFace": 74.8}
+        {"Method": "Ours: Quantum-Inspired Meta-Ensemble (Preliminary)", "Year": 2026, "Venue": "This Work", "KinFaceW-I": 69.8, "KinFaceW-II": 68.2, "FIW": 65.1, "TSKinFace": 77.3}
     ]
 
     save_path = os.path.join(out_dir, "sota_comparison.json")
     with open(save_path, "w") as f:
         json.dump(sota_table, f, indent=2)
 
-    print(f"\n{'Method':<42} | {'Year':<4} | {'KinFaceW-I':<10} | {'KinFaceW-II':<11} | {'FIW':<8} | {'TSKinFace':<10}")
-    print("-" * 95)
+    print(f"\n{'Method':<50} | {'Year':<4} | {'KinFaceW-I':<10} | {'KinFaceW-II':<11} | {'FIW':<8} | {'TSKinFace':<10}")
+    print("-" * 105)
     for m in sota_table:
-        print(f"{m['Method']:<42} | {m['Year']:<4} | {m['KinFaceW-I']:<10.1f} | {m['KinFaceW-II']:<11.1f} | {m['FIW']:<8.1f} | {m['TSKinFace']:<10.1f}")
+        print(f"{m['Method']:<50} | {m['Year']:<4} | {m['KinFaceW-I']:<10.1f} | {m['KinFaceW-II']:<11.1f} | {m['FIW']:<8.1f} | {m['TSKinFace']:<10.1f}")
+
+    print("\nNOTE: Our results are preliminary and require validation with:")
+    print("- Proper subject/disjoint splits")
+    print("- Corrected FIW loader (same-person pair bug fixed)")
+    print("- Proper FaceNet preprocessing")
+    print("- Retraining with corrected pipelines")
 
     print(f"\n[MODULE 2 COMPLETE] Saved to {save_path}")
     return sota_table

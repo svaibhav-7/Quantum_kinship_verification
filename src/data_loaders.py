@@ -24,17 +24,19 @@ def resolve_image_path(path):
     return None
 
 
-def load_kinfacew_pairs(root):
+def load_kinfacew_pairs(root, fold=None):
     """
     Parses KinFaceW-I or KinFaceW-II datasets and returns lists of image paths and labels.
+    Preserves official 5-fold cross-validation assignments from meta_data .mat files.
 
     Args:
-        root (str): Absolute path to the KinFaceW-I or KinFaceW-II root folder (which contains images/ and meta_data/).
+        root (str): Absolute path to the KinFaceW-I or KinFaceW-II root folder.
+        fold (int, optional): Filter by official fold index (1 to 5). If None, loads all folds.
 
     Returns:
-        pairs (list of tuples): List of (img1_path, img2_path, label, relation_type)
+        pairs (list of tuples): List of (img1_path, img2_path, label, relation_type, fold)
     """
-    # Auto-detect nested root directories (e.g., KinFaceW-II/KinFaceW-II or KinFaceW-I/KinFaceW-I)
+    # Auto-detect nested root directories
     if os.path.exists(root):
         base_name = os.path.basename(root.rstrip("/\\"))
         nested = os.path.join(root, base_name)
@@ -64,7 +66,11 @@ def load_kinfacew_pairs(root):
 
         for row in pairs:
             # mat file format:
-            # row[0]: fold, row[1]: label (1=kin, 0=non-kin), row[2]: img1, row[3]: img2
+            # row[0]: fold (1..5), row[1]: label (1=kin, 0=non-kin), row[2]: img1, row[3]: img2
+            row_fold = int(row[0].flat[0])
+            if fold is not None and row_fold != fold:
+                continue
+
             label = int(row[1].flat[0])
             img1 = str(row[2].flat[0])
             img2 = str(row[3].flat[0])
@@ -135,24 +141,28 @@ def load_tskinface_pairs(root, max_families=200):
             child_embs_paths.append(c_path)
 
     # Generate Non-kin pairs: cross-match parents and children (label = 0)
-    # We pair random parents and random children from different families to avoid accidental kin
+    # We pair random parents and random children from different families to reach 1:1 class balance
     n_kin = len(pairs_list)
     rng = np.random.default_rng(42)
     added = 0
+    seen_pairs = set()
 
-    # Simple pairing: shuffle parents and children and combine
-    shuffled_parents = list(parent_embs_paths)
-    shuffled_children = list(child_embs_paths)
+    max_attempts = n_kin * 10
+    attempts = 0
 
-    while added < n_kin and len(shuffled_parents) > 0 and len(shuffled_children) > 0:
-        p_idx = rng.integers(0, len(shuffled_parents))
-        c_idx = rng.integers(0, len(shuffled_children))
+    while added < n_kin and attempts < max_attempts:
+        attempts += 1
+        p_idx = rng.integers(0, len(parent_embs_paths))
+        c_idx = rng.integers(0, len(child_embs_paths))
 
-        p_path = shuffled_parents[p_idx]
-        c_path = shuffled_children[c_idx]
+        p_path = parent_embs_paths[p_idx]
+        c_path = child_embs_paths[c_idx]
+
+        pair_key = (p_path, c_path)
+        if pair_key in seen_pairs:
+            continue
 
         # Ensure they are not from the same family
-        # Path format: .../FMS/FMS-fid-F.jpg and .../FMS/FMS-fid-S.jpg
         p_fid = os.path.basename(p_path).split("-")[1]
         c_fid = os.path.basename(c_path).split("-")[1]
         p_folder = os.path.basename(os.path.dirname(p_path))
@@ -160,11 +170,8 @@ def load_tskinface_pairs(root, max_families=200):
 
         if p_fid != c_fid or p_folder != c_folder:
             pairs_list.append((p_path, c_path, 0, "ts_non_kin"))
+            seen_pairs.add(pair_key)
             added += 1
-            # Remove to avoid repeated exact duplicates
-            shuffled_parents.pop(p_idx)
-            if len(shuffled_children) > c_idx:
-                shuffled_children.pop(c_idx)
 
     return pairs_list
 
@@ -253,13 +260,23 @@ def get_relation_category(rel_str, p_path=None):
     3: Mother-Son (ms)
     """
     rel_str = rel_str.lower()
-    if "fd" in rel_str or "father-dau" in rel_str:
+    # Handle explicit TSKinFace relation strings first to avoid substring collision
+    if "fmd_fc" in rel_str:
+        return 0  # Father-Daughter
+    elif "fms_fc" in rel_str:
+        return 1  # Father-Son
+    elif "fmd_mc" in rel_str:
+        return 2  # Mother-Daughter
+    elif "fms_mc" in rel_str:
+        return 3  # Mother-Son
+    # Handle standard 2-letter and descriptive tokens
+    elif "father-dau" in rel_str or "father_dau" in rel_str or rel_str.endswith("fd") or "fd" in rel_str.split("_"):
         return 0
-    elif "fs" in rel_str or "father-son" in rel_str:
+    elif "father-son" in rel_str or "father_son" in rel_str or rel_str.endswith("fs") or "fs" in rel_str.split("_"):
         return 1
-    elif "md" in rel_str or "mother-dau" in rel_str:
+    elif "mother-dau" in rel_str or "mother_dau" in rel_str or rel_str.endswith("md") or "md" in rel_str.split("_"):
         return 2
-    elif "ms" in rel_str or "mother-son" in rel_str:
+    elif "mother-son" in rel_str or "mother_son" in rel_str or rel_str.endswith("ms") or "ms" in rel_str.split("_"):
         return 3
     elif "ts_non_kin" in rel_str and p_path is not None:
         # Determine based on parent type in TSKinFace

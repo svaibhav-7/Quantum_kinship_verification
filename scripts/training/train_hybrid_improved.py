@@ -674,11 +674,11 @@ def main():
             val_idx = indices[val_start:val_end]
             remaining_idx = np.concatenate([indices[:val_start], indices[val_end:]])
 
-            # Augment training data with other test folds
-            fold_train_e1 = torch.cat([train_emb1, test_emb1[remaining_idx]], dim=0)
-            fold_train_e2 = torch.cat([train_emb2, test_emb2[remaining_idx]], dim=0)
-            fold_train_y = torch.cat([train_y, test_y[remaining_idx]], dim=0)
-            fold_train_r = torch.cat([train_rel, test_rel[remaining_idx]], dim=0)
+            # Train cleanly on training dataset (KFW2 + TSKinFace) without leaking test fold samples
+            fold_train_e1 = train_emb1
+            fold_train_e2 = train_emb2
+            fold_train_y = train_y
+            fold_train_r = train_rel
 
             fold_val_e1 = test_emb1[val_idx]
             fold_val_e2 = test_emb2[val_idx]

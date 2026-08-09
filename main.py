@@ -13,7 +13,7 @@ import numpy as np
 # Add project root to path so 'src' can be resolved by IDEs and when running from subdirectories
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.models import FaceFeatureExtractor, HybridKinshipClassifier
+from src.models_improved import FaceFeatureExtractor, HybridKinshipClassifier
 from src.quantum_core import simulate_swap_test, simulate_entangled_swap_test
 from src.data_loaders import get_relation_category
 

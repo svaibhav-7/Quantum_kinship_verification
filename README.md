@@ -41,7 +41,7 @@ The repository houses a **Master 12-Module Evaluation Suite** (`research_experim
 
 ### 1. Literature SOTA Benchmark Comparison (Module 2)
 
-| Method / Paper | Year | Venue | KinFaceW-I | KinFaceW-II | **FIW (Large Unconstrained)** | TSKinFace |
+| Method / Paper | Year | Venue | KinFaceW-I | KinFaceW-II | **FIW (Unconstrained)** | TSKinFace |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | NRML (Neighborhood Repressed Metric Learning) | 2018 | IEEE TPAMI | 69.9% | 76.5% | 65.2% | 71.4% |
 | MNRML (Multi-Metric NRML) | 2019 | IEEE TIP | 72.5% | 77.1% | 66.8% | 73.0% |
@@ -55,9 +55,8 @@ The repository houses a **Master 12-Module Evaluation Suite** (`research_experim
 | Hierarchical Attention Network (HAN-Kin) | 2023 | NeurIPS | 78.9% | 82.4% | 77.5% | 80.1% |
 | Multi-Task Kinship Transformer (MTKT) | 2024 | CVPR | 79.5% | 83.1% | 79.2% | 81.0% |
 | Contrastive Kinship Graph (CKG) | 2024 | ECCV | 80.1% | 83.7% | 80.5% | 81.8% |
-| **Ours: Quantum-Inspired Meta-Ensemble** | **2026** | **This Work** | **67.7%** | **71.1%** | **78.0% (86.0% ROC-AUC)** | **74.8%** |
-
-*Note: On FIW (the largest and most realistic modern benchmark), our Quantum Meta-Ensemble achieves **78.0% Accuracy / 86.0% ROC-AUC** (reaching **83.0% Accuracy / 87.5% ROC-AUC** on balanced subsets at calibrated threshold $\tau=0.4770$), outperforming standard baselines like ArcFace (76.8%) and CosFace (75.9%).*
+| **Ours: Quantum-Inspired Base Ensemble** | **2026** | **This Work** | **70.5%** | **69.5%** | **60.2%** | **83.3%** |
+| **Ours: Quantum-Inspired Meta-Ensemble** | **2026** | **This Work** | **67.4%** | **68.2%** | **76.0% (0.860 ROC-AUC)** | **77.2%** |
 
 ---
 
@@ -65,32 +64,33 @@ The repository houses a **Master 12-Module Evaluation Suite** (`research_experim
 
 | Model Architecture | Parameters (M) | Memory FP32 (MB) | FIW Accuracy | FIW ROC-AUC |
 | :--- | :---: | :---: | :---: | :---: |
-| Siamese CNN Baseline | 4.2 M | 16.8 MB | 64.2% | 0.685 |
+| Siamese ResNet-18 | 11.2 M | 44.8 MB | 64.2% | 0.685 |
 | FaceNet (Inception-ResNet-v1) | 23.5 M | 94.0 MB | 71.5% | 0.762 |
 | CosFace (ResNet-100) | 45.2 M | 180.8 MB | 75.9% | 0.808 |
-| ArcFace (ResNet-100) | 45.2 M | 180.8 MB | 76.8% | 0.819 |
+| ArcFace (ResNet-50) | 31.0 M | 124.0 MB | 76.8% | 0.814 |
 | AdaFace (Adaptive Margin) | 31.0 M | 124.0 MB | 78.4% | 0.831 |
 | Vision Transformer (ViT-Base) | 86.4 M | 345.6 MB | 79.1% | 0.838 |
-| **Ours: Quantum Meta-Ensemble** | **14.8 M** | **56.5 MB** | **78.0% (83.0% Calibrated)** | **0.860 (0.875 Calibrated)** |
+| **Ours: Single Best Checkpoint** | **1.25 M** | **4.77 MB** | **77.8%** | **0.864** |
+| **Ours: Quantum Meta-Ensemble** | **13.76 M** | **52.48 MB** | **76.0% (66.0% Family-Disjoint)** | **0.860** |
 
 ---
 
-### 3. Summary of 12 Priority Research Evaluation Modules
+### 3. Summary of Priority Research Evaluation Modules
 
 | Module # | Focus Area | Key Empirical Result | Generated Artifact |
 | :---: | :--- | :--- | :--- |
-| **01** | Architectural Ablation | Removing Quantum Module drops FIW accuracy by **7.5%**; removing Meta-Ensemble drops accuracy by **10.4%**. | `ablation_study_bar_chart.png` |
-| **02** | SOTA Comparison | Evaluates against 18 published baselines (2018–2025). | `sota_comparison.json` |
-| **03** | Statistical Significance | **McNemar's Test ($p = 2.15 \times 10^{-12}$)** and Paired t-test ($p = 2.91 \times 10^{-13}$) confirm gains are highly significant. | `statistical_tests.json` |
-| **04** | Explainability & t-SNE | 2D t-SNE scatter plots show clear cluster separation **After Quantum Hilbert Space Projection**. | `tsne_feature_space_separation.png` |
-| **05** | ROC & PR Curves | High discrimination capacity across datasets (**FIW ROC-AUC: 86.0%**). | `roc_pr_curves_combined.png` |
-| **06** | Threshold Sensitivity | Optimal Youden decision threshold calibrated at $\tau = 0.4776$. | `threshold_sensitivity_curves.png` |
-| **07** | Robustness & Noise | Evaluates degradation across 6 noise types (Blur, JPEG, Occlusion, Noise, Brightness, Rotation) at 5 severity levels. | `robustness_degradation_curves.png` |
-| **08** | Efficiency & Complexity | **14.8M parameters**, **56.5 MB footprint**, **0.042 GFLOPs**, **22.9 ms CPU latency**, **3.2 ms batch-128 latency (~310 FPS)**. | `computational_efficiency.json` |
-| **09** | Qualitative Error Diagnostics | Diagnostics for True Positive, True Negative, False Positive, and False Negative failure modes. | `error_analysis.json` |
-| **10** | Cross-Dataset Matrix | Full $4 \times 4$ Train Domain $\rightarrow$ Test Domain transfer generalization matrix heatmap. | `cross_dataset_heatmap.png` |
-| **11** | Deep Learning Baselines | Outperforms ArcFace, CosFace, and FaceNet while using **$3 \times$ fewer parameters** than ResNet-100. | `baseline_models_comparison.png` |
-| **12** | Weight Strategy Ablation | Compares Equal Weights (79.6%) vs Base-dominant (71.8%) vs Learned Optimal $(0.45, 0.35, 0.20)$ (**83.0%**). | `fusion_weights_ablation_chart.png` |
+| **01** | Architectural Ablation | Removing Meta-Ensemble drops FIW accuracy by **10.4%**; removing Quantum Module drops accuracy by **7.5%**. | `ablation_study_bar_chart.png` |
+| **02** | SOTA Comparison | Evaluates against 16 published baselines across 4 datasets. | `sota_comparison.json` |
+| **03** | Statistical Significance | Bootstrap 95% CI on FIW accuracy: **[72.6%, 79.8%]**; paired t-test vs baseline ($p < 10^{-20}$). | `statistical_summary.json` |
+| **04** | Explainability & t-SNE | 2D t-SNE scatter plots show probability space clustering after Quantum Hilbert Space Projection. | `explainability_summary.json` |
+| **05** | ROC & PR Curves | High discrimination capacity across datasets (**FIW ROC-AUC: 0.860, PR-AUC: 0.867**). | `roc_pr_summary.json` |
+| **06** | Threshold Sensitivity | Optimal Youden decision threshold calibrated at $\tau = 0.5449$ (77.8% accuracy). | `threshold_summary.json` |
+| **07** | Robustness & Degradation | Evaluates degradation across 6 noise types (Blur, JPEG, Occlusion, Noise, Brightness, Rotation) at 5 severity levels. | `robustness_summary.json` |
+| **08** | Efficiency & Complexity | **13.76M parameters**, **52.48 MB footprint**, **199.6 ms CPU latency (63.8 ms batch-128)**; Single Checkpoint: **1.25M params, 4.77 MB**. | `efficiency_summary.json` |
+| **09** | Qualitative Error Diagnostics | Diagnostics for True Positive (197), True Negative (183), False Positive (67), and False Negative (53) modes. | `error_analysis_summary.json` |
+| **10** | Cross-Dataset Matrix | Full $4 \times 4$ Train Domain $\rightarrow$ Test Domain transfer matrix heatmap. | `cross_dataset_summary.json` |
+| **11** | Baseline Comparisons | Outperforms ArcFace and CosFace in ROC-AUC while using **$6 \times$ fewer parameters** than ViT-Base. | `baseline_comparison.json` |
+| **12** | Weight Strategy Ablation | Compares Equal Weights vs Base-dominant vs FIW-dominant vs Learned Optimal $(0.45, 0.35, 0.20)$. | `weight_ablation_summary.json` |
 
 ---
 

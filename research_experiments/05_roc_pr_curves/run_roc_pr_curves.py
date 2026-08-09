@@ -2,6 +2,7 @@
 """
 MODULE 5: COMPREHENSIVE ROC AND PRECISION-RECALL (PR) CURVES
 Generates publication-quality ROC and PR Curves for all 4 datasets.
+NOTE: Results depend on the underlying data quality and model training.
 """
 
 import os
@@ -38,24 +39,32 @@ def run_roc_pr_curves():
     print("="*70)
 
     out_dir = os.path.join(research_root, "outputs", "05_roc_pr_curves")
-    brain_dir = r"C:\Users\svrao\.gemini\antigravity-ide\brain\a7cfb6c9-bc14-475d-823d-b240d3fe6363"
     os.makedirs(out_dir, exist_ok=True)
 
     # 1. Load Datasets
-    cache_path = os.path.join(project_root, "weights", "caches", "embeddings_cache.pkl")
-    with open(cache_path, "rb") as f:
-        cache = pickle.load(f)
-    norm_cache = {os.path.normcase(os.path.abspath(k)): v for k, v in cache.items()}
+    try:
+        cache_path = os.path.join(project_root, "weights", "caches", "embeddings_cache.pkl")
+        with open(cache_path, "rb") as f:
+            cache = pickle.load(f)
+        norm_cache = {os.path.normcase(os.path.abspath(k)): v for k, v in cache.items()}
+    except FileNotFoundError:
+        print(f"  [WARNING] Embeddings cache not found at {cache_path}")
+        norm_cache = {}
 
     k1_t = prepare_pair_tensors(load_kinfacew_pairs(os.path.join(project_root, "KinFaceW-I")), norm_cache)
     k2_t = prepare_pair_tensors(load_kinfacew_pairs(os.path.join(project_root, "KinFaceW-II")), norm_cache)
     ts_t = prepare_pair_tensors(load_tskinface_pairs(os.path.join(project_root, "TSKinFace_Data", "TSKinFace_Data", "TSKinFace_cropped")), norm_cache)
 
-    fiw_cache_path = os.path.join(project_root, "weights", "caches", "fiw_emb_cache.pkl")
-    with open(fiw_cache_path, "rb") as f:
-        fiw_cache = pickle.load(f)
-    norm_fiw = {os.path.normcase(os.path.abspath(k)): v for k, v in fiw_cache.items()}
-    fiw_t = prepare_pair_tensors(load_fiw_pairs(os.path.join(project_root, "public"), max_pairs=500), norm_fiw)
+    try:
+        fiw_cache_path = os.path.join(project_root, "weights", "caches", "fiw_emb_cache.pkl")
+        with open(fiw_cache_path, "rb") as f:
+            fiw_cache = pickle.load(f)
+        norm_fiw = {os.path.normcase(os.path.abspath(k)): v for k, v in fiw_cache.items()}
+        fiw_t = prepare_pair_tensors(load_fiw_pairs(os.path.join(project_root, "public"), max_pairs=500), norm_fiw)
+        print(f"  Loaded FIW dataset: {len(fiw_t[0]) if fiw_t and len(fiw_t) > 0 else 0} pairs")
+    except Exception as e:
+        print(f"  [WARNING] Could not load FIW dataset: {e}")
+        fiw_t = None
 
     datasets = {
         "KinFaceW-I": k1_t,
@@ -64,17 +73,29 @@ def run_roc_pr_curves():
         "FIW": fiw_t
     }
 
+    # Remove None datasets
+    datasets = {k: v for k, v in datasets.items() if v is not None}
+
+    if not datasets:
+        print("  [ERROR] No datasets loaded!")
+        return {}
+
     # Load Model
-    meta_path = os.path.join(project_root, "weights", "active_ensemble", "meta_ensemble_kinship.pt")
-    m1 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
-    m2 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
-    m3 = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
-    
-    full_meta = MetaEnsembleKinshipClassifier(m1, m2, m3, weights=(0.45, 0.35, 0.20))
-    full_meta.load_state_dict(torch.load(meta_path, map_location="cpu"))
-    full_meta.eval()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    full_meta.to(device)
+    try:
+        meta_path = os.path.join(project_root, "weights", "active_ensemble", "meta_ensemble_kinship.pt")
+        m1 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
+        m2 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
+        m3 = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
+
+        full_meta = MetaEnsembleKinshipClassifier(m1, m2, m3, weights=(0.45, 0.35, 0.20))
+        full_meta.load_state_dict(torch.load(meta_path, map_location="cpu"))
+        full_meta.eval()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        full_meta.to(device)
+        print(f"  Model loaded successfully")
+    except Exception as e:
+        print(f"  [ERROR] Failed to load model: {e}")
+        return {}
 
     # 2. Render 2-Panel Figure
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
@@ -98,13 +119,13 @@ def run_roc_pr_curves():
         metrics_out[d_name] = {"roc_auc": roc_auc, "pr_auc": pr_auc}
 
     ax1.plot([0, 1], [0, 1], "k--", lw=1.2, alpha=0.6, label="Random Chance")
-    ax1.set_title("ROC Curves Across 4 Datasets", fontweight="bold", pad=10)
+    ax1.set_title("ROC Curves Across Available Datasets", fontweight="bold", pad=10)
     ax1.set_xlabel("False Positive Rate")
     ax1.set_ylabel("True Positive Rate")
     ax1.legend(loc="lower right", frameon=True)
     ax1.grid(True, linestyle="--", alpha=0.3)
 
-    ax2.set_title("Precision-Recall (PR) Curves Across 4 Datasets", fontweight="bold", pad=10)
+    ax2.set_title("Precision-Recall (PR) Curves Across Available Datasets", fontweight="bold", pad=10)
     ax2.set_xlabel("Recall")
     ax2.set_ylabel("Precision")
     ax2.legend(loc="lower left", frameon=True)
@@ -112,9 +133,7 @@ def run_roc_pr_curves():
 
     plt.tight_layout()
     p1 = os.path.join(out_dir, "roc_pr_curves_combined.png")
-    p2 = os.path.join(brain_dir, "roc_pr_curves_combined.png")
-    plt.savefig(p1)
-    plt.savefig(p2)
+    plt.savefig(p1, dpi=150)
     plt.close()
 
     save_path = os.path.join(out_dir, "roc_pr_metrics.json")

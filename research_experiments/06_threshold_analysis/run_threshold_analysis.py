@@ -31,26 +31,35 @@ def run_threshold_analysis():
     print("="*70)
 
     out_dir = os.path.join(research_root, "outputs", "06_threshold_analysis")
-    brain_dir = r"C:\Users\svrao\.gemini\antigravity-ide\brain\a7cfb6c9-bc14-475d-823d-b240d3fe6363"
     os.makedirs(out_dir, exist_ok=True)
 
     fiw_cache_path = os.path.join(project_root, "weights", "caches", "fiw_emb_cache.pkl")
-    with open(fiw_cache_path, "rb") as f:
-        fiw_cache = pickle.load(f)
-    norm_fiw = {os.path.normcase(os.path.abspath(k)): v for k, v in fiw_cache.items()}
-    emb1, emb2, y_true_t, rels = prepare_pair_tensors(load_fiw_pairs(os.path.join(project_root, "public"), max_pairs=500), norm_fiw)
-    y_true = y_true_t.view(-1).numpy()
+    try:
+        with open(fiw_cache_path, "rb") as f:
+            fiw_cache = pickle.load(f)
+        norm_fiw = {os.path.normcase(os.path.abspath(k)): v for k, v in fiw_cache.items()}
+        emb1, emb2, y_true_t, rels = prepare_pair_tensors(load_fiw_pairs(os.path.join(project_root, "public"), max_pairs=500), norm_fiw)
+        y_true = y_true_t.view(-1).numpy()
+        print(f"  Loaded FIW evaluation set: {len(y_true)} pairs")
+    except Exception as e:
+        print(f"  [ERROR] Failed to load FIW dataset: {e}")
+        return {"status": "ERROR", "message": f"Failed to load dataset: {e}"}
 
     meta_path = os.path.join(project_root, "weights", "active_ensemble", "meta_ensemble_kinship.pt")
-    m1 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
-    m2 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
-    m3 = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
-    
-    full_meta = MetaEnsembleKinshipClassifier(m1, m2, m3, weights=(0.45, 0.35, 0.20))
-    full_meta.load_state_dict(torch.load(meta_path, map_location="cpu"))
-    full_meta.eval()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    full_meta.to(device)
+    try:
+        m1 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
+        m2 = EnsembleKinshipClassifier([HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention") for _ in range(5)])
+        m3 = HybridKinshipClassifier(n_qubits=8, encoding_mode="entangled", projection_type="quantum_inspired_attention")
+
+        full_meta = MetaEnsembleKinshipClassifier(m1, m2, m3, weights=(0.45, 0.35, 0.20))
+        full_meta.load_state_dict(torch.load(meta_path, map_location="cpu"))
+        full_meta.eval()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        full_meta.to(device)
+        print(f"  Model loaded successfully")
+    except Exception as e:
+        print(f"  [ERROR] Failed to load model: {e}")
+        return {"status": "ERROR", "message": f"Failed to load model: {e}"}
 
     with torch.no_grad():
         preds = full_meta(emb1.to(device), emb2.to(device), rels.to(device)).cpu().view(-1).numpy()
@@ -68,7 +77,7 @@ def run_threshold_analysis():
     opt_idx = np.argmax(accs)
     opt_t = float(thresholds[opt_idx])
 
-    # Plot Threshold Curves
+    # Plot Threshold Curules
     fig, ax = plt.subplots(figsize=(9, 5.5))
     ax.plot(thresholds, accs, label="Accuracy (%)", color="#4CAF50", lw=2.2)
     ax.plot(thresholds, precs, label="Precision (%)", color="#FF9800", lw=2.2)
@@ -84,9 +93,7 @@ def run_threshold_analysis():
 
     plt.tight_layout()
     p1 = os.path.join(out_dir, "threshold_sensitivity_curves.png")
-    p2 = os.path.join(brain_dir, "threshold_sensitivity_curves.png")
-    plt.savefig(p1)
-    plt.savefig(p2)
+    plt.savefig(p1, dpi=150)
     plt.close()
 
     res = {
