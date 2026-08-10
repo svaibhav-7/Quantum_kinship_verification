@@ -133,6 +133,7 @@ class QuantumInspiredCrossAttention(nn.Module):
       3. MLP projection: 512 → 256 → 128 → n_qubits
       4. Quantum interference weighting on attention scores
       5. tanh scaling to [-π, π]
+      6. Learnable quantum gate sequences per attention head
 
     Note: each embedding is represented as a single token, so the attention
     operation learns cross-conditioned projections rather than token-level
@@ -178,6 +179,13 @@ class QuantumInspiredCrossAttention(nn.Module):
         self.phase_matrix1 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
         self.phase_matrix2 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
 
+        # Learnable quantum gate sequences per attention head
+        # Each head gets a parameter set for U3 gate: [theta, phi, lambda] for each qubit
+        self.quantum_gate_sequences = nn.ParameterList([
+            nn.Parameter(torch.randn(n_qubits, 3) * 0.1)  # [theta, phi, lambda] for U3 gate per head
+            for _ in range(self.n_heads)
+        ])
+
     def forward(self, emb1, emb2, rels):
         """
         Args:
@@ -209,6 +217,27 @@ class QuantumInspiredCrossAttention(nn.Module):
         # Project to quantum angle space
         z1 = self.norm2(self.projection(h1))  # (B, n_qubits)
         z2 = self.norm2(self.projection(h2))  # (B, n_qubits)
+
+        # Apply learnable quantum gate sequences per attention head
+        # For each head, apply parameterized quantum circuit to the projected angles
+        head_contributions_z1 = []
+        head_contributions_z2 = []
+        for head_idx in range(self.n_heads):
+            # Get gate sequence for this head: [theta, phi, lambda] for each qubit
+            gate_seq = self.quantum_gate_sequences[head_idx]  # (n_qubits, 3)
+            # Use theta for scaling, phi for shifting (simplified version)
+            scale_factor = torch.sigmoid(gate_seq[:, 0])  # (n_qubits)
+            shift_factor = gate_seq[:, 1]  # (n_qubits)
+            # Apply to both z1 and z2
+            z1_head = z1 * scale_factor.unsqueeze(0) + shift_factor.unsqueeze(0)
+            z2_head = z2 * scale_factor.unsqueeze(0) + shift_factor.unsqueeze(0)
+            head_contributions_z1.append(z1_head)
+            head_contributions_z2.append(z2_head)
+
+        # Combine contributions from all heads (average)
+        if self.n_heads > 0:
+            z1 = torch.stack(head_contributions_z1, dim=0).mean(dim=0)
+            z2 = torch.stack(head_contributions_z2, dim=0).mean(dim=0)
 
         # Scale to [-π, π]
         z1 = torch.tanh(z1) * math.pi
