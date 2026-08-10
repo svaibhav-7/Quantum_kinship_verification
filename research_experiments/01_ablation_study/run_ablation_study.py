@@ -12,6 +12,8 @@ import json
 import pickle
 import numpy as np
 import torch
+import torch.nn as nn
+import copy
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -31,13 +33,36 @@ class AblatedModel(torch.nn.Module):
     """Wrapper that modifies model forward pass for ablation testing."""
     def __init__(self, base_model, ablation_type):
         super().__init__()
-        self.base_model = base_model
         self.ablation_type = ablation_type
+        # For quantum_module ablation, we need to work with a copy to avoid
+        # modifying the original model parameters
+        if ablation_type == "quantum_module":
+            self.base_model = copy.deepcopy(base_model)
+            # Neutralize quantum enhancement parameters by setting them to neutral values
+            if hasattr(self.base_model.projection_net, 'phase_matrix1'):
+                # Set phase matrices to zero so cos(0) = 1 (no interference effect)
+                with torch.no_grad():
+                    self.base_model.projection_net.phase_matrix1.fill_(0.0)
+                    self.base_model.projection_net.phase_matrix2.fill_(0.0)
+
+                # Set quantum gate sequences to neutral values:
+                # For U3 gate [theta, phi, lambda], we want no rotation:
+                # scale_factor = sigmoid(theta) should be 1
+                # shift_factor = phi should be 0
+                with torch.no_grad():
+                    for gate_seq in self.base_model.projection_net.quantum_gate_sequences:
+                        # Set theta to large positive value so sigmoid(theta) ≈ 1
+                        gate_seq[:, 0].fill_(10.0)  # large positive
+                        # Set phi to 0 so no shift
+                        gate_seq[:, 1].fill_(0.0)
+                        # lambda doesn't matter for our simplified application
+        else:
+            self.base_model = base_model
 
     def forward(self, emb1, emb2, rels):
         if self.ablation_type == "quantum_module":
-            # Return tensor of 0.5 (random guessing)
-            return torch.full_like(self.base_model(emb1, emb2, rels), 0.5)
+            # Use the model with neutralized quantum enhancement parameters
+            return self.base_model(emb1, emb2, rels)
         elif self.ablation_type == "projection_swap":
             # Swap the quantum-inspired projection with simple projection
             # We'll create a temporary model with simple projection
