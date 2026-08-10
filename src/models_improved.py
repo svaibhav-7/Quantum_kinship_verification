@@ -56,7 +56,7 @@ class FaceFeatureExtractor:
                     [
                         transforms.Resize((160, 160)),
                         transforms.ToTensor(),
-                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                        transforms.Normalize([127.5/255, 127.5/255, 127.5/255], [128.0/255, 128.0/255, 128.0/255]),
                     ]
                 )
                 print("FaceNet feature extractor successfully initialized.")
@@ -172,9 +172,11 @@ class QuantumInspiredCrossAttention(nn.Module):
             nn.Linear(128, n_qubits),
         )
         self.norm2 = nn.LayerNorm(n_qubits)
+        self.norm3 = nn.LayerNorm(n_qubits)
 
-        # Quantum-inspired interference matrix (learnable)
-        self.phase_matrix = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
+        # Quantum-inspired interference matrices (learnable) - hierarchical
+        self.phase_matrix1 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
+        self.phase_matrix2 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
 
     def forward(self, emb1, emb2, rels):
         """
@@ -212,25 +214,42 @@ class QuantumInspiredCrossAttention(nn.Module):
         z1 = torch.tanh(z1) * math.pi
         z2 = torch.tanh(z2) * math.pi
 
-        # Apply quantum-inspired interference to the angles (novel step)
-        # We'll apply a phase shift based on the angles themselves and the learned matrix
-        # This simulates quantum interference in the angle space
+        # Apply hierarchical quantum-inspired interference with residual connections
         z1_shape = z1.shape
         z2_shape = z2.shape
         z1_flat = z1.view(-1, self.n_qubits)  # (B, n_qubits)
         z2_flat = z2.view(-1, self.n_qubits)  # (B, n_qubits)
 
-        # Compute interference: apply phase matrix to create interaction between qubits
-        interference1 = torch.cos(
-            torch.matmul(z1_flat, self.phase_matrix)
+        # Stage 1 interference for z1
+        interference_stage1 = torch.cos(
+            torch.matmul(z1_flat, self.phase_matrix1)
         )  # (B, n_qubits)
-        interference2 = torch.cos(
-            torch.matmul(z2_flat, self.phase_matrix)
-        )  # (B, n_qubits)
+        z1_flat = z1_flat * interference_stage1
 
-        # Modulate the angles with interference (element-wise multiplication)
-        z1_flat = z1_flat * interference1
-        z2_flat = z2_flat * interference2
+        # Residual connection
+        residual = z1_flat.clone()
+
+        # Stage 2 interference for z1
+        interference_stage2 = torch.cos(
+            torch.matmul((z1_flat + residual), self.phase_matrix2)
+        )  # (B, n_qubits)
+        z1_flat = z1_flat * interference_stage2
+
+        # Apply LayerNorm to residual for next iteration
+        residual = self.norm3(z1_flat)
+
+        # Do same for z2_flat
+        # Stage 1 interference for z2
+        interference_stage1_z2 = torch.cos(
+            torch.matmul(z2_flat, self.phase_matrix1)
+        )  # (B, n_qubits)
+        z2_flat = z2_flat * interference_stage1_z2
+
+        # Stage 2 interference for z2
+        interference_stage2_z2 = torch.cos(
+            torch.matmul((z2_flat + residual), self.phase_matrix2)
+        )  # (B, n_qubits)
+        z2_flat = z2_flat * interference_stage2_z2
 
         # Reshape back
         z1 = z1_flat.view(z1_shape)
