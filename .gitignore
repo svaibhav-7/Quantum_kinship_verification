@@ -61,3 +61,13 @@ Thumbs.db
 
 # IDE & local agent caches
 .claude/
+
+# Legacy artifacts (superseded; kept locally for provenance)
+legacy/**/*.pt
+legacy/**/*.pkl
+legacy/**/*.png
+legacy/**/*.pdf
+
+# Scratch
+scratch/
+tmp/

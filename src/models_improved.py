@@ -343,11 +343,13 @@ class HybridKinshipClassifier(nn.Module):
         n_qubits=8,
         encoding_mode="entangled",
         projection_type="quantum_inspired_attention",
+        ansatz_depth=1,
     ):
         super().__init__()
         self.n_qubits = n_qubits
         self.encoding_mode = encoding_mode
         self.projection_type = projection_type
+        self.ansatz_depth = ansatz_depth
 
         # Projection network
         if projection_type == "quantum_inspired_attention":
@@ -387,7 +389,7 @@ class HybridKinshipClassifier(nn.Module):
         if self.encoding_mode == "entangled":
             # Differentiable shared-circuit fidelity with distinct register params.
             fidelity = differentiable_entangled_fidelity(
-                z1, z2, self.ent_params1, self.ent_params2, self.n_qubits
+                z1, z2, self.ent_params1, self.ent_params2, self.n_qubits, self.ansatz_depth
             )
         else:
             # Fast analytical product-state fidelity
@@ -468,7 +470,26 @@ class HybridKinshipClassifier(nn.Module):
             ent_reg = torch.abs(ent_diff - 0.5)
             reg_loss += 0.05 * ent_reg
 
-            # 3. Orthogonality encouragement for relation embedding in the projection net
+            # 3. Periodicity regularization: encourage parameters to be consistent with periodic nature of quantum phases
+            # Since Rz(θ) has period 4π, we map parameters to [0, 4π) and penalize deviation from this mapping
+            def periodicity_loss(params):
+                # Map to [0, 4π) using modulo
+                mapped_params = torch.fmod(params, 4 * math.pi)
+                # Handle negative values: fmod preserves sign, so we adjust
+                mapped_params = torch.where(mapped_params < 0, mapped_params + 4 * math.pi, mapped_params)
+                # Distance to nearest equivalent parameter (considering periodicity)
+                # For each param, the distance is min(|param - mapped_param|, |param - (mapped_param ± 4π)|)
+                dist1 = torch.abs(params - mapped_params)
+                dist2 = torch.abs(params - (mapped_params + 4 * math.pi))
+                dist3 = torch.abs(params - (mapped_params - 4 * math.pi))
+                min_dist = torch.min(torch.min(dist1, dist2), dist3)
+                return torch.mean(min_dist)
+
+            period_loss1 = periodicity_loss(self.ent_params1)
+            period_loss2 = periodicity_loss(self.ent_params2)
+            reg_loss += 0.03 * (period_loss1 + period_loss2)
+
+            # 4. Orthogonality encouragement for relation embedding in the projection net
             # Only applies to QuantumInspiredCrossAttention which has rel_embed
             if self.projection_type == "quantum_inspired_attention" and hasattr(self.projection_net, 'rel_embed'):
                 # Get embeddings for the 4 relation types [FD, FS, MS, MD]
@@ -607,9 +628,10 @@ class PairFusionKinshipClassifier(nn.Module):
 class MetaEnsembleKinshipClassifier(nn.Module):
     """
     Meta-Ensemble combining Base Kinship Ensemble (5 folds), FIW Ensemble (5 folds),
-    and Fine-Tuned Checkpoint (1 model) with learned domain weights.
+    and Fine-Tuned Checkpoint (1 model) with quantum state fusion.
 
-    Provides robust predictions across clean benchmarks and noisy in-the-wild datasets.
+    Provides robust predictions across clean benchmarks and noisy in-the-wild datasets
+    using quantum interference principles for model combination.
     """
 
     def __init__(self, ensemble_full, ensemble_fiw, single_fiw, weights=(0.45, 0.35, 0.20)):
@@ -617,16 +639,66 @@ class MetaEnsembleKinshipClassifier(nn.Module):
         self.ensemble_full = ensemble_full
         self.ensemble_fiw = ensemble_fiw
         self.single_fiw = single_fiw
-        self.register_buffer("weights", torch.tensor(weights, dtype=torch.float32))
+        # Learnable phase parameters for quantum interference between models
+        self.phase_full = nn.Parameter(torch.tensor(0.0))  # Phase for full ensemble
+        self.phase_fiw = nn.Parameter(torch.tensor(0.0))   # Phase for FIW ensemble
+        self.phase_single = nn.Parameter(torch.tensor(0.0)) # Phase for single model
+        # Initialize weights to match the provided ratios
+        self.register_buffer("weights_init", torch.tensor(weights, dtype=torch.float32))
+        # Gating network for dynamic weight prediction
+        self.gating_network = nn.Sequential(
+            nn.Linear(3, 16),  # Input: [p1, p2, p3]
+            nn.ReLU(),
+            nn.Linear(16, 3),  # Output: [w1_raw, w2_raw, w3_raw]
+            nn.Softmax(dim=-1)  # Normalize to weights
+        )
 
     def forward(self, emb1, emb2, rels):
-        w1, w2, w3 = self.weights[0], self.weights[1], self.weights[2]
-        p1 = self.ensemble_full(emb1, emb2, rels)
-        p2 = self.ensemble_fiw(emb1, emb2, rels)
-        p3 = self.single_fiw(emb1, emb2, rels)
-        return w1 * p1 + w2 * p2 + w3 * p3
+        # Get predictions from each ensemble
+        p1 = self.ensemble_full(emb1, emb2, rels)  # Base kinship ensemble
+        p2 = self.ensemble_fiw(emb1, emb2, rels)   # FIW ensemble
+        p3 = self.single_fiw(emb1, emb2, rels)     # Single fine-tuned model
+
+        # Get dynamic weights from gating network
+        ensemble_preds = torch.stack([p1.squeeze(-1), p2.squeeze(-1), p3.squeeze(-1)], dim=1)  # (B, 3)
+        dynamic_weights = self.gating_network(ensemble_preds)  # (B, 3)
+        w1, w2, w3 = dynamic_weights[:, 0:1], dynamic_weights[:, 1:2], dynamic_weights[:, 2:3]  # (B, 1) each
+
+        # Convert probabilities to quantum amplitudes (sqrt(p))
+        # Clamp to avoid numerical issues
+        eps = 1e-8
+        p1_clamped = torch.clamp(p1, eps, 1.0 - eps)
+        p2_clamped = torch.clamp(p2, eps, 1.0 - eps)
+        p3_clamped = torch.clamp(p3, eps, 1.0 - eps)
+
+        # Amplitudes: sqrt(probability)
+        a1 = torch.sqrt(p1_clamped)
+        a2 = torch.sqrt(p2_clamped)
+        a3 = torch.sqrt(p3_clamped)
+
+        # Apply phase shifts for quantum interference
+        # Using learnable phase parameters for each model
+        a1_phased = a1 * torch.exp(1j * self.phase_full)
+        a2_phased = a2 * torch.exp(1j * self.phase_fiw)
+        a3_phased = a3 * torch.exp(1j * self.phase_single)
+
+        # Quantum superposition: sum of probability amplitudes
+        # Weighted superposition using dynamic weights from gating network
+        superposition_amplitude = (
+            w1 * a1_phased +
+            w2 * a2_phased +
+            w3 * a3_phased
+        )
+
+        # Born rule: probability = |amplitude|^2
+        fidelity = torch.real(superposition_amplitude * torch.conj(superposition_amplitude))
+
+        # Ensure output is in valid range [0, 1]
+        fidelity = torch.clamp(fidelity, 0.0, 1.0)
+
+        return fidelity
 
     def set_weights(self, w1, w2, w3):
         """Update domain fusion weights dynamically."""
         total = w1 + w2 + w3
-        self.weights = torch.tensor([w1 / total, w2 / total, w3 / total], dtype=torch.float32)
+        self.weights_init = torch.tensor([w1 / total, w2 / total, w3 / total], dtype=torch.float32)

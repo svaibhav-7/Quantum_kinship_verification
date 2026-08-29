@@ -1,0 +1,32 @@
+{
+  "Full Model": {
+    "KinFaceW-I": 51.31332082551595,
+    "KinFaceW-II": 51.800000000000004,
+    "TSKinFace": 49.3125,
+    "FIW": 51.2
+  },
+  "- Quantum Module": {
+    "KinFaceW-I": 67.26078799249531,
+    "KinFaceW-II": 68.8,
+    "TSKinFace": 42.375,
+    "FIW": 50.6
+  },
+  "- Projection Swap (to simple)": {
+    "KinFaceW-I": 50.0,
+    "KinFaceW-II": 50.0,
+    "TSKinFace": 50.0,
+    "FIW": 50.0
+  },
+  "- Relation Embed": {
+    "KinFaceW-I": 60.0375234521576,
+    "KinFaceW-II": 60.650000000000006,
+    "TSKinFace": 53.43750000000001,
+    "FIW": 52.400000000000006
+  },
+  "- SWAP Test": {
+    "KinFaceW-I": 53.56472795497186,
+    "KinFaceW-II": 53.449999999999996,
+    "TSKinFace": 48.25,
+    "FIW": 52.0
+  }
+}

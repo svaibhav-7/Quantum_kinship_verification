@@ -1,7 +1,0 @@
-{
-  "optimal_threshold": 0.5448979591836735,
-  "max_accuracy": 77.8,
-  "precision_at_opt": 81.7351598173516,
-  "recall_at_opt": 71.6,
-  "f1_at_opt": 76.33262260127933
-}

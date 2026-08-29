@@ -1,207 +1,223 @@
-# Quantum-Inspired Facial Kinship Verification via Entangled Hilbert Space Projection & Meta-Ensemble Classification
+# Facial Kinship Verification: Leakage-Free Evaluation
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Publication PDF](https://img.shields.io/badge/Master_Report-PDF-teal.svg)](research_experiments/Quantum_Kinship_Master_Research_Report.pdf)
 
-> **Official Research Repository & Production Implementation** for *"Quantum-Inspired Facial Kinship Verification: A Hierarchical Meta-Ensemble Framework with Entangled Hilbert Space Projection"*.
-
----
-
-## 🌟 Executive Overview
-
-Facial kinship verification—determining whether two individuals share a biological parent-child or sibling relationship from unconstrained photographs—is a challenging computer vision task due to extreme variations in age disparity, gender, lighting, and facial expression.
-
-This repository implements a novel **Quantum-Inspired Metric Learning Framework** that maps 512-dimensional FaceNet embeddings into an **8-qubit entangled quantum Hilbert space ($\mathcal{H} = \mathbb{C}^{256}$)** via parameterized rotation transformations $R_y(\theta)$ and relation-conditioned cross-attention gates. Biometric similarity is evaluated using **quantum SWAP-test density matrix inner-product state fidelity**:
-
-$$\mathcal{F}(\rho_1, \rho_2) = \text{Tr}(\rho_1 \rho_2) = \prod_{i=1}^{8} \cos^2\left(\frac{\theta_{1,i} - \theta_{2,i}}{2}\right)$$
-
-To ensure robust real-world generalization across disparate image qualities, individual fold models are combined into an **11-Sub-Model Soft-Voting Meta-Ensemble** (`meta_ensemble_kinship.pt`).
+> A leakage-free evaluation pipeline for facial kinship verification, with a
+> compact classifier trained under it and a tested negative result for a
+> quantum-inspired similarity metric.
 
 ---
 
-## 🔬 Key Architectural Highlights
+## Overview
 
-1. **8-Qubit Entangled Quantum Hilbert Projection Layer**:
-   - Projects FaceNet 512D embeddings $\mathbf{e}_1, \mathbf{e}_2$ to 8 rotation angles $\theta_1..\theta_8 \in [-\pi, \pi]$ using multi-head cross-attention and learnable quantum phase interference matrices.
-2. **SWAP-Test State Fidelity Metric**:
-   - Replaces traditional Euclidean/cosine distances with density matrix state overlap, providing high non-linear sensitivity to genuine genetic facial geometry.
-3. **Relation-Conditioned Attention**:
-   - Conditions similarity projections on specific kinship types: **Father-Daughter (FD)**, **Father-Son (FS)**, **Mother-Daughter (MD)**, and **Mother-Son (MS)**.
-4. **Hierarchical Meta-Ensemble Soft-Voting**:
-   - Combines 5 cross-validation fold models trained on multi-dataset pairs, 5 fold models fine-tuned on Families In the Wild (FIW), and 1 fine-tuned specialist model:
-   $$P_{\text{meta}} = 0.45 \cdot P_{\text{Full}} + 0.35 \cdot P_{\text{FIW}} + 0.20 \cdot P_{\text{FIW-FineTuned}}$$
+Facial kinship verification decides whether two people are biologically
+related from unconstrained photographs. This repository contains a
+**leakage-free evaluation pipeline** for the task, plus a compact classifier
+trained under it.
 
----
+The headline contribution is methodological. While building this we found
+that the field's standard protocols make results look much better than they
+are:
 
-## 📊 Comprehensive Experimental Results (12-Module Research Suite)
+- **Identity leakage.** Pair-level random splits put an identity from
+  **100% of test pairs** (11,424/11,424) into the training set.
+- **A dataset shortcut.** In TSKinFace every positive is same-family and every
+  negative is cross-family (800/800 vs 0/800), so a model can score ~84% by
+  recognising a shared photo session rather than kinship. Closing it costs
+  about **9 ROC-AUC points**.
+- **A negative result.** A quantum-inspired SWAP-test fidelity module adds
+  **nothing measurable** over standard pair features (20 paired folds,
+  p = 0.158 accuracy, p = 0.982 AUC) while costing 6-14x runtime.
 
-The repository houses a **Master 12-Module Evaluation Suite** (`research_experiments/`) that thoroughly evaluates the model across all publication dimensions required for top-tier Elsevier/IEEE journals (e.g., *Pattern Recognition*, *ESWA*).
+Under corrected grouped 5-fold evaluation, a 1.9M-parameter classifier reaches
+**75.66% mean accuracy / 0.8497 mean ROC-AUC** across four datasets.
 
-### 1. Literature SOTA Benchmark Comparison (Module 2)
-
-| Method / Paper | Year | Venue | KinFaceW-I | KinFaceW-II | **FIW (Unconstrained)** | TSKinFace |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| NRML (Neighborhood Repressed Metric Learning) | 2018 | IEEE TPAMI | 69.9% | 76.5% | 65.2% | 71.4% |
-| MNRML (Multi-Metric NRML) | 2019 | IEEE TIP | 72.5% | 77.1% | 66.8% | 73.0% |
-| Deep Kinship Verification (DBLM) | 2019 | CVPR | 74.1% | 78.4% | 68.5% | 74.2% |
-| Discriminative Deep Metric Learning (DDML) | 2020 | IEEE TIFS | 75.3% | 79.2% | 70.1% | 75.8% |
-| Relational Graph Convolutional Net (R-GCN) | 2021 | ICCV | 76.8% | 80.5% | 72.4% | 77.1% |
-| Adversarial Kinship Mining (AKM) | 2022 | AAAI | 78.0% | 81.8% | 75.1% | 79.0% |
-| FaceNet Baseline (VGGFace2) | 2022 | IEEE Access | 65.4% | 68.2% | 71.5% | 70.2% |
-| ArcFace Kinship Metric Learning | 2023 | CVPR | 71.2% | 74.5% | 76.8% | 74.9% |
-| CosFace Kinship Feature Alignment | 2023 | ICCV | 70.8% | 73.9% | 75.9% | 74.1% |
-| Hierarchical Attention Network (HAN-Kin) | 2023 | NeurIPS | 78.9% | 82.4% | 77.5% | 80.1% |
-| Multi-Task Kinship Transformer (MTKT) | 2024 | CVPR | 79.5% | 83.1% | 79.2% | 81.0% |
-| Contrastive Kinship Graph (CKG) | 2024 | ECCV | 80.1% | 83.7% | 80.5% | 81.8% |
-| **Ours: Quantum-Inspired Base Ensemble** | **2026** | **This Work** | **70.5%** | **69.5%** | **60.2%** | **83.3%** |
-| **Ours: Quantum-Inspired Meta-Ensemble** | **2026** | **This Work** | **67.4%** | **68.2%** | **76.0% (0.860 ROC-AUC)** | **77.2%** |
+Full methodology, per-fold numbers and audit results: **[RESULTS_HONEST.md](RESULTS_HONEST.md)**.
 
 ---
 
-### 2. Deep Learning Baseline Comparisons (Module 11)
+## Method
 
-| Model Architecture | Parameters (M) | Memory FP32 (MB) | FIW Accuracy | FIW ROC-AUC |
-| :--- | :---: | :---: | :---: | :---: |
-| Siamese ResNet-18 | 11.2 M | 44.8 MB | 64.2% | 0.685 |
-| FaceNet (Inception-ResNet-v1) | 23.5 M | 94.0 MB | 71.5% | 0.762 |
-| CosFace (ResNet-100) | 45.2 M | 180.8 MB | 75.9% | 0.808 |
-| ArcFace (ResNet-50) | 31.0 M | 124.0 MB | 76.8% | 0.814 |
-| AdaFace (Adaptive Margin) | 31.0 M | 124.0 MB | 78.4% | 0.831 |
-| Vision Transformer (ViT-Base) | 86.4 M | 345.6 MB | 79.1% | 0.838 |
-| **Ours: Single Best Checkpoint** | **1.25 M** | **4.77 MB** | **77.8%** | **0.864** |
-| **Ours: Quantum Meta-Ensemble** | **13.76 M** | **52.48 MB** | **76.0% (66.0% Family-Disjoint)** | **0.860** |
+1. **Frozen FaceNet embeddings** (InceptionResnetV1, VGGFace2) -- 512-d per face.
+2. **Shared Siamese encoder** so both faces are treated identically; kinship is
+   symmetric, so only symmetric pair features are used
+   (`sum`, `|difference|`, `product`, `cosine`).
+3. **Relation conditioning** on FD / FS / MD / MS.
+4. **Quantum-inspired branch** (optional): embeddings are projected to 8
+   rotation angles and compared by an exact simulated SWAP-test fidelity,
+   supplied to the classifier as **one additional feature**. It is switchable
+   (`use_quantum=False`) so its contribution is measurable rather than assumed
+   -- and measurement shows it contributes nothing.
+5. **Per-domain thresholds** calibrated on a group-disjoint validation split,
+   never on test.
+
+The architecture is deliberately conventional: it serves as a control, so the
+protocol findings above cannot be attributed to architectural tricks.
+
+### Exact simulation, 380x faster
+
+The reference simulator built a 2^n statevector and permuted every dimension
+once per qubit, leaving the GPU idle on kernel-launch overhead.
+`src/quantum_fast.py` keeps the mathematics exact -- equivalence and gradients
+are pinned by tests -- while removing the permutes and precomputing the
+entangling layer as a single diagonal phase vector:
+
+| | reference | fast | speedup |
+|---|---|---|---|
+| CPU | 161 pairs/s | 21,618 pairs/s | 134x |
+| GPU (RTX 5060) | 192 pairs/s | 73,094 pairs/s | **380x** |
+
+A closed-form product over qubits does *not* work here: the shared CNOT chain
+correlates the Rz phases, so the overlap is not factorizable. The speedup comes
+from removing overhead, not from approximating. Note this is quantum-vs-quantum
+-- simulating a circuit is always slower than the classical path it sits beside.
 
 ---
 
-### 3. Summary of Priority Research Evaluation Modules
+## Results
 
-| Module # | Focus Area | Key Empirical Result | Generated Artifact |
-| :---: | :--- | :--- | :--- |
-| **01** | Architectural Ablation | Removing Meta-Ensemble drops FIW accuracy by **10.4%**; removing Quantum Module drops accuracy by **7.5%**. | `ablation_study_bar_chart.png` |
-| **02** | SOTA Comparison | Evaluates against 16 published baselines across 4 datasets. | `sota_comparison.json` |
-| **03** | Statistical Significance | Bootstrap 95% CI on FIW accuracy: **[72.6%, 79.8%]**; paired t-test vs baseline ($p < 10^{-20}$). | `statistical_summary.json` |
-| **04** | Explainability & t-SNE | 2D t-SNE scatter plots show probability space clustering after Quantum Hilbert Space Projection. | `explainability_summary.json` |
-| **05** | ROC & PR Curves | High discrimination capacity across datasets (**FIW ROC-AUC: 0.860, PR-AUC: 0.867**). | `roc_pr_summary.json` |
-| **06** | Threshold Sensitivity | Optimal Youden decision threshold calibrated at $\tau = 0.5449$ (77.8% accuracy). | `threshold_summary.json` |
-| **07** | Robustness & Degradation | Evaluates degradation across 6 noise types (Blur, JPEG, Occlusion, Noise, Brightness, Rotation) at 5 severity levels. | `robustness_summary.json` |
-| **08** | Efficiency & Complexity | **13.76M parameters**, **52.48 MB footprint**, **199.6 ms CPU latency (63.8 ms batch-128)**; Single Checkpoint: **1.25M params, 4.77 MB**. | `efficiency_summary.json` |
-| **09** | Qualitative Error Diagnostics | Diagnostics for True Positive (197), True Negative (183), False Positive (67), and False Negative (53) modes. | `error_analysis_summary.json` |
-| **10** | Cross-Dataset Matrix | Full $4 \times 4$ Train Domain $\rightarrow$ Test Domain transfer matrix heatmap. | `cross_dataset_summary.json` |
-| **11** | Baseline Comparisons | Outperforms ArcFace and CosFace in ROC-AUC while using **$6 \times$ fewer parameters** than ViT-Base. | `baseline_comparison.json` |
-| **12** | Weight Strategy Ablation | Compares Equal Weights vs Base-dominant vs FIW-dominant vs Learned Optimal $(0.45, 0.35, 0.20)$. | `weight_ablation_summary.json` |
+Grouped 5-fold cross-validation, every family tested exactly once. No family
+or identity appears in both training and test.
+
+| Dataset | Accuracy (95% CI) | ROC-AUC |
+| :--- | ---: | ---: |
+| KinFaceW-I | **76.92% ± 2.19** | 0.875 |
+| KinFaceW-II | **74.25% ± 1.95** | 0.832 |
+| FIW | **72.21% ± 1.55** | 0.810 |
+| TSKinFace (shortcut-free) | **79.25% ± 2.32** | 0.881 |
+| **Mean** | **75.66%** | **0.8497** |
+
+Fold integrity was verified directly: zero folds with train/test group
+overlap, every family tested exactly once, no duplicates (95/95 FIW,
+533/533 KinFaceW-I, 1000/1000 KinFaceW-II, 559/559 TSKinFace).
+
+**Why no SOTA comparison table?** Published kinship results use each dataset's
+official protocol, which permits the identity leakage and TSKinFace shortcut
+documented above. Comparing our grouped-k-fold numbers against them would be
+misleading in both directions, so we do not present a ranking. A previous
+version of this README carried such a table; several of its rows could not be
+traced to a verifiable source and have been removed rather than reproduced.
+
+### Efficiency
+
+| Model | Parameters | FIW ROC-AUC |
+| :--- | ---: | ---: |
+| Siamese ResNet-18 | 11.2 M | 0.685 |
+| FaceNet (Inception-ResNet-v1) | 23.5 M | 0.762 |
+| ArcFace (ResNet-50) | 31.0 M | 0.814 |
+| Vision Transformer (ViT-Base) | 86.4 M | 0.838 |
+| **Ours** | **0.50 M** | **0.810** |
+
+Baseline rows are quoted from their source papers under their own protocols
+and are **not** directly comparable to our grouped-k-fold numbers; they are
+included for scale, not for ranking. Our model is ~170x smaller than ViT-Base.
+
+### Ablation: does the quantum module help?
+
+| | Accuracy | ROC-AUC |
+| :--- | ---: | ---: |
+| Quantum ON | 75.66% | 0.8497 |
+| Quantum OFF | 76.34% | 0.8496 |
+| Difference | -0.68 pts | +0.0001 |
+| Paired t-test (20 folds) | p = 0.158 | p = 0.982 |
+
+No measurable contribution. The module is retained as a documented ablation,
+not as the mechanism behind performance.
+
+> **Note on earlier versions.** A 12-module evaluation suite and an associated
+> manuscript previously reported figures such as 77.8% FIW and 83.3% TSKinFace.
+> Those were produced under leaked splits and the TSKinFace shortcut described
+> above, and are superseded. They are archived in [`legacy/`](legacy/) with an
+> explanation; do not cite them.
 
 ---
 
-## 📂 Repository Layout
+## Repository Layout
 
 ```
 Quantum_kinship/
-├── research_experiments/         # Master 12-Module Research Evaluation Suite
-│   ├── 01_ablation_study/        # Module 1: Architectural Ablation Study
-│   ├── 02_sota_literature_comparison/ # Module 2: 18 SOTA Papers Benchmark
-│   ├── 03_statistical_significance/    # Module 3: McNemar & Bootstrap CI Tests
-│   ├── 04_explainability_tsne/    # Module 4: t-SNE Feature Space Separation Plot
-│   ├── 05_roc_pr_curves/         # Module 5: Combined ROC & Precision-Recall Curves
-│   ├── 06_threshold_analysis/    # Module 6: Threshold Sensitivity Curves
-│   ├── 07_robustness_degradation/# Module 7: 6 Real-World Noise Degradation Tests
-│   ├── 08_computational_efficiency/ # Module 8: FLOPs, Latency & FPS Benchmark
-│   ├── 09_qualitative_error_analysis/ # Module 9: Failure Mode Diagnostic Rationales
-│   ├── 10_cross_dataset/         # Module 10: 4x4 Generalization Matrix Heatmap
-│   ├── 11_baseline_comparisons/  # Module 11: Deep Learning Models Comparison
-│   ├── 12_ensemble_weight_ablation/   # Module 12: Weight Strategy Ablation
-│   ├── outputs/                  # High-resolution PNG figures & JSON results
-│   ├── master_research_runner.py # Executes all 12 modules in 10 seconds
-│   ├── master_report_generator.py# Generates publication PDF report
-│   └── Quantum_Kinship_Master_Research_Report.pdf # Publication-ready PDF
-├── src/                          # Core PyTorch source modules
-│   ├── models_improved.py        # HybridKinshipClassifier & MetaEnsemble
-│   ├── quantum_core.py           # Differentiable quantum SWAP-test simulator
-│   └── data_loaders.py           # FaceNet embedding loader & pair utilities
-├── scripts/                      # Deployment & utility scripts
-│   ├── inference/                # Production CLI prediction tools
-│   │   └── deploy_meta_predict.py# Standalone inference engine
-│   └── training/                 # Model training & meta-ensemble builders
-├── weights/                      # Model checkpoints & embedding caches
-│   ├── active_ensemble/          # Active meta-ensemble (meta_ensemble_kinship.pt)
-│   └── caches/                   # Pre-computed 512D FaceNet embeddings
-└── main.py                       # Quick system diagnostic entry point
+├── src/                          # Core library
+│   ├── splits.py                 # Family-disjoint splitting (closes identity leakage)
+│   ├── kfold.py                  # Grouped k-fold; every family tested exactly once
+│   ├── ts_pairs.py               # Shortcut-free TSKinFace negatives
+│   ├── multi_dataset.py          # Unified protocol across all 4 datasets
+│   ├── models_hybrid.py          # QuantumAugmentedKinshipClassifier
+│   ├── quantum_fast.py           # Exact SWAP-test fidelity, 380x faster
+│   ├── calibration.py            # FPR-constrained threshold calibration
+│   ├── predictor.py              # Deployment inference, per-domain thresholds
+│   ├── quantum_core.py           # Reference simulator (validates quantum_fast)
+│   ├── models_improved.py        # FaceFeatureExtractor (FaceNet wrapper)
+│   └── data_loaders.py           # Dataset parsers
+├── scripts/
+│   ├── deploy/build_all_caches.py    # Extract FaceNet embeddings (GPU)
+│   ├── training/train_multi.py       # Train on all 4 datasets pooled
+│   ├── evaluation/run_kfold.py       # Grouped 5-fold evaluation
+│   ├── deploy/package_multi.py       # Package model + per-domain thresholds
+│   └── inference/predict.py          # CLI: single pair or CSV batch
+├── tests/                        # 61 tests
+├── results/honest/               # Measured metrics (kfold.json is definitive)
+├── weights/
+│   ├── deploy/kinship_model.pt   # Deployment artifact
+│   └── caches/                   # Precomputed embeddings
+├── legacy/                       # Superseded work -- see legacy/README.md
+├── RESULTS_HONEST.md             # Full methodology and results
+└── README.md
 ```
 
 ---
 
-## 🛠️ Quick Start & Usage Instructions
-
-### 1. Installation & Environment Setup
-
-Clone the repository and install required dependencies:
+## Quick Start
 
 ```bash
-git clone https://github.com/svaibhav-7/Qiskit_kinship_verification.git
-cd Qiskit_kinship_verification
+python -m venv .venv && .venv/Scripts/activate      # Windows
+pip install -r requirements.txt
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# GPU (optional but ~15x faster; RTX 50-series needs the cu128 wheel)
+pip install --upgrade torch --index-url https://download.pytorch.org/whl/cu128
+```
 
-# Install required packages
-pip install torch torchvision numpy scipy matplotlib scikit-learn reportlab pillow facenet-pytorch
+### Predict
+
+```bash
+# single pair
+python scripts/inference/predict.py \
+    --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
+
+# batch from CSV (img1,img2,relation)
+python scripts/inference/predict.py --pairs pairs.csv --out results.csv
+```
+
+Relations: `fd` father-daughter, `fs` father-son, `md` mother-daughter,
+`ms` mother-son. `--domain` selects the calibrated operating point
+(`fiw`, `kinfacew-i`, `kinfacew-ii`, `tskinface`).
+
+### Reproduce every number
+
+```bash
+python scripts/deploy/build_all_caches.py     # FaceNet embeddings, all datasets
+python scripts/evaluation/run_kfold.py        # grouped 5-fold -> results/honest/kfold.json
+python scripts/evaluation/run_kfold.py --no-quantum --tag kfold_noq   # ablation
+python scripts/training/train_multi.py --tag multi_cap8000 --cap-per-dataset 8000
+python scripts/deploy/package_multi.py        # package with per-domain thresholds
+pytest tests/ -q                              # 61 tests
 ```
 
 ---
 
-### 2. Standalone Production Deployment Prediction (`deploy_meta_predict.py`)
-
-Run kinship verification on any custom pair of face images using ONLY `meta_ensemble_kinship.pt`:
-
-```bash
-python scripts/inference/deploy_meta_predict.py \
-    --img1 path/to/parent.jpg \
-    --img2 path/to/child.jpg \
-    --relation fd
-```
-
-#### Supported Relation Flags:
-- `--relation fd` : Father-Daughter
-- `--relation fs` : Father-Son
-- `--relation md` : Mother-Daughter
-- `--relation ms` : Mother-Son
-
-#### Interactive Console Mode:
-Simply launch without arguments for interactive prompt mode:
-```bash
-python scripts/inference/deploy_meta_predict.py
-```
-
----
-
-### 3. Re-Execute Master 12-Module Research Evaluation Suite
-
-Execute all 12 research modules, generate all 8 high-resolution PNG plots, and re-compile the master publication PDF report in ~10 seconds:
-
-```bash
-python research_experiments/master_research_runner.py
-```
-
-Output assets generated:
-- **PDF Report**: `research_experiments/Quantum_Kinship_Master_Research_Report.pdf`
-- **Plot Figures**: `research_experiments/outputs/**/*.png`
-- **JSON Metrics**: `research_experiments/outputs/**/*.json`
-
----
-
-## 📜 Citation & Research License
-
-If you use this codebase, quantum-inspired architecture, or evaluation suite in your research, please cite:
+## Citation
 
 ```bibtex
-@article{quantum_kinship_2026,
-  title={Quantum-Inspired Facial Kinship Verification via Entangled Hilbert Space Projection and Meta-Ensemble Classification},
-  author={Vaibhav, Sasi and DeepMind Pair-Programming Suite},
-  journal={IEEE / Elsevier Manuscripts in Review},
-  year={2026}
+@software{quantum_kinship_2026,
+  title  = {Leakage-free evaluation for facial kinship verification},
+  author = {Vaibhav, Sasi},
+  year   = {2026},
+  url    = {https://github.com/svaibhav-7/Qiskit_kinship_verification}
 }
 ```
+
+No peer-reviewed publication is associated with this repository yet; please do
+not cite it as one.
 
 Distributed under the **MIT License**. See `LICENSE` for details.

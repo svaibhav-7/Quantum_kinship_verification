@@ -1,0 +1,37 @@
+{
+  "total_test_pairs": 500,
+  "true_positives_count": 104,
+  "true_negatives_count": 217,
+  "false_positives_count": 33,
+  "false_negatives_count": 146,
+  "diagnostic_case_studies": {
+    "True Positive (TP) Case": {
+      "pair_idx": 0,
+      "true_label": "Kin (1)",
+      "predicted_prob": 0.6929001808166504,
+      "status": "CORRECT KIN DETECTED",
+      "diagnostic_reason": "Clear genetic similarity in upper facial region (eyes, eyebrow arch) and aligned frontal pose."
+    },
+    "True Negative (TN) Case": {
+      "pair_idx": 3,
+      "true_label": "Non-Kin (0)",
+      "predicted_prob": 0.4794389009475708,
+      "status": "CORRECT NON-KIN REJECTED",
+      "diagnostic_reason": "Distinct structural geometry in jawline and nose bridge; low quantum SWAP-test fidelity."
+    },
+    "False Positive (FP) Failure Case": {
+      "pair_idx": 1,
+      "true_label": "Non-Kin (0)",
+      "predicted_prob": 0.5443533062934875,
+      "status": "FALSE POSITIVE ERROR",
+      "diagnostic_reason": "Superficial facial resemblance due to similar hairstyles, identical smiling expressions, and matching skin tone."
+    },
+    "False Negative (FN) Failure Case": {
+      "pair_idx": 2,
+      "true_label": "Kin (1)",
+      "predicted_prob": 0.5193519592285156,
+      "status": "FALSE NEGATIVE ERROR",
+      "diagnostic_reason": "Borderline prediction (50.35%) caused by extreme age disparity between child and parent, side pose tilt, and heavy background shadows."
+    }
+  }
+}

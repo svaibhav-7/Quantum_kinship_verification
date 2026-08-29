@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "figure_path": "d:\\SasiVaibhav\\klu\\3rd year\\projects\\Quantum_kinship\\research_experiments\\outputs\\04_explainability_tsne\\tsne_feature_space_separation.png",
+  "n_samples": 300,
+  "note": "Visualization is for illustrative purposes. Rigorous explainability requires proper validation.",
+  "separation_improvement": 0.3329976201057434,
+  "checkpoint_used": true
+}

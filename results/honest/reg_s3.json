@@ -1,0 +1,34 @@
+{
+  "config": {
+    "epochs": 60,
+    "batch_size": 512,
+    "lr": 0.001,
+    "max_pairs": 0,
+    "no_quantum": false,
+    "seed": 3,
+    "tag": "reg_s3",
+    "device": "auto",
+    "patience": 8,
+    "val_ratio": 0.2,
+    "dropout": 0.5,
+    "weight_decay": 0.01
+  },
+  "split": {
+    "n_train": 45700,
+    "n_test": 11420,
+    "test_fraction": 0.19992997198879553,
+    "shared_families": 0,
+    "shared_identities": 0,
+    "train_kin_ratio": 0.5,
+    "test_kin_ratio": 0.5
+  },
+  "val_best": {
+    "accuracy": 74.70433639947439,
+    "roc_auc": 0.8672661288017147
+  },
+  "selected_epoch": 10,
+  "test": {
+    "accuracy": 81.04203152364273,
+    "roc_auc": 0.8989591493094427
+  }
+}
