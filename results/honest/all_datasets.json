@@ -1,0 +1,47 @@
+{
+  "FIW (family-disjoint held-out)": {
+    "n": 11420,
+    "accuracy": 82.53064798598949,
+    "roc_auc": 0.8989854650182032,
+    "tpr": 78.84413309982486,
+    "fpr": 13.782837127845884,
+    "accuracy_recalibrated": 83.18739054290718,
+    "threshold_recalibrated": 0.061739597360548945
+  },
+  "KinFaceW-I (unseen)": {
+    "n": 1066,
+    "accuracy": 62.38273921200751,
+    "roc_auc": 0.6730214827043637,
+    "tpr": 71.10694183864915,
+    "fpr": 46.34146341463415,
+    "accuracy_recalibrated": 63.03939962476548,
+    "threshold_recalibrated": 0.33482345938682556
+  },
+  "KinFaceW-II (unseen)": {
+    "n": 2000,
+    "accuracy": 64.8,
+    "roc_auc": 0.685139,
+    "tpr": 70.6,
+    "fpr": 41.0,
+    "accuracy_recalibrated": 65.0,
+    "threshold_recalibrated": 0.13871243596076965
+  },
+  "TSKinFace (stock pairs)": {
+    "n": 1600,
+    "accuracy": 61.625,
+    "roc_auc": 0.7457101562499999,
+    "tpr": 91.0,
+    "fpr": 67.75,
+    "accuracy_recalibrated": 68.6875,
+    "threshold_recalibrated": 0.9041331708431244
+  },
+  "TSKinFace (shortcut-free)": {
+    "n": 2236,
+    "accuracy": 60.73345259391771,
+    "roc_auc": 0.6587692531705927,
+    "tpr": 86.04651162790698,
+    "fpr": 64.57960644007156,
+    "accuracy_recalibrated": 61.89624329159212,
+    "threshold_recalibrated": 0.8529911571410133
+  }
+}

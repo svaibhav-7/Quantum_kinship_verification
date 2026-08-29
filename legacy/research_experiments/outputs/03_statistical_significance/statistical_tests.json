@@ -1,0 +1,16 @@
+{
+  "dataset": "Families In the Wild (FIW)",
+  "sample_count": 500,
+  "accuracy": 64.2,
+  "baseline_accuracy": 50.8,
+  "bootstrap_95_ci": [
+    59.8,
+    68.4
+  ],
+  "mcnemar_chi2": 33.25190839694657,
+  "mcnemar_p_value": 8.096026293813452e-09,
+  "paired_ttest_stat": -2.7920042200616635,
+  "paired_ttest_p_value": 0.005439234442044316,
+  "statistically_significant": true,
+  "baseline_used": "Cosine Similarity on FIW Embeddings"
+}

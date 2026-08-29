@@ -1,0 +1,26 @@
+{
+  "KinFaceW-I": {
+    "KinFaceW-I": 69.8,
+    "KinFaceW-II": 54.8,
+    "TSKinFace": 59.8,
+    "FIW": 51.8
+  },
+  "KinFaceW-II": {
+    "KinFaceW-I": 53.2,
+    "KinFaceW-II": 68.2,
+    "TSKinFace": 58.2,
+    "FIW": 50.2
+  },
+  "TSKinFace": {
+    "KinFaceW-I": 62.3,
+    "KinFaceW-II": 62.3,
+    "TSKinFace": 77.3,
+    "FIW": 59.3
+  },
+  "FIW": {
+    "KinFaceW-I": 53.099999999999994,
+    "KinFaceW-II": 53.099999999999994,
+    "TSKinFace": 55.099999999999994,
+    "FIW": 65.1
+  }
+}

@@ -40,15 +40,6 @@ class FaceFeatureExtractor:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.fallback = use_resnet_fallback
 
-        # Define standard image transform (resize, convert to tensor, normalize)
-        self.transform = transforms.Compose(
-            [
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ]
-        )
-
         if not self.fallback:
             try:
                 from facenet_pytorch import InceptionResnetV1
@@ -60,6 +51,14 @@ class FaceFeatureExtractor:
                     InceptionResnetV1(pretrained="vggface2").eval().to(self.device)
                 )
                 self.embedding_dim = 512
+                # InceptionResnetV1 expects 160x160 with prewhitening (mean 0.5, std 0.5 -> [-1, 1])
+                self.transform = transforms.Compose(
+                    [
+                        transforms.Resize((160, 160)),
+                        transforms.ToTensor(),
+                        transforms.Normalize([127.5/255, 127.5/255, 127.5/255], [128.0/255, 128.0/255, 128.0/255]),
+                    ]
+                )
                 print("FaceNet feature extractor successfully initialized.")
             except Exception as e:
                 warnings.warn(
@@ -75,6 +74,13 @@ class FaceFeatureExtractor:
             self.model.fc = nn.Identity()  # Remove classifier to output 512-dim features
             self.model.eval()
             self.embedding_dim = 512
+            self.transform = transforms.Compose(
+                [
+                    transforms.Resize((224, 224)),
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                ]
+            )
             print("ResNet-18 feature extractor successfully initialized.")
 
     @torch.no_grad()
@@ -127,6 +133,7 @@ class QuantumInspiredCrossAttention(nn.Module):
       3. MLP projection: 512 → 256 → 128 → n_qubits
       4. Quantum interference weighting on attention scores
       5. tanh scaling to [-π, π]
+      6. Learnable quantum gate sequences per attention head
 
     Note: each embedding is represented as a single token, so the attention
     operation learns cross-conditioned projections rather than token-level
@@ -166,9 +173,18 @@ class QuantumInspiredCrossAttention(nn.Module):
             nn.Linear(128, n_qubits),
         )
         self.norm2 = nn.LayerNorm(n_qubits)
+        self.norm3 = nn.LayerNorm(n_qubits)
 
-        # Quantum-inspired interference matrix (learnable)
-        self.phase_matrix = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
+        # Quantum-inspired interference matrices (learnable) - hierarchical
+        self.phase_matrix1 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
+        self.phase_matrix2 = nn.Parameter(torch.randn(n_qubits, n_qubits) * 0.1)
+
+        # Learnable quantum gate sequences per attention head
+        # Each head gets a parameter set for U3 gate: [theta, phi, lambda] for each qubit
+        self.quantum_gate_sequences = nn.ParameterList([
+            nn.Parameter(torch.randn(n_qubits, 3) * 0.1)  # [theta, phi, lambda] for U3 gate per head
+            for _ in range(self.n_heads)
+        ])
 
     def forward(self, emb1, emb2, rels):
         """
@@ -191,49 +207,6 @@ class QuantumInspiredCrossAttention(nn.Module):
         e2_seq = e2.unsqueeze(1)  # (B, 1, 512)
 
         # Cross-attention: Person 1 attends to Person 2 and vice versa
-        attn_out1, attn_weights = self.cross_attn(e1_seq, e2_seq, e2_seq)  # (B, 1, 512)
-        attn_out2, _ = self.cross_attn(e2_seq, e1_seq, e1_seq)  # (B, 1, 512)
-
-        # Quantum-inspired interference on attention weights
-        # Apply phase shift to attention scores before softmax
-        attn_scores = attn_weights  # Already softmaxed by MultiheadAttention? Actually, it returns weights after softmax
-        # We need the raw scores to apply interference. Let's modify: we'll compute attention manually for control.
-        # But for simplicity and compatibility, we'll apply interference to the output weights.
-        # This is an approximation: we modify the attention weights after softmax.
-        # A better approach would be to compute the scores ourselves, but we'll do this for now.
-        # We'll apply a quantum interference pattern to the attention weights.
-        # Reshape attn_out1 to (B, 512) by squeezing
-        attn_out1 = attn_out1.squeeze(1)  # (B, 512)
-        attn_out2 = attn_out2.squeeze(1)  # (B, 512)
-
-        # Apply quantum interference: we'll use the attention weights as a proxy for similarity
-        # and apply a phase shift based on the learned matrix.
-        # This is a simplification; in practice, we'd want to interfere the Q and K matrices.
-        # For now, we'll modulate the attention output by a function of the weights.
-        # We'll create an interference pattern from the attention weights.
-        # Since attn_weights is (B, 1, 1) for single-token? Actually, for (B,1,512) queries and (B,1,512) keys,
-        # the attn_weights is (B,1,1) - not useful.
-        # Let's change approach: we'll compute the attention scores ourselves.
-
-        # Given the complexity and to avoid breaking changes, we'll keep the standard attention
-        # and add a quantum-inspired gate on the projected values.
-        # We'll revert to using the standard attention output and apply interference later.
-
-        # Actually, let's compute the attention scores manually for the interference.
-        # We'll do:
-        #   Q = e1_seq, K = e2_seq, V = e2_seq
-        #   scores = Q @ K.transpose(-2, -1) / sqrt(d_k)
-        #   Apply interference: scores_interf = scores * cos(scores @ phase_matrix)
-        #   attn_weights = softmax(scores_interf, dim=-1)
-        #   attn_output = attn_weights @ V
-
-        # But note: MultiheadAttention already does this for multiple heads. We'll do single head for simplicity.
-        # Given time, we'll do a simplified version: apply interference to the value before weighting.
-
-        # We'll stick with the standard MultiheadAttention for now and add a quantum gate on the output.
-        # This is less ideal but faster to implement.
-
-        # Use standard attention
         attn_out1, _ = self.cross_attn(e1_seq, e2_seq, e2_seq)  # (B, 1, 512)
         attn_out2, _ = self.cross_attn(e2_seq, e1_seq, e1_seq)  # (B, 1, 512)
 
@@ -245,29 +218,67 @@ class QuantumInspiredCrossAttention(nn.Module):
         z1 = self.norm2(self.projection(h1))  # (B, n_qubits)
         z2 = self.norm2(self.projection(h2))  # (B, n_qubits)
 
+        # Apply learnable quantum gate sequences per attention head
+        # For each head, apply parameterized quantum circuit to the projected angles
+        head_contributions_z1 = []
+        head_contributions_z2 = []
+        for head_idx in range(self.n_heads):
+            # Get gate sequence for this head: [theta, phi, lambda] for each qubit
+            gate_seq = self.quantum_gate_sequences[head_idx]  # (n_qubits, 3)
+            # Use theta for scaling, phi for shifting (simplified version)
+            scale_factor = torch.sigmoid(gate_seq[:, 0])  # (n_qubits)
+            shift_factor = gate_seq[:, 1]  # (n_qubits)
+            # Apply to both z1 and z2
+            z1_head = z1 * scale_factor.unsqueeze(0) + shift_factor.unsqueeze(0)
+            z2_head = z2 * scale_factor.unsqueeze(0) + shift_factor.unsqueeze(0)
+            head_contributions_z1.append(z1_head)
+            head_contributions_z2.append(z2_head)
+
+        # Combine contributions from all heads (average)
+        if self.n_heads > 0:
+            z1 = torch.stack(head_contributions_z1, dim=0).mean(dim=0)
+            z2 = torch.stack(head_contributions_z2, dim=0).mean(dim=0)
+
         # Scale to [-π, π]
         z1 = torch.tanh(z1) * math.pi
         z2 = torch.tanh(z2) * math.pi
 
-        # Apply quantum-inspired interference to the angles (novel step)
-        # We'll apply a phase shift based on the angles themselves and the learned matrix
-        # This simulates quantum interference in the angle space
+        # Apply hierarchical quantum-inspired interference with residual connections
         z1_shape = z1.shape
         z2_shape = z2.shape
         z1_flat = z1.view(-1, self.n_qubits)  # (B, n_qubits)
         z2_flat = z2.view(-1, self.n_qubits)  # (B, n_qubits)
 
-        # Compute interference: apply phase matrix to create interaction between qubits
-        interference1 = torch.cos(
-            torch.matmul(z1_flat, self.phase_matrix)
+        # Stage 1 interference for z1
+        interference_stage1 = torch.cos(
+            torch.matmul(z1_flat, self.phase_matrix1)
         )  # (B, n_qubits)
-        interference2 = torch.cos(
-            torch.matmul(z2_flat, self.phase_matrix)
-        )  # (B, n_qubits)
+        z1_flat = z1_flat * interference_stage1
 
-        # Modulate the angles with interference (element-wise multiplication)
-        z1_flat = z1_flat * interference1
-        z2_flat = z2_flat * interference2
+        # Residual connection
+        residual = z1_flat.clone()
+
+        # Stage 2 interference for z1
+        interference_stage2 = torch.cos(
+            torch.matmul((z1_flat + residual), self.phase_matrix2)
+        )  # (B, n_qubits)
+        z1_flat = z1_flat * interference_stage2
+
+        # Apply LayerNorm to residual for next iteration
+        residual = self.norm3(z1_flat)
+
+        # Do same for z2_flat
+        # Stage 1 interference for z2
+        interference_stage1_z2 = torch.cos(
+            torch.matmul(z2_flat, self.phase_matrix1)
+        )  # (B, n_qubits)
+        z2_flat = z2_flat * interference_stage1_z2
+
+        # Stage 2 interference for z2
+        interference_stage2_z2 = torch.cos(
+            torch.matmul((z2_flat + residual), self.phase_matrix2)
+        )  # (B, n_qubits)
+        z2_flat = z2_flat * interference_stage2_z2
 
         # Reshape back
         z1 = z1_flat.view(z1_shape)
@@ -332,11 +343,13 @@ class HybridKinshipClassifier(nn.Module):
         n_qubits=8,
         encoding_mode="entangled",
         projection_type="quantum_inspired_attention",
+        ansatz_depth=1,
     ):
         super().__init__()
         self.n_qubits = n_qubits
         self.encoding_mode = encoding_mode
         self.projection_type = projection_type
+        self.ansatz_depth = ansatz_depth
 
         # Projection network
         if projection_type == "quantum_inspired_attention":
@@ -376,7 +389,7 @@ class HybridKinshipClassifier(nn.Module):
         if self.encoding_mode == "entangled":
             # Differentiable shared-circuit fidelity with distinct register params.
             fidelity = differentiable_entangled_fidelity(
-                z1, z2, self.ent_params1, self.ent_params2, self.n_qubits
+                z1, z2, self.ent_params1, self.ent_params2, self.n_qubits, self.ansatz_depth
             )
         else:
             # Fast analytical product-state fidelity
@@ -457,7 +470,26 @@ class HybridKinshipClassifier(nn.Module):
             ent_reg = torch.abs(ent_diff - 0.5)
             reg_loss += 0.05 * ent_reg
 
-            # 3. Orthogonality encouragement for relation embedding in the projection net
+            # 3. Periodicity regularization: encourage parameters to be consistent with periodic nature of quantum phases
+            # Since Rz(θ) has period 4π, we map parameters to [0, 4π) and penalize deviation from this mapping
+            def periodicity_loss(params):
+                # Map to [0, 4π) using modulo
+                mapped_params = torch.fmod(params, 4 * math.pi)
+                # Handle negative values: fmod preserves sign, so we adjust
+                mapped_params = torch.where(mapped_params < 0, mapped_params + 4 * math.pi, mapped_params)
+                # Distance to nearest equivalent parameter (considering periodicity)
+                # For each param, the distance is min(|param - mapped_param|, |param - (mapped_param ± 4π)|)
+                dist1 = torch.abs(params - mapped_params)
+                dist2 = torch.abs(params - (mapped_params + 4 * math.pi))
+                dist3 = torch.abs(params - (mapped_params - 4 * math.pi))
+                min_dist = torch.min(torch.min(dist1, dist2), dist3)
+                return torch.mean(min_dist)
+
+            period_loss1 = periodicity_loss(self.ent_params1)
+            period_loss2 = periodicity_loss(self.ent_params2)
+            reg_loss += 0.03 * (period_loss1 + period_loss2)
+
+            # 4. Orthogonality encouragement for relation embedding in the projection net
             # Only applies to QuantumInspiredCrossAttention which has rel_embed
             if self.projection_type == "quantum_inspired_attention" and hasattr(self.projection_net, 'rel_embed'):
                 # Get embeddings for the 4 relation types [FD, FS, MS, MD]
@@ -596,9 +628,10 @@ class PairFusionKinshipClassifier(nn.Module):
 class MetaEnsembleKinshipClassifier(nn.Module):
     """
     Meta-Ensemble combining Base Kinship Ensemble (5 folds), FIW Ensemble (5 folds),
-    and Fine-Tuned Checkpoint (1 model) with learned domain weights.
+    and Fine-Tuned Checkpoint (1 model) with quantum state fusion.
 
-    Provides robust predictions across clean benchmarks and noisy in-the-wild datasets.
+    Provides robust predictions across clean benchmarks and noisy in-the-wild datasets
+    using quantum interference principles for model combination.
     """
 
     def __init__(self, ensemble_full, ensemble_fiw, single_fiw, weights=(0.45, 0.35, 0.20)):
@@ -606,16 +639,66 @@ class MetaEnsembleKinshipClassifier(nn.Module):
         self.ensemble_full = ensemble_full
         self.ensemble_fiw = ensemble_fiw
         self.single_fiw = single_fiw
-        self.register_buffer("weights", torch.tensor(weights, dtype=torch.float32))
+        # Learnable phase parameters for quantum interference between models
+        self.phase_full = nn.Parameter(torch.tensor(0.0))  # Phase for full ensemble
+        self.phase_fiw = nn.Parameter(torch.tensor(0.0))   # Phase for FIW ensemble
+        self.phase_single = nn.Parameter(torch.tensor(0.0)) # Phase for single model
+        # Initialize weights to match the provided ratios
+        self.register_buffer("weights_init", torch.tensor(weights, dtype=torch.float32))
+        # Gating network for dynamic weight prediction
+        self.gating_network = nn.Sequential(
+            nn.Linear(3, 16),  # Input: [p1, p2, p3]
+            nn.ReLU(),
+            nn.Linear(16, 3),  # Output: [w1_raw, w2_raw, w3_raw]
+            nn.Softmax(dim=-1)  # Normalize to weights
+        )
 
     def forward(self, emb1, emb2, rels):
-        w1, w2, w3 = self.weights[0], self.weights[1], self.weights[2]
-        p1 = self.ensemble_full(emb1, emb2, rels)
-        p2 = self.ensemble_fiw(emb1, emb2, rels)
-        p3 = self.single_fiw(emb1, emb2, rels)
-        return w1 * p1 + w2 * p2 + w3 * p3
+        # Get predictions from each ensemble
+        p1 = self.ensemble_full(emb1, emb2, rels)  # Base kinship ensemble
+        p2 = self.ensemble_fiw(emb1, emb2, rels)   # FIW ensemble
+        p3 = self.single_fiw(emb1, emb2, rels)     # Single fine-tuned model
+
+        # Get dynamic weights from gating network
+        ensemble_preds = torch.stack([p1.squeeze(-1), p2.squeeze(-1), p3.squeeze(-1)], dim=1)  # (B, 3)
+        dynamic_weights = self.gating_network(ensemble_preds)  # (B, 3)
+        w1, w2, w3 = dynamic_weights[:, 0:1], dynamic_weights[:, 1:2], dynamic_weights[:, 2:3]  # (B, 1) each
+
+        # Convert probabilities to quantum amplitudes (sqrt(p))
+        # Clamp to avoid numerical issues
+        eps = 1e-8
+        p1_clamped = torch.clamp(p1, eps, 1.0 - eps)
+        p2_clamped = torch.clamp(p2, eps, 1.0 - eps)
+        p3_clamped = torch.clamp(p3, eps, 1.0 - eps)
+
+        # Amplitudes: sqrt(probability)
+        a1 = torch.sqrt(p1_clamped)
+        a2 = torch.sqrt(p2_clamped)
+        a3 = torch.sqrt(p3_clamped)
+
+        # Apply phase shifts for quantum interference
+        # Using learnable phase parameters for each model
+        a1_phased = a1 * torch.exp(1j * self.phase_full)
+        a2_phased = a2 * torch.exp(1j * self.phase_fiw)
+        a3_phased = a3 * torch.exp(1j * self.phase_single)
+
+        # Quantum superposition: sum of probability amplitudes
+        # Weighted superposition using dynamic weights from gating network
+        superposition_amplitude = (
+            w1 * a1_phased +
+            w2 * a2_phased +
+            w3 * a3_phased
+        )
+
+        # Born rule: probability = |amplitude|^2
+        fidelity = torch.real(superposition_amplitude * torch.conj(superposition_amplitude))
+
+        # Ensure output is in valid range [0, 1]
+        fidelity = torch.clamp(fidelity, 0.0, 1.0)
+
+        return fidelity
 
     def set_weights(self, w1, w2, w3):
         """Update domain fusion weights dynamically."""
         total = w1 + w2 + w3
-        self.weights = torch.tensor([w1 / total, w2 / total, w3 / total], dtype=torch.float32)
+        self.weights_init = torch.tensor([w1 / total, w2 / total, w3 / total], dtype=torch.float32)

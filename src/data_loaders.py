@@ -2,6 +2,7 @@ import os
 import pickle
 import numpy as np
 import scipy.io
+import csv
 from PIL import Image
 import torch
 
@@ -24,17 +25,19 @@ def resolve_image_path(path):
     return None
 
 
-def load_kinfacew_pairs(root):
+def load_kinfacew_pairs(root, fold=None):
     """
     Parses KinFaceW-I or KinFaceW-II datasets and returns lists of image paths and labels.
+    Preserves official 5-fold cross-validation assignments from meta_data .mat files.
 
     Args:
-        root (str): Absolute path to the KinFaceW-I or KinFaceW-II root folder (which contains images/ and meta_data/).
+        root (str): Absolute path to the KinFaceW-I or KinFaceW-II root folder.
+        fold (int, optional): Filter by official fold index (1 to 5). If None, loads all folds.
 
     Returns:
-        pairs (list of tuples): List of (img1_path, img2_path, label, relation_type)
+        pairs (list of tuples): List of (img1_path, img2_path, label, relation_type, fold)
     """
-    # Auto-detect nested root directories (e.g., KinFaceW-II/KinFaceW-II or KinFaceW-I/KinFaceW-I)
+    # Auto-detect nested root directories
     if os.path.exists(root):
         base_name = os.path.basename(root.rstrip("/\\"))
         nested = os.path.join(root, base_name)
@@ -64,7 +67,11 @@ def load_kinfacew_pairs(root):
 
         for row in pairs:
             # mat file format:
-            # row[0]: fold, row[1]: label (1=kin, 0=non-kin), row[2]: img1, row[3]: img2
+            # row[0]: fold (1..5), row[1]: label (1=kin, 0=non-kin), row[2]: img1, row[3]: img2
+            row_fold = int(row[0].flat[0])
+            if fold is not None and row_fold != fold:
+                continue
+
             label = int(row[1].flat[0])
             img1 = str(row[2].flat[0])
             img2 = str(row[3].flat[0])
@@ -135,24 +142,28 @@ def load_tskinface_pairs(root, max_families=200):
             child_embs_paths.append(c_path)
 
     # Generate Non-kin pairs: cross-match parents and children (label = 0)
-    # We pair random parents and random children from different families to avoid accidental kin
+    # We pair random parents and random children from different families to reach 1:1 class balance
     n_kin = len(pairs_list)
     rng = np.random.default_rng(42)
     added = 0
+    seen_pairs = set()
 
-    # Simple pairing: shuffle parents and children and combine
-    shuffled_parents = list(parent_embs_paths)
-    shuffled_children = list(child_embs_paths)
+    max_attempts = n_kin * 10
+    attempts = 0
 
-    while added < n_kin and len(shuffled_parents) > 0 and len(shuffled_children) > 0:
-        p_idx = rng.integers(0, len(shuffled_parents))
-        c_idx = rng.integers(0, len(shuffled_children))
+    while added < n_kin and attempts < max_attempts:
+        attempts += 1
+        p_idx = rng.integers(0, len(parent_embs_paths))
+        c_idx = rng.integers(0, len(child_embs_paths))
 
-        p_path = shuffled_parents[p_idx]
-        c_path = shuffled_children[c_idx]
+        p_path = parent_embs_paths[p_idx]
+        c_path = child_embs_paths[c_idx]
+
+        pair_key = (p_path, c_path)
+        if pair_key in seen_pairs:
+            continue
 
         # Ensure they are not from the same family
-        # Path format: .../FMS/FMS-fid-F.jpg and .../FMS/FMS-fid-S.jpg
         p_fid = os.path.basename(p_path).split("-")[1]
         c_fid = os.path.basename(c_path).split("-")[1]
         p_folder = os.path.basename(os.path.dirname(p_path))
@@ -160,13 +171,38 @@ def load_tskinface_pairs(root, max_families=200):
 
         if p_fid != c_fid or p_folder != c_folder:
             pairs_list.append((p_path, c_path, 0, "ts_non_kin"))
+            seen_pairs.add(pair_key)
             added += 1
-            # Remove to avoid repeated exact duplicates
-            shuffled_parents.pop(p_idx)
-            if len(shuffled_children) > c_idx:
-                shuffled_children.pop(c_idx)
 
     return pairs_list
+
+
+def get_relation_category(rel, img1_path):
+    """
+    Map relation string to category index for one-hot encoding.
+    Categories: 0=father-son, 1=father-daughter, 2=mother-son, 3=mother-daughter/other/non-kin
+
+    Args:
+        rel (str): Relation string from dataset
+        img1_path (str): Path to first image (used for disambiguation in some cases)
+
+    Returns:
+        int: Category index (0-3)
+    """
+    # Handle KinFaceW & TSKinFace relations - map each to a distinct category (0..3)
+    rel_lower = str(rel).lower()
+
+    if "fd" in rel_lower or "fmd_fc" in rel_lower or "father_daughter" in rel_lower:
+        return 1  # father-daughter
+    elif "fs" in rel_lower or "fms_fc" in rel_lower or "father_son" in rel_lower:
+        return 0  # father-son
+    elif "md" in rel_lower or "fmd_mc" in rel_lower or "mother_daughter" in rel_lower:
+        return 3  # mother-daughter
+    elif "ms" in rel_lower or "fms_mc" in rel_lower or "mother_son" in rel_lower:
+        return 2  # mother-son
+
+    # Default fallback for any other relation type
+    return 3  # catch-all category
 
 
 def cache_face_embeddings(pairs, feature_extractor, cache_path):
@@ -190,7 +226,7 @@ def cache_face_embeddings(pairs, feature_extractor, cache_path):
 
     # Load existing cache if available
     cache = {}
-    if os.path.exists(cache_path):
+    if cache_path and os.path.exists(cache_path):
         try:
             with open(cache_path, "rb") as f:
                 raw_cache = pickle.load(f)
@@ -244,37 +280,6 @@ def cache_face_embeddings(pairs, feature_extractor, cache_path):
     return cache
 
 
-def get_relation_category(rel_str, p_path=None):
-    """
-    Maps relationship type strings to one of 4 canonical categories:
-    0: Father-Daughter (fd)
-    1: Father-Son (fs)
-    2: Mother-Daughter (md)
-    3: Mother-Son (ms)
-    """
-    rel_str = rel_str.lower()
-    if "fd" in rel_str or "father-dau" in rel_str:
-        return 0
-    elif "fs" in rel_str or "father-son" in rel_str:
-        return 1
-    elif "md" in rel_str or "mother-dau" in rel_str:
-        return 2
-    elif "ms" in rel_str or "mother-son" in rel_str:
-        return 3
-    elif "ts_non_kin" in rel_str and p_path is not None:
-        # Determine based on parent type in TSKinFace
-        # format: .../FMS/FMS-fid-F.jpg -> Father
-        basename = os.path.basename(p_path)
-        is_father = "-f" in basename.lower()
-        is_fms = "fms" in p_path.lower()
-        if is_fms:
-            return 1 if is_father else 3  # Father-Son or Mother-Son
-        else:
-            return 0 if is_father else 2  # Father-Daughter or Mother-Daughter
-    else:
-        return 0
-
-
 def prepare_pair_tensors(pairs, cache):
     """
     Converts pairs and their cached embeddings into PyTorch Tensors,
@@ -312,3 +317,118 @@ def prepare_pair_tensors(pairs, cache):
     rels_tensor = torch.tensor(np.array(rels_list), dtype=torch.float32)
 
     return emb1_tensor, emb2_tensor, labels_tensor, rels_tensor
+
+
+def load_fiw_pairs(fiw_root, max_pairs=None):
+    """
+    Load FIW (Family In the Wild) dataset pairs from `public/FIDs`.
+
+    Parses each family's `mid.csv` to map parent-child relationships (FD, FS, MD, MS).
+    Creates a 1:1 balanced set of Kin and Non-Kin pairs across families.
+    """
+    import glob
+    import random
+
+    fids_dir = os.path.join(fiw_root, "FIDs") if os.path.exists(os.path.join(fiw_root, "FIDs")) else fiw_root
+    if not os.path.exists(fids_dir):
+        print(f"  [WARNING] FIDs directory not found at {fids_dir}")
+        return []
+
+    families = sorted([d for d in os.listdir(fids_dir) if os.path.isdir(os.path.join(fids_dir, d))])
+    kin_pairs = []
+    all_family_images = {}
+
+    for fid in families:
+        fpath = os.path.join(fids_dir, fid)
+        mid_csv = os.path.join(fpath, "mid.csv")
+        if not os.path.exists(mid_csv):
+            continue
+
+        with open(mid_csv, "r") as f:
+            reader = list(csv.reader(f))
+        if len(reader) < 2:
+            continue
+
+        header = [x.strip() for x in reader[0]]
+        mids = []
+        genders = {}
+        rel_matrix = {}
+        all_family_images[fid] = []
+
+        for row in reader[1:]:
+            if not row:
+                continue
+            mid_id = row[0].strip()
+            mids.append(mid_id)
+            gender = row[-1].strip().lower()
+            genders[mid_id] = gender
+            rel_matrix[mid_id] = {}
+            for col_idx, m in enumerate(header[1:-2], start=1):
+                if col_idx < len(row):
+                    try:
+                        rel_matrix[mid_id][m] = int(row[col_idx].strip())
+                    except ValueError:
+                        pass
+            m_imgs = glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.jpg")) + glob.glob(os.path.join(fpath, f"MID{mid_id}", "*.png"))
+            all_family_images[fid].extend(m_imgs)
+
+        # Generate parent-child kin pairs
+        for m1 in mids:
+            for m2 in mids:
+                if m1 == m2:
+                    continue
+                code = rel_matrix.get(m1, {}).get(m2, 0)
+                if code in (1, 4):  # 1 = child of, 4 = parent of
+                    if code == 1:
+                        child_id, parent_id = m1, m2
+                    else:
+                        parent_id, child_id = m1, m2
+
+                    parent_gender = genders.get(parent_id, "m")
+                    child_gender = genders.get(child_id, "f")
+
+                    p_imgs = glob.glob(os.path.join(fpath, f"MID{parent_id}", "*.jpg"))
+                    c_imgs = glob.glob(os.path.join(fpath, f"MID{child_id}", "*.jpg"))
+
+                    if parent_gender == "m" and child_gender == "f":
+                        rel_str = "fd"
+                    elif parent_gender == "m" and child_gender == "m":
+                        rel_str = "fs"
+                    elif parent_gender == "f" and child_gender == "f":
+                        rel_str = "md"
+                    else:
+                        rel_str = "ms"
+
+                    for p_img in p_imgs:
+                        for c_img in c_imgs:
+                            kin_pairs.append((p_img, c_img, 1, rel_str))
+
+    # Generate equal number of Non-Kin Pairs from different families
+    nonkin_pairs = []
+    fid_list = [f for f in families if f in all_family_images and all_family_images[f]]
+    random.seed(42)
+
+    for p1, p2, _, rel_str in kin_pairs:
+        p1_fid = os.path.basename(os.path.dirname(os.path.dirname(p1)))
+        other_fids = [f for f in fid_list if f != p1_fid]
+        if not other_fids:
+            continue
+        other_fid = random.choice(other_fids)
+        other_img = random.choice(all_family_images[other_fid])
+        nonkin_pairs.append((p1, other_img, 0, rel_str))
+
+    total_pairs = kin_pairs + nonkin_pairs
+    random.seed(42)
+    random.shuffle(total_pairs)
+
+    if max_pairs and max_pairs > 0 and len(total_pairs) > max_pairs:
+        half = max_pairs // 2
+        sampled_kin = [p for p in total_pairs if p[2] == 1][:half]
+        sampled_nonkin = [p for p in total_pairs if p[2] == 0][:half]
+        total_pairs = sampled_kin + sampled_nonkin
+        random.shuffle(total_pairs)
+
+    print(f"  [FIW] Loaded {len(total_pairs)} pairs (kin={sum(1 for p in total_pairs if p[2]==1)}, non-kin={sum(1 for p in total_pairs if p[2]==0)})")
+    return total_pairs
+
+
