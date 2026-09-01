@@ -258,6 +258,35 @@ pytest tests/ -q                              # 61 tests
 
 ---
 
+---
+
+---
+
+## Project History and Methodology
+
+This repository began as a quantum-inspired kinship system reporting 77.8% on
+FIW. Re-examination found that number was measured with 100% identity leakage,
+and that nine quantum-inspired formulations each failed against a
+capacity-matched classical control.
+
+**[docs/project_history.pdf](docs/project_history.pdf)** records the full route:
+the diagnostics that prompted the change, why each quantum formulation failed
+and what that implies structurally, the methodology that replaced them, and one
+claim this project made and later had to retract.
+
+In brief:
+
+| | Then | Now |
+|---|---|---|
+| FIW | 76.0% (100% identity leakage) | 72.21% ± 1.55 (family-disjoint) |
+| TSKinFace | 83.3% (photo-session shortcut) | 79.25% ± 2.32 (shortcut closed) |
+| Seed stability | 22.5-point spread | 12.1 points |
+| Quantum claim | "removing it costs 7.5%" | 9 formulations, none beats its control |
+
+The numbers went down. That drop is the leakage and the shortcut leaving.
+
+---
+
 ## Citation
 
 ```bibtex
