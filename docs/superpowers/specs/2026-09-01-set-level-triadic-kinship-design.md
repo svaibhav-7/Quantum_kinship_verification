@@ -36,15 +36,45 @@ All figures below are family-disjoint, no training unless stated.
 | `Tr(ρ₁ρ₂)` added to mean-pool | 0.8050 | 0.8059 | +0.1 |
 | Quantum interference sweep | 0.7684 | 0.7696 | +0.1 |
 
-Two conclusions follow. Set-level and triadic modelling carry real signal. Both
-quantum formulations do not — this is the third independent experiment to reach
-that conclusion, after the 5-seed (p = 0.945) and 20-fold (p = 0.982) ablations.
+Two conclusions follow. Set-level and triadic modelling carry real signal. The
+quantum formulations do not. Section 2b records all seven tested to date.
 
 `Tr(ρ₁ρ₂)` *loses* to a mean vector because it is dominated by the leading
 eigenvector while accumulating noise from tail directions that cannot be
 estimated from ~5 photos. The interference sweep collapses to the classical
 mixture because normalised FaceNet embeddings carry no phase structure to
 exploit.
+
+## 2b. Quantum formulations tested
+
+Six distinct quantum-inspired formulations were evaluated against matched
+classical controls on family-disjoint data. They are listed here so the design
+decision is auditable and so no formulation is retried without reason.
+
+| # | Formulation | Quantum role | Control | Result |
+|---|---|---|---|---|
+| 1 | SWAP-test fidelity (5 seeds) | similarity score | classical head | p = 0.945 |
+| 2 | SWAP-test fidelity (20 folds) | similarity score | classical head | p = 0.982 |
+| 3 | Density fidelity `Tr(ρ₁ρ₂)` | set similarity | mean-pool | **−8.7 AUC** |
+| 4 | Interference sweep over phase | triad mixing | classical mixture | +0.1 AUC |
+| 5 | Entanglement entropy of 2-register state | pair feature | cosine | 0.514 alone (chance) |
+| 6 | POVM head (PSD, partition of unity) | constrained nonlinearity | same-capacity linear head | **−5.5 AUC** |
+| 7 | Purity regularizer on representation | geometric prior | decorrelation penalty | **−0.9 AUC, p = 0.047** |
+
+Formulation 7 initially appeared to gain +1.3 AUC on a single seed. Repeating
+it across 9 paired runs reversed the sign and showed it significantly *worse*
+than no regularizer. The single-seed reading was noise.
+
+These cover the three distinct roles a quantum component could play — a
+similarity measure (1–4), a feature extractor (5), and an inductive bias
+(6–7) — each against a control matched for capacity or intent. None improved
+on its classical counterpart; four were significantly worse.
+
+**Conclusion.** The failure is not one of implementation. Normalised FaceNet
+embeddings carry no phase structure for interference to exploit, and a photo
+set of ~5 images cannot support estimation of the tail directions a density
+matrix needs. The quantum arm is therefore retained as a pre-registered
+control, not as a mechanism.
 
 ## 3. Design
 
@@ -85,8 +115,8 @@ Datasets without triads are unaffected.
 `Tr(ρ₁ρ₂)` over the set density matrix `ρ = (1/N)Σ|ψᵢ⟩⟨ψᵢ|` is retained as a
 switchable feature, defaulting **off**. It is the natural quantum reading of a
 photo set — a mixed state over observations — which is precisely why its failure
-is informative. Reporting it as a pre-registered control across three
-experiments is a stronger scientific claim than omitting it.
+is informative. Reporting it as a pre-registered control across seven
+formulations is a stronger scientific claim than omitting it.
 
 The existing SWAP-test branch (`use_quantum`) is likewise retained unchanged.
 
@@ -124,7 +154,8 @@ Four arms, all on the same folds:
 3. Set-level + triadic
 4. Set-level + density-matrix arm (the quantum control)
 
-Arms 2 and 3 carry the claims; arm 4 tests the quantum hypothesis a third time.
+Arms 2 and 3 carry the claims; arm 4 re-tests the quantum hypothesis under the
+new set-level representation, which is the most favourable setting it has had.
 
 ## 6. Success criteria
 
