@@ -7,8 +7,8 @@ Verification project.
 
 | Subfolder | Format | Length | Assets | Title |
 |-----------|--------|--------|--------|-------|
-| `ieee/` | IEEEtran (2-col) | 10 pp | 11 figs, 10 tables, 15 refs | Person-Level Kinship Verification: Leakage-Free Evaluation, Set-Based Aggregation, and a Negative Result for Quantum-Inspired Metrics |
-| `elsevier/` | elsarticle (1-col) | 22 pp | 8 figs, 11 tables, 14 refs | A Systematic Negative Result for Quantum-Inspired Similarity Metrics in Facial Kinship Verification |
+| `ieee/` | IEEEtran (2-col) | 12 pp | 11 figs, 13 tables, 15 refs | Person-Level Kinship Verification: Leakage-Free Evaluation, Set-Based Aggregation, and a Negative Result for Quantum-Inspired Metrics |
+| `elsevier/` | elsarticle (1-col) | 24 pp | 8 figs, 14 tables, 14 refs | A Systematic Negative Result for Quantum-Inspired Similarity Metrics in Facial Kinship Verification |
 
 Both compile with zero errors and zero undefined references. The two are
 different papers from the same work: the IEEE variant leads with person-level
@@ -37,6 +37,8 @@ project root. Regenerate them with:
 python scripts/evaluation/run_kfold.py            # main baseline + ablation
 python scripts/evaluation/run_setlevel.py         # set-level arms
 python scripts/evaluation/run_triadic.py          # triadic arms
+python scripts/deploy/build_arcface_cache.py      # ArcFace embeddings
+python scripts/evaluation/run_backbone_comparison.py  # cross-backbone replication
 python scripts/evaluation/make_figures.py         # core figures
 FIGDIR=ieee python scripts/evaluation/make_figures_extra.py   # analysis figures
 FIGDIR=elsevier python scripts/evaluation/make_figures_extra.py

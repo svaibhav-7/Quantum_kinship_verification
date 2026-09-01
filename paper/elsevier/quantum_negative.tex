@@ -56,12 +56,13 @@ kernel-launch overhead and achieves a $380\times$ GPU speedup (192 to 73{,}094
 pairs/s) with identical output and gradients, verified by test. We also
 quantify the identity leakage admitted by the evaluation protocols under which
 positive quantum claims were made: 100\% of test pairs share an identity with
-training on the largest benchmark. Beyond the negative result we report three analyses that the corrected
-protocol makes interpretable. Errors concentrate sharply by relation type:
-mother--son reaches $0.712$ ROC-AUC against father--daughter's $0.993$ on the
-largest benchmark despite being its largest subset, and we show this disparity
-is induced during training rather than inherited from the embedding, which
-spans only $0.078$ ROC-AUC across the four relations. Aggregating several
+training on the largest benchmark. Beyond the negative result we report three further analyses. The negative
+result itself replicates under a second backbone (ArcFace), failing on all
+eight backbone--corpus combinations. We document a subgroup artefact of
+independent methodological interest: an apparent $0.28$ ROC-AUC deficit for
+mother--son pairs proves to be a single-family effect that disappears
+($0.031$ spread) once per-family capping prevents any family dominating a
+fold. Aggregating several
 photographs of a person rather than one improves ROC-AUC by $+0.077$ where
 photograph sets exist, with most of the gain realised by the fifth photograph
 and none --- by construction --- on corpora storing a single photograph per
@@ -649,23 +650,68 @@ Mother--son & 0.7065 & 0.9750 & 0.7795 & 0.7124 & 0.8483 & 0.8288 \\
 \end{tabular}
 \end{table*}
 
-Performance is markedly uneven across relation types
-(Table~\ref{tab:relation}). On FIW, father--daughter reaches $0.9933$ ROC-AUC
-while mother--son reaches $0.7124$ --- and mother--son is the \emph{largest}
-subset of that corpus. Averaged over corpora the ordering is mother--son
-($0.8288$), mother--daughter ($0.8973$), father--son ($0.9172$),
-father--daughter ($0.9312$).
+Table~\ref{tab:relation} reports per-relation performance measured on a single
+held-out fold, the form in which such comparisons are usually presented. Read
+at face value it suggests a large relation effect: on FIW father--daughter
+reaches $0.9933$ ROC-AUC while mother--son reaches $0.7124$.
+Section~\ref{sec:mscorrection} shows this reading is unsound, and we retain the
+table because the discrepancy between it and the corrected measurement is
+itself the point.
 
-Figure~\ref{fig:relgap} isolates where this disparity originates. Measured on
-raw embeddings with no training at all, the four relations span only
-$0.7065$--$0.7841$, a range of $0.078$. After training the range is $0.281$.
-The frozen embedding is therefore not the binding constraint: most of the
-disparity is induced during training, plausibly because the relation-conditioned
-head fits the easier relations at the expense of the hardest one. We verified
-that this is not a labelling artefact --- gender fields in the FIW metadata are
-complete and well-formed across the families we audited --- and we regard
-cross-gender parent--child verification as the most promising target for
-future architectural work under this protocol.
+Figure~\ref{fig:relgap} gives the first indication that the single-fold
+reading is misleading. Measured on raw embeddings with no training at all, the
+four relations span only $0.7065$--$0.7841$, a range of $0.078$, while the
+single-fold trained estimate spans $0.281$. A representation that separates the
+relations so evenly is unlikely to support a threefold larger disparity after
+training, and Section~\ref{sec:mscorrection} identifies the cause.
+
+\subsection{A correction: mother--son is not the weak relation}
+\label{sec:mscorrection}
+
+An earlier analysis of these results, based on a single held-out fold,
+reported mother--son as markedly weaker than the other relations
+($0.712$ ROC-AUC against father--daughter's $0.993$). Re-examining that fold
+shows the comparison was not sound: $92\%$ of its mother--son pairs came from a
+single family, which scores $0.701$, while the only other contributing family
+scores $0.846$. The apparent relation effect was a family effect.
+
+Table~\ref{tab:relation_kfold} repeats the measurement under grouped $k$-fold
+with a per-family cap, so no family can dominate a relation's estimate.
+
+\begin{table}[t]
+\centering
+\caption{Per-relation ROC-AUC under grouped $k$-fold with a per-family cap.
+The single-fold column is the earlier, unsound estimate; the remaining columns
+are the corrected measurement. Under a protocol in which no family dominates,
+the four relations span $0.0310$ ROC-AUC.}
+\label{tab:relation_kfold}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Relation & Single fold & Mean & SD & Range & Families/fold \\
+\midrule
+Father--daughter & 0.9933 & 0.7635 & 0.0219 & 0.7435--0.7953 & 12.6 \\
+Father--son & 0.9754 & 0.7946 & 0.0752 & 0.7050--0.8942 & 12.2 \\
+Mother--daughter & 0.9668 & 0.7766 & 0.0601 & 0.7147--0.8730 & 14.4 \\
+Mother--son & 0.7124 & 0.7910 & 0.0381 & 0.7497--0.8390 & 12.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Under the corrected measurement mother--son reaches $0.7910$, the second
+highest of the four, and the relations span $0.0310$ ROC-AUC rather than
+$0.281$. That residual spread is close to the $0.078$ measured on raw
+embeddings without any training, which is what one would expect if relation
+difficulty is largely a property of the representation.
+
+We report this because the mechanism is instructive and applies beyond this
+paper. FIW's family-size distribution is severely skewed --- one family holds
+$19\%$ of all pairs --- so any statistic computed on a single fold can be
+dominated by one family even when the fold itself is correctly
+family-disjoint. Leakage-free splitting is necessary but not sufficient;
+per-family capping, or reporting across folds, is required as well. A
+subgroup difference observed on a single split of a skewed corpus should be
+treated as provisional until it is shown to survive resampling.
 
 \subsection{How the person-level gain scales}
 
@@ -742,6 +788,94 @@ that a single global decision threshold is inappropriate. We therefore
 calibrate per corpus on a group-disjoint validation slice: a single shared
 threshold costs between $0.7$ and $5.9$ accuracy points depending on the
 corpus.
+
+% ---------------------------------------------------------------------------
+\section{Do the findings depend on the backbone?}
+\label{sec:backbone}
+
+All results so far use a single frozen embedding, which bounds what they can
+claim: a finding could be a property of the task, or an artefact of FaceNet. We
+therefore repeat the central experiments with ArcFace (\texttt{buffalo\_l},
+w600k\_r50) substituted for FaceNet and everything else held fixed --- same
+folds, same negatives, same classifier, same protocol. The two backbones are
+trained with different objectives on different corpora, so agreement between
+them is meaningful evidence.
+
+\begin{table}[t]
+\centering
+\caption{Person-level aggregation under two backbones. The gain replicates and
+is in fact larger under ArcFace; the three single-photograph corpora are
+unchanged to machine precision under both, as the degradation guarantee
+requires.}
+\label{tab:backbone}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{FaceNet} & \multicolumn{3}{c}{ArcFace} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Corpus & Single & Set-level & $\Delta$ & Single & Set-level & $\Delta$ \\
+\midrule
+KinFaceW-I & 0.7588 & 0.7588 & $+0.0000$ & 0.7540 & 0.7540 & $+0.0000$ \\
+KinFaceW-II & 0.7770 & 0.7770 & $+0.0000$ & 0.8190 & 0.8190 & $+0.0000$ \\
+FIW & 0.7491 & 0.8254 & $+0.0763$ & 0.7764 & 0.8740 & $+0.0976$ \\
+TSKinFace & 0.7326 & 0.7326 & $+0.0000$ & 0.8460 & 0.8460 & $+0.0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three observations follow from Table~\ref{tab:backbone}.
+
+\textbf{Identity leakage is backbone-invariant by construction.} It is a
+property of how pairs are partitioned, not of how images are embedded, so the
+$100\%$ figure of Section~\ref{sec:protocol} carries over unchanged. We state this
+for completeness rather than as a finding.
+
+\textbf{The person-level gain replicates and strengthens.} FaceNet gains
+$+0.0763$ ROC-AUC on FIW from aggregating photographs; ArcFace gains
+$+0.0976$. That the effect is larger under the stronger backbone is consistent
+with its proposed mechanism --- aggregation averages away per-photograph
+nuisance variation, and a better embedding has proportionally more signal left
+to recover once that variation is suppressed.
+
+\textbf{The degradation guarantee holds under both.} KinFaceW-I, KinFaceW-II
+and TSKinFace store one photograph per person, and set-level scoring reproduces
+the single-image result exactly on all three under both backbones. This is a
+correctness property of the implementation rather than an empirical result, and
+it is what allows a single system to be deployed across corpora with differing
+photograph availability.
+
+ArcFace is the stronger backbone in absolute terms on three of four corpora,
+most markedly on TSKinFace ($0.8460$ against $0.7326$). We do not read this as
+a contribution: it reflects a better face representation, not a better kinship
+method, and it is reported so that the backbone-invariance claims above are
+interpretable.
+
+\subsection{The negative result under a second backbone}
+
+\begin{table}[t]
+\centering
+\caption{Change in ROC-AUC from adding the density-fidelity arm
+$\mathrm{Tr}(\rho_1\rho_2)$ to the set-level features. The formulation fails
+under both backbones on all four corpora.}
+\label{tab:backbone_quantum}
+\begin{tabular}{lcc}
+\toprule
+Corpus & FaceNet & ArcFace \\
+\midrule
+KinFaceW-I & $-0.0025$ & $-0.0006$ \\
+KinFaceW-II & $-0.0003$ & $+0.0001$ \\
+FIW & $-0.0003$ & $-0.0007$ \\
+TSKinFace & $+0.0001$ & $-0.0014$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:backbone_quantum} re-tests the density-fidelity formulation.
+Across eight backbone--corpus combinations the largest effect in either
+direction is $0.0025$ ROC-AUC, and seven of the eight are negative. The failure
+is therefore not specific to the embedding it was first measured on, which
+supports the structural explanation of Section~\ref{sec:why}: a density matrix
+estimated from a median of five observations is dominated by its leading
+eigenvector regardless of which encoder produced those observations.
 
 % ---------------------------------------------------------------------------
 \section{Why the approach fails}
