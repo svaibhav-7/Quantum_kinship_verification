@@ -181,9 +181,17 @@ pip install --upgrade torch --index-url https://download.pytorch.org/whl/cu128
 ### Predict
 
 ```bash
-# single pair
+# single pair, one photo each
 python scripts/inference/predict.py \
     --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
+
+# set-level: several photos per person (+0.077 ROC-AUC where sets exist)
+python scripts/inference/predict.py \
+    --set-a p1.jpg p2.jpg p3.jpg --set-b c1.jpg c2.jpg
+
+# triadic: father + mother + child scored jointly (+0.032 ROC-AUC)
+python scripts/inference/predict.py \
+    --father f.jpg --mother m.jpg --child c.jpg
 
 # batch from CSV (img1,img2,relation)
 python scripts/inference/predict.py --pairs pairs.csv --out results.csv
@@ -192,6 +200,22 @@ python scripts/inference/predict.py --pairs pairs.csv --out results.csv
 Relations: `fd` father-daughter, `fs` father-son, `md` mother-daughter,
 `ms` mother-son. `--domain` selects the calibrated operating point
 (`fiw`, `kinfacew-i`, `kinfacew-ii`, `tskinface`).
+
+Shipped models, each scored on a held-out family-disjoint fold:
+
+| Model | Accuracy | ROC-AUC | Use when |
+|---|---:|---:|---|
+| pairwise | 75.66% | 0.8497 | one photo per person |
+| set-level | 73.40% | 0.8228 | several photos per person |
+| triadic | 76.58% | 0.8382 | both parents and a child |
+
+The pairwise row averages four datasets under grouped 5-fold; the other two are
+single held-out folds on the corpora that support them, so the rows are not
+directly comparable. The like-for-like comparison on identical folds is in
+`RESULTS_HONEST.md`.
+
+Passing one photo per person to the set interface reproduces the single-image
+path exactly, so the set interface is always safe to use.
 
 ### Reproduce every number
 

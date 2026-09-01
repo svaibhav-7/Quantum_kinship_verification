@@ -285,3 +285,21 @@ key is now dataset-aware, pinned by four tests.
 
 Nine formulations, none beating its classical control.
 
+### Shipped deployment models
+
+Both new components are packaged and wired into the CLI. Each was fitted on a
+family-disjoint training split, calibrated on a family-disjoint validation
+slice, and scored once on a held-out fold.
+
+| Artifact | Accuracy | ROC-AUC | Threshold |
+|---|---:|---:|---:|
+| `weights/deploy/kinship_model.pt` (pairwise) | 75.66% | 0.8497 | per-domain |
+| `weights/deploy/set_model.pkl` | 73.40% | 0.8228 | 0.4987 |
+| `weights/deploy/triad_model.pkl` | 76.58% | 0.8382 | 0.5159 |
+
+The set-level accuracy here (73.40%) sits below the pairwise 75.66%, and the
+two are **not** comparable: the pairwise figure averages four datasets under
+grouped 5-fold, while set-level is a single held-out FIW fold — FIW being the
+only corpus with photo sets, and the hardest of the four. The like-for-like
+comparison on identical folds is Section 10: FIW 0.7296 → 0.8066.
+
