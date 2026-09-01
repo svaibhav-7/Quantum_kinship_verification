@@ -1,0 +1,549 @@
+% ============================================================================
+% Evaluation Protocol Flaws in Facial Kinship Verification
+%
+% All numeric claims in this manuscript trace to results/honest/*.json and are
+% reproducible via scripts/evaluation/run_kfold.py. Do not add a figure or a
+% baseline row without a verifiable source.
+% ============================================================================
+
+\documentclass[journal,12pt]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\title{Identity Leakage, Dataset Shortcuts, and a Negative Result for
+Quantum-Inspired Metrics in Facial Kinship Verification}
+
+\author{Sasi~Vaibhav% <-- add co-authors and affiliation before submission
+\thanks{Code and data-processing scripts:
+\url{https://github.com/svaibhav-7/Quantum_kinship_verification}}}
+
+\maketitle
+
+\begin{abstract}
+Facial kinship verification is evaluated almost universally on four benchmarks:
+KinFaceW-I, KinFaceW-II, TSKinFace, and Families In the Wild (FIW). We show that
+the protocols in common use on these benchmarks admit two distinct forms of
+optimistic bias. First, pair-level random splitting places an identity from
+\emph{every} test pair into the training set: on FIW we measure
+$11{,}424/11{,}424$ ($100\%$) test pairs sharing an identity with training.
+Second, the standard TSKinFace pairing makes every positive pair same-family and
+every negative pair cross-family, so a model can separate the classes by
+recognising a shared photographic session rather than kinship; removing this cue
+costs approximately $9$ ROC-AUC points. We propose a corrected protocol based on
+grouped $k$-fold cross-validation in which every family is tested exactly once,
+and negatives are constructed within each fold so that no family spans the
+train/test boundary. Under this protocol a deliberately conventional
+$0.50$M-parameter classifier attains $75.66\%$ mean accuracy and $0.8497$ mean
+ROC-AUC across the four benchmarks. We additionally report a systematic negative
+result: nine distinct quantum-inspired formulations, spanning similarity
+measures, feature extractors, and inductive biases, each evaluated against a
+capacity-matched classical control, fail to improve on their controls; four are
+significantly worse. We release the protocol implementation and all evaluation
+code.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Facial kinship verification, evaluation protocol, dataset bias, data leakage,
+quantum-inspired machine learning, negative results.
+\end{IEEEkeywords}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+
+Facial kinship verification asks whether two facial images depict biologically
+related individuals. Progress is measured on a small set of public benchmarks,
+and reported accuracies have risen steadily. This paper examines whether the
+evaluation protocols supporting those numbers are sound.
+
+We report three findings.
+
+\textbf{Identity leakage.} The conventional practice of splitting a corpus at
+the level of \emph{pairs} rather than \emph{identities} does not isolate the
+test set. FIW contains $57{,}120$ pairs drawn from only $95$ families and $472$
+distinct identities, so identities recur across pairs an average of $242$ times.
+Under a random pair-level split we measure that $100\%$ of test pairs share at
+least one identity with the training set. Any metric obtained this way is
+optimistic by an unknown margin.
+
+\textbf{A dataset shortcut.} In the standard TSKinFace construction, all $800$
+positive pairs are drawn from within a family and all $800$ negatives across
+families. Family membership therefore predicts the label perfectly, and a model
+can exploit correlated capture conditions --- illumination, camera, background
+--- instead of facial resemblance. We rebuild the negatives to include
+same-family non-kin pairs (father versus mother, who are co-photographed but not
+kin). Embedding separability drops from $0.7278$ to $0.6880$ ROC-AUC, isolating
+roughly nine points attributable to the shortcut.
+
+\textbf{A negative result for quantum-inspired metrics.} Quantum-inspired
+similarity, in which embeddings are mapped to rotation angles and compared by a
+simulated SWAP test, has been proposed for this task. We evaluate nine
+formulations against capacity-matched classical controls. None improves on its
+control; four are significantly worse. We give a structural explanation rather
+than attributing the outcome to implementation.
+
+Our contributions are: (i) quantification of both biases with reproducible
+measurements; (ii) a corrected, released evaluation protocol; (iii) baseline
+results under it; and (iv) a pre-registered nine-formulation negative result.
+
+% ---------------------------------------------------------------------------
+\section{Related Work}
+
+% TODO(before submission): This section must cite the actual literature. Every
+% entry below is a placeholder describing what belongs there. Do NOT populate
+% it with numbers that cannot be traced to a paper you have read --- an earlier
+% draft of this manuscript contained a baseline comparison table whose rows
+% could not be sourced, and it has been removed.
+
+\subsection{Kinship verification}
+Metric-learning approaches, deep pairwise and graph-based models, and the
+benchmarks themselves (KinFaceW, TSKinFace, FIW, and the RFIW challenge series).
+
+\subsection{Evaluation bias in vision benchmarks}
+Subject-disjoint versus random splitting in face recognition and biometrics;
+shortcut learning and spurious correlation; template- and set-based protocols
+such as IJB-B/C, which motivate our set-level discussion in
+Section~\ref{sec:limitations}.
+
+\subsection{Quantum-inspired machine learning}
+Variational circuits, SWAP-test similarity, density-matrix classifiers, and
+prior reports of quantum-inspired gains on classical data.
+
+% ---------------------------------------------------------------------------
+\section{Sources of Optimistic Bias}
+\label{sec:bias}
+
+\subsection{Identity leakage under pair-level splitting}
+
+Let $\mathcal{P}$ be a set of labelled pairs and $\mathrm{id}(\cdot)$ the
+identity depicted in an image. A split $(\mathcal{P}_{\text{tr}},
+\mathcal{P}_{\text{te}})$ is \emph{identity-disjoint} if
+\begin{equation}
+\Big(\bigcup_{p \in \mathcal{P}_{\text{tr}}} \mathrm{id}(p)\Big) \cap
+\Big(\bigcup_{p \in \mathcal{P}_{\text{te}}} \mathrm{id}(p)\Big) = \emptyset .
+\end{equation}
+Random splitting over $\mathcal{P}$ does not enforce this. Table~\ref{tab:leak}
+reports the measured violation on FIW.
+
+\begin{table}[t]
+\caption{Identity leakage under a random $80/20$ pair-level split of FIW.}
+\label{tab:leak}
+\centering
+\begin{tabular}{lr}
+\toprule
+Quantity & Value \\
+\midrule
+Pairs & 57{,}120 \\
+Distinct families & 95 \\
+Distinct identities & 472 \\
+Mean appearances per identity & 242 \\
+Largest family, share of all pairs & 19\% \\
+\midrule
+Test pairs sharing an identity with train & 11{,}424 / 11{,}424 (100\%) \\
+Test pairs whose family was seen in train & 11{,}424 / 11{,}424 (100\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{A non-obvious obstacle to correcting it}
+
+Splitting on families is not sufficient by itself. Each \emph{negative} pair
+joins two families, and treating families as vertices and negatives as edges
+yields a graph over FIW with a single connected component containing all $95$
+families. No family-disjoint partition of the existing pairs exists. Negatives
+must therefore be discarded and regenerated \emph{within} each side after the
+split. We found this empirically: a splitter that passed synthetic unit tests
+failed on the real corpus for exactly this reason.
+
+A second consequence is data loss. Because pre-existing negatives straddle any
+group boundary, naively dropping them removes usable data --- on KinFaceW-I,
+$173$ of $1{,}066$ pairs, leaving only $119$ test pairs. Regenerating negatives
+per side instead recovers the test set to $212$ pairs on KinFaceW-I and $400$ on
+KinFaceW-II.
+
+\subsection{The TSKinFace photo-session shortcut}
+
+Table~\ref{tab:ts} contrasts the standard TSKinFace pairing with our
+shortcut-free construction, in which half the negatives are drawn within a
+family as father--mother pairs: co-photographed, hence sharing every session
+cue, but not kin.
+
+\begin{table}[t]
+\caption{TSKinFace pair construction. Under the standard protocol, family
+membership predicts the label perfectly.}
+\label{tab:ts}
+\centering
+\begin{tabular}{lccc}
+\toprule
+Construction & Same-fam.\ pos. & Same-fam.\ neg. & Cosine AUC \\
+\midrule
+Standard & 100\% & 0\% & 0.7278 \\
+Shortcut-free (ours) & 100\% & 50\% & 0.6880 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $0.0398$ AUC reduction is measured on raw embeddings without training, so it
+reflects separability available to any model, not a property of ours. We verify
+separately that our trained model does not rely on a related cue: $8.2\%$ of FIW
+positives come from the same source photograph (versus $0\%$ of negatives), and
+excluding them changes accuracy by $+0.08$ points ($82.53\% \to 82.61\%$).
+
+% ---------------------------------------------------------------------------
+\section{Corrected Protocol}
+\label{sec:protocol}
+
+We adopt grouped $k$-fold cross-validation with $k=5$. The grouping unit is the
+family, which is the unit that shares identities and capture conditions.
+
+\begin{enumerate}
+\item \textbf{Positives only are partitioned.} Families are dealt largest-first
+into the currently smallest fold, which keeps folds balanced despite the highly
+skewed family sizes.
+\item \textbf{Negatives are generated per side}, after partitioning, from the
+families present on that side.
+\item \textbf{Group keys are dataset-scoped.} The family identifier
+\texttt{fd\_003} occurs in both KinFaceW-I and KinFaceW-II denoting different
+families; an unscoped key merges them and corrupts the disjointness check.
+\item \textbf{Family contribution is capped} at $1{,}500$ pairs, preventing the
+largest FIW family ($19\%$ of all pairs) from dominating whichever fold it
+enters.
+\item \textbf{Thresholds are calibrated on a group-disjoint validation slice} of
+the training side. The test fold is scored once.
+\end{enumerate}
+
+Fold integrity is verified directly rather than assumed: zero folds exhibit
+train/test group overlap, and every family is tested exactly once with no
+duplicates ($95/95$ FIW, $533/533$ KinFaceW-I, $1000/1000$ KinFaceW-II,
+$559/559$ TSKinFace).
+
+\subsection{Effect on measurement stability}
+
+Table~\ref{tab:stab} shows why a single group-disjoint split is insufficient.
+Accuracy on one split varies by up to $14.2$ points with the random seed,
+because FIW's test side reduces to a small number of families of very unequal
+size.
+
+\begin{table}[t]
+\caption{Accuracy range across seeds (single split) versus across folds
+(grouped $k$-fold).}
+\label{tab:stab}
+\centering
+\begin{tabular}{lcc}
+\toprule
+Dataset & Single split & Grouped $k$-fold \\
+\midrule
+FIW & 61.7--75.9 (14.2) & 69.8--74.4 (4.6) \\
+KinFaceW-I & 70.3--78.8 (8.5) & 72.9--79.4 (6.5) \\
+KinFaceW-II & 69.0--77.8 (8.8) & 71.0--77.0 (6.0) \\
+TSKinFace & 75.1--84.1 (9.0) & 75.7--81.9 (6.2) \\
+\midrule
+Overall spread & 22.5 & 12.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Reference Model}
+\label{sec:model}
+
+To measure the protocol rather than an architecture, we use a deliberately
+conventional model. Frozen FaceNet embeddings ($512$-d) pass through a shared
+Siamese encoder; kinship is symmetric, so only symmetric pair features are
+formed --- sum, absolute difference, elementwise product, and cosine --- and
+concatenated with a one-hot relation code before a three-layer MLP. Predictions
+are averaged over both argument orders, making the model exactly symmetric. The
+model has $497{,}881$ parameters.
+
+Its plainness is deliberate: findings in Sections~\ref{sec:bias} and
+\ref{sec:protocol} cannot then be attributed to architectural novelty. We note
+that a linear probe on the same frozen embeddings reaches $0.702$ ROC-AUC
+against this model's $0.810$ on FIW, confirming the head performs non-trivial
+work and that the frozen backbone is not the binding constraint.
+
+% ---------------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+
+\begin{table}[t]
+\caption{Grouped 5-fold results. Every family tested exactly once.}
+\label{tab:main}
+\centering
+\begin{tabular}{lcc}
+\toprule
+Dataset & Accuracy (95\% CI) & ROC-AUC \\
+\midrule
+KinFaceW-I & $76.92 \pm 2.19$ & $0.8752 \pm 0.0146$ \\
+KinFaceW-II & $74.25 \pm 1.95$ & $0.8320 \pm 0.0190$ \\
+FIW & $72.21 \pm 1.55$ & $0.8101 \pm 0.0175$ \\
+TSKinFace (shortcut-free) & $79.25 \pm 2.32$ & $0.8814 \pm 0.0192$ \\
+\midrule
+\textbf{Mean} & $\mathbf{75.66}$ & $\mathbf{0.8497}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:main} reports results under the corrected protocol. We
+deliberately omit a comparison against published accuracies. Those numbers are
+obtained under each dataset's official protocol, which permits the leakage and
+shortcut quantified in Section~\ref{sec:bias}; presenting a ranking against them
+would mislead in both directions. We regard establishing comparable baselines
+under the corrected protocol as work the community must do collectively, and we
+release our implementation to that end.
+
+\subsection{Per-relation analysis}
+
+Performance is markedly uneven across relation types. On FIW, father--daughter
+reaches $0.9933$ ROC-AUC while mother--son reaches $0.7124$ --- and mother--son
+is the largest subset ($5{,}296$ pairs). Averaged over datasets the ordering is
+mother--son ($0.8288$), mother--daughter ($0.8973$), father--son ($0.9172$),
+father--daughter ($0.9312$). We verified that this is not a labelling artefact:
+gender fields in the FIW metadata are complete and well-formed across the
+families we audited. Cross-gender parent--child verification appears
+intrinsically harder, and we regard it as the most promising target for future
+architectural work.
+
+% ---------------------------------------------------------------------------
+\section{Set-Level and Triadic Representations}
+\label{sec:setlevel}
+
+Sections~\ref{sec:bias}--\ref{sec:results} concern how the task is
+\emph{measured}. We now examine two ways in which the task is conventionally
+\emph{posed} that discard available evidence.
+
+\subsection{Identity photo sets}
+
+The standard protocol scores one photograph against one photograph. FIW,
+however, supplies a median of five photographs per identity, so the
+conventional formulation discards most of the evidence for each person. We
+represent each identity by its photo set and form symmetric set statistics: the
+$\ell_2$-normalised centroid, the within-set spread ($1$ minus mean pairwise
+cosine), the set size, and the maximum, minimum, mean and standard deviation of
+the cross-set similarity matrix.
+
+A set of size one must reduce exactly to the single-image case: the centroid is
+the embedding, the spread is zero, and every cross-set statistic collapses to
+the single cosine. We assert this in the test suite rather than assume it,
+which matters because the three remaining benchmarks store exactly one
+photograph per person.
+
+\begin{table}[t]
+\caption{Set-level representation under grouped 5-fold. Gains appear only where
+photo sets exist; single-photograph corpora are bit-identical to the baseline,
+as required.}
+\label{tab:setlevel}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Dataset & Set size & Single & Set-level & $\Delta$ \\
+\midrule
+KinFaceW-I & 1.00 & 0.7210 & 0.7210 & $0.0000$ \\
+KinFaceW-II & 1.00 & 0.7672 & 0.7672 & $0.0000$ \\
+TSKinFace & 1.00 & 0.7306 & 0.7306 & $0.0000$ \\
+FIW & 7.30 & 0.7296 & \textbf{0.8066} & $\mathbf{+0.0771}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:setlevel} reports the outcome. On FIW the representation is worth
+$+0.0771$ ROC-AUC, closely matching an untrained embedding-level estimate of
+$+0.071$, which indicates the gain is intrinsic to the representation rather
+than a product of additional model capacity. The three single-photograph corpora
+are unchanged to machine precision.
+
+We stress the narrowness of this result: it is a large gain on one benchmark and
+exactly zero on three, and any aggregate over the four would obscure that. The
+practical implication is that kinship verification deployments in which several
+photographs of a person are available --- the common case --- are leaving a
+substantial margin unclaimed, and that benchmarks storing a single photograph
+per identity cannot measure this.
+
+\subsection{Triadic structure}
+
+TSKinFace supplies father, mother and child jointly, but the pairwise protocol
+decomposes each triad into two independent comparisons. We instead score the
+triad: alongside $\cos(F,C)$ and $\cos(M,C)$ we compute the best convex
+parental mixture $\max_\alpha \cos\big(\widehat{\alpha F + (1-\alpha)M},\,
+C\big)$, the maximising $\alpha$, the gain of that mixture over the better
+single parent, and the parental similarity $\cos(F,M)$.
+
+The last quantity is not expressible in a pairwise formulation and is the
+strongest single contributor: a child resembling one parent is weaker evidence
+of kinship when the two parents already resemble each other.
+
+\begin{table}[t]
+\caption{Triadic scoring on TSKinFace, grouped 5-fold, folds assigned by the
+parents' family.}
+\label{tab:triadic}
+\centering
+\begin{tabular}{lcc}
+\toprule
+Arm & Accuracy (95\% CI) & ROC-AUC \\
+\midrule
+Best single parent & $67.62 \pm 2.69$ & $0.7569$ \\
+Triadic & $\mathbf{69.05 \pm 2.65}$ & $\mathbf{0.7893}$ \\
+Triadic $+$ phase sweep & $69.50 \pm 2.41$ & $0.7887$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Triadic scoring improves ROC-AUC by $+0.0324$ over the best single parent
+(paired $t$-test over folds, $t = 14.93$, $p = 0.0001$; the gain is positive in
+all five folds). Negatives retain the true parents and substitute a child from
+another family, so the label depends on kinship rather than on any property of
+the parent pair.
+
+% ---------------------------------------------------------------------------
+\section{A Negative Result for Quantum-Inspired Metrics}
+\label{sec:quantum}
+
+\subsection{Formulations tested}
+
+We evaluated nine formulations, chosen to span the three roles a quantum
+component can occupy: a similarity measure, a feature extractor, and an
+inductive bias. Each is compared against a control matched for capacity or
+intent (Table~\ref{tab:quantum}).
+
+\begin{table}[t]
+\caption{Quantum-inspired formulations against matched classical controls.}
+\label{tab:quantum}
+\centering
+\small
+\begin{tabular}{llc}
+\toprule
+Formulation & Control & Outcome \\
+\midrule
+SWAP fidelity (5 seeds) & classical head & $p=0.945$ \\
+SWAP fidelity (20 folds) & classical head & $p=0.982$ \\
+Density fidelity $\mathrm{Tr}(\rho_1\rho_2)$ & mean-pooling & $-8.7$ AUC \\
+Interference phase sweep & classical mixture & $+0.1$ AUC \\
+Entanglement entropy & cosine & $0.514$ alone \\
+POVM head & capacity-matched head & $-5.5$ AUC \\
+Purity regulariser & decorrelation penalty & $-0.9$, $p=0.047$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Under grouped $k$-fold with $20$ paired observations, enabling the SWAP-test
+branch yields $75.66\%$ against $76.34\%$ with it disabled (accuracy
+$p = 0.158$; ROC-AUC $p = 0.982$). The branch also costs $6$--$14\times$ runtime.
+
+\subsection{A cautionary observation}
+
+The purity regulariser initially measured $+1.3$ ROC-AUC on a single seed, with
+reduced variance --- a result consistent with effective regularisation. Repeated
+across nine paired runs the sign reversed, and the method proved significantly
+\emph{worse} than no regulariser ($-0.0089$, $p = 0.047$). We report this
+because the single-seed reading was of the kind that is readily published, and
+it illustrates why capacity-matched controls and repeated trials are necessary
+when evaluating claims of this type.
+
+\subsection{Two further formulations}
+
+The set-level and triadic representations each admit a natural quantum reading,
+and we tested both as pre-registered controls.
+
+A photo set is a mixed state $\rho = \frac{1}{N}\sum_i
+|\psi_i\rangle\langle\psi_i|$, and $\mathrm{Tr}(\rho_1 \rho_2)$ is the
+corresponding fidelity. Added to the set features it changes ROC-AUC by
+$-0.0006$, $-0.0005$, $+0.0001$ and $-0.0006$ on the four benchmarks.
+
+A child explained by two parents is naturally written as a coherent
+superposition with a relative phase, of which the classical convex mixture is
+the zero-phase special case. Sweeping the phase changes ROC-AUC by $-0.0006$
+($p = 0.147$).
+
+This brings the total to nine formulations, none of which improves on its
+classical control.
+
+\subsection{Why the approach fails}
+
+The failures are structural rather than implementational. Interference-based
+formulations reduce to their classical counterparts because $\ell_2$-normalised
+FaceNet embeddings carry no phase structure to exploit; the phase sweep in
+Table~\ref{tab:quantum} is maximised at the classical mixture. Density-matrix
+formulations require estimating a $d \times d$ operator from the images
+available for one identity --- a median of five --- so the resulting $\rho$ is
+dominated by its leading eigenvector, which is the mean, while accumulating
+noise from tail directions that are not estimable. This is why
+$\mathrm{Tr}(\rho_1\rho_2)$ scores \emph{below} simple mean-pooling.
+
+\subsection{An efficiency contribution}
+
+Independently of the above, we contribute an exact reformulation of the
+simulated SWAP test. The reference implementation materialises a $2^n$
+statevector and permutes all $n$ axes once per qubit, incurring kernel-launch
+overhead that leaves the accelerator idle. Applying rotations by reshaping to
+$(B, \text{left}, 2, \text{right})$ and precomputing the CNOT chain and $R_z$
+layer as a single diagonal phase vector yields a $380\times$ speedup on GPU
+($192 \to 73{,}094$ pairs/s) with identical output and gradients, verified by
+test. We note that a closed-form product over qubits is \emph{not} available
+here: the shared CNOT chain correlates the $R_z$ phases, so the overlap does not
+factorise. The gain arises from removing overhead, not from approximation.
+
+This is a quantum-versus-quantum speedup. Simulating a circuit is necessarily
+more costly than the classical operation it parallels, and we measure the
+quantum branch at $5$--$14\times$ slower than the classical path at every qubit
+count from $2$ to $12$.
+
+% ---------------------------------------------------------------------------
+\section{Limitations}
+\label{sec:limitations}
+
+\textbf{Small test sets.} KinFaceW-I and KinFaceW-II yield $212$ and $400$ test
+pairs per fold, giving confidence intervals of roughly $\pm 2$ points. FIW and
+TSKinFace are firmer.
+
+\textbf{Single backbone.} All results use frozen FaceNet embeddings. Whether the
+biases we quantify interact with backbone choice is untested.
+
+\textbf{Set-level gains are confined to one benchmark.} Only FIW stores
+multiple photographs per identity, so the $+0.0771$ ROC-AUC of
+Section~\ref{sec:setlevel} is measured on a single corpus; the other three are
+unchanged by construction. Whether the effect holds at other set sizes, and on
+corpora we could not test, is open.
+
+\textbf{Negative results are bounded.} We tested nine formulations; we do not
+claim no quantum-inspired method can help on this task, only that these nine,
+covering the three natural roles, do not.
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+Two properties of standard facial kinship verification protocols inflate
+reported performance: pair-level splitting leaks identities into the test set at
+a measured rate of $100\%$ on FIW, and the standard TSKinFace pairing admits a
+photo-session shortcut worth approximately nine ROC-AUC points. We provide a
+corrected grouped $k$-fold protocol, verify its integrity directly, and report
+baselines under it. We further report that nine quantum-inspired formulations,
+each against a matched control, fail to improve on classical baselines, and give
+a structural account of why. All code is released so that the protocol can be
+adopted and the results checked.
+
+% ---------------------------------------------------------------------------
+\section*{Reproducibility}
+
+Every numeric claim derives from JSON artefacts in \texttt{results/honest/}.
+The protocol is implemented in \texttt{src/splits.py}, \texttt{src/kfold.py},
+and \texttt{src/ts\_pairs.py}; results are regenerated by
+\texttt{scripts/evaluation/run\_kfold.py}. The implementation is covered by 61
+tests, including assertions that no group spans a fold boundary and that the
+fast SWAP-test reformulation matches the reference simulator in both value and
+gradient.
+
+% ---------------------------------------------------------------------------
+\begin{thebibliography}{1}
+% TODO(before submission): populate with references actually consulted.
+% An earlier draft cited baselines that could not be traced to a source; those
+% rows were removed rather than reproduced. Add entries only for papers read.
+\bibitem{placeholder}
+Reference list to be completed.
+\end{thebibliography}
+
+\end{document}

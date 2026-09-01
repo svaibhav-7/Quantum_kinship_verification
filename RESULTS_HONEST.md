@@ -229,3 +229,59 @@ documented ablation, not as the mechanism behind performance.
 - **Fixed:** `fd_003` names different families in KinFaceW-I and -II; the
   unscoped group key merged them. Now dataset-scoped.
 
+
+## 10. Set-level and triadic representations
+
+Two ways the task is conventionally *posed* discard available evidence.
+
+### Set-level identity representation
+
+The protocol scores one photograph against one photograph, but FIW supplies a
+median of five per identity.
+
+| Dataset | Set size | Single | Set-level | Delta |
+|---|---:|---:|---:|---:|
+| KinFaceW-I | 1.00 | 0.7210 | 0.7210 | 0.0000 |
+| KinFaceW-II | 1.00 | 0.7672 | 0.7672 | 0.0000 |
+| TSKinFace | 1.00 | 0.7306 | 0.7306 | 0.0000 |
+| **FIW** | **7.30** | 0.7296 | **0.8066** | **+0.0771** |
+
+The gain appears only where photo sets exist. The three single-photograph
+corpora are bit-identical to the baseline, which is the degradation guarantee
+holding exactly. `+0.0771` closely matches the untrained probe estimate of
+`+0.071`, so the gain is intrinsic to the representation rather than extra
+model capacity.
+
+**This is a large gain on one benchmark and exactly zero on three.** Any
+average over the four obscures that, so we report per dataset.
+
+### Triadic scoring (TSKinFace)
+
+| Arm | Accuracy (95% CI) | ROC-AUC |
+|---|---:|---:|
+| Best single parent | 67.62 ± 2.69 | 0.7569 |
+| **Triadic** | **69.05 ± 2.65** | **0.7893** |
+| Triadic + phase sweep | 69.50 ± 2.41 | 0.7887 |
+
+Triadic scoring gains **+0.0324 ROC-AUC** over the best single parent
+(paired t-test over folds, t = 14.93, **p = 0.0001**, positive in all 5 folds).
+The strongest single contributor is `cos(F,M)` -- parental similarity -- which
+no pairwise model can express.
+
+### A bug caught before it became a result
+
+The first set-level run reported +9.8 AUC and KinFaceW rising 0.725 to 0.898.
+Set sizes gave it away: 55.5 images per identity on KinFaceW-I, which stores
+exactly one. `identity_of_path` was FIW-specific and returned the *directory*
+on other datasets, collapsing all 533 KinFaceW-I people into 4 buckets. The
+key is now dataset-aware, pinned by four tests.
+
+### Formulations 8 and 9
+
+| Formulation | Control | Result |
+|---|---|---|
+| Density fidelity on photo sets | set features | -0.0006, -0.0005, +0.0001, -0.0006 |
+| Interference phase sweep on triads | convex mixture | -0.0006, p = 0.147 |
+
+Nine formulations, none beating its classical control.
+
