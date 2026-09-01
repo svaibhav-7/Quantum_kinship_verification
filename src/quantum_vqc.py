@@ -44,6 +44,26 @@ def encode_angles(z, n_qubits):
     return state
 
 
+def amplitude_encode(v, n_qubits):
+    """Encode a real vector directly as statevector amplitudes.
+
+    Angle encoding puts `n` numbers into `n` qubits -- one Ry angle each --
+    which forces a 512-d embedding through an `n`-dimensional bottleneck before
+    the circuit sees anything. Amplitude encoding puts `2**n` numbers into the
+    same `n` qubits, so at n=9 the whole FaceNet embedding is carried with no
+    compression at all.
+
+    The state is the L2-normalised input, zero-padded to `2**n`. Cosine
+    similarity between two inputs is therefore preserved exactly as the
+    inner product between their encoded states.
+    """
+    dim = 2 ** n_qubits
+    v = v[:, :dim] if v.shape[1] >= dim else torch.nn.functional.pad(
+        v, (0, dim - v.shape[1]))
+    v = v / (torch.linalg.vector_norm(v, dim=1, keepdim=True) + 1e-12)
+    return v.to(torch.complex64)
+
+
 # ---------------------------------------------------------------------------
 # Gates
 # ---------------------------------------------------------------------------

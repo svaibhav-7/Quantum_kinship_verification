@@ -190,3 +190,50 @@ class TestDeterminism(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAmplitudeEncoding(unittest.TestCase):
+    """Angle encoding puts n numbers into n qubits; amplitude encoding puts
+    2^n. At n=9 that is the whole 512-d FaceNet embedding with no compression,
+    which removes the bottleneck that angle encoding imposes upstream of the
+    circuit."""
+
+    def test_encodes_a_full_vector_without_compression(self):
+        from src.quantum_vqc import amplitude_encode
+
+        v = torch.randn(4, 512)
+        s = amplitude_encode(v, n_qubits=9)
+        self.assertEqual(s.shape, (4, 512))
+
+    def test_state_is_normalised(self):
+        from src.quantum_vqc import amplitude_encode
+
+        s = amplitude_encode(torch.randn(6, 64), n_qubits=6)
+        torch.testing.assert_close(torch.linalg.vector_norm(s, dim=1),
+                                   torch.ones(6), rtol=1e-5, atol=1e-6)
+
+    def test_preserves_direction_up_to_scale(self):
+        """The encoded state is the input vector normalised, so cosine
+        similarity between inputs survives encoding exactly."""
+        from src.quantum_vqc import amplitude_encode
+
+        a, b = torch.randn(1, 64), torch.randn(1, 64)
+        ca = torch.nn.functional.cosine_similarity(a, b).item()
+        sa, sb = amplitude_encode(a, 6), amplitude_encode(b, 6)
+        cb = torch.real((sa.conj() * sb).sum()).item()
+        self.assertAlmostEqual(ca, cb, places=5)
+
+    def test_pads_when_the_vector_is_shorter_than_the_register(self):
+        from src.quantum_vqc import amplitude_encode
+
+        s = amplitude_encode(torch.randn(2, 100), n_qubits=7)  # 128 slots
+        self.assertEqual(s.shape, (2, 128))
+        torch.testing.assert_close(torch.linalg.vector_norm(s, dim=1),
+                                   torch.ones(2), rtol=1e-5, atol=1e-6)
+
+    def test_gradients_flow_through_the_encoding(self):
+        from src.quantum_vqc import amplitude_encode
+
+        v = torch.randn(3, 64, requires_grad=True)
+        amplitude_encode(v, 6).abs().sum().backward()
+        self.assertGreater(float(v.grad.abs().sum()), 0.0)
