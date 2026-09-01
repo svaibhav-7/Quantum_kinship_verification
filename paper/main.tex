@@ -18,8 +18,8 @@
 
 \begin{document}
 
-\title{Identity Leakage, Dataset Shortcuts, and a Negative Result for
-Quantum-Inspired Metrics in Facial Kinship Verification}
+\title{Person-Level Kinship Verification: Leakage-Free Evaluation, Set-Based
+Aggregation, and a Negative Result for Quantum-Inspired Metrics}
 
 \author{Sasi~Vaibhav% <-- add co-authors and affiliation before submission
 \thanks{Code and data-processing scripts:
@@ -28,26 +28,29 @@ Quantum-Inspired Metrics in Facial Kinship Verification}
 \maketitle
 
 \begin{abstract}
-Facial kinship verification is evaluated almost universally on four benchmarks:
-KinFaceW-I, KinFaceW-II, TSKinFace, and Families In the Wild (FIW). We show that
-the protocols in common use on these benchmarks admit two distinct forms of
-optimistic bias. First, pair-level random splitting places an identity from
-\emph{every} test pair into the training set: on FIW we measure
-$11{,}424/11{,}424$ ($100\%$) test pairs sharing an identity with training.
-Second, the standard TSKinFace pairing makes every positive pair same-family and
-every negative pair cross-family, so a model can separate the classes by
-recognising a shared photographic session rather than kinship; removing this cue
-costs approximately $9$ ROC-AUC points. We propose a corrected protocol based on
-grouped $k$-fold cross-validation in which every family is tested exactly once,
-and negatives are constructed within each fold so that no family spans the
-train/test boundary. Under this protocol a deliberately conventional
-$0.50$M-parameter classifier attains $75.66\%$ mean accuracy and $0.8497$ mean
-ROC-AUC across the four benchmarks. We additionally report a systematic negative
-result: nine distinct quantum-inspired formulations, spanning similarity
-measures, feature extractors, and inductive biases, each evaluated against a
-capacity-matched classical control, fail to improve on their controls; four are
-significantly worse. We release the protocol implementation and all evaluation
-code.
+Facial kinship verification is evaluated almost exclusively as a
+photograph-versus-photograph decision on four benchmarks. We argue that this
+formulation is both harder to measure reliably and weaker than the data
+supports. First, we quantify the leakage admitted by conventional splitting:
+because Families In the Wild draws $57{,}120$ pairs from $95$ families and
+$472$ identities, a random pair-level split places an identity from
+\emph{every} test pair into the training set, a violation we measure at
+$11{,}424/11{,}424$ ($100\%$). We propose a leakage-free protocol based on
+grouped $k$-fold cross-validation in which every family is tested exactly once
+and negatives are regenerated within each fold; this reduces seed-to-seed
+accuracy variation from $22.5$ to $12.1$ points. Second, we show that the
+conventional formulation discards most of the available evidence: FIW supplies
+a median of five photographs per identity, yet the standard protocol scores one
+against one. Representing each \emph{person} by their photograph set, as
+template-based face recognition does, improves ROC-AUC by $+0.077$ on FIW under
+the leakage-free protocol, while reducing exactly to the single-image case on
+corpora storing one photograph per person. We further show that scoring
+father--mother--child triads jointly, rather than as independent pairs, adds
+$+0.032$ ROC-AUC on TSKinFace ($p = 0.0001$). Finally we report a systematic
+negative result: nine quantum-inspired formulations, spanning similarity
+measures, feature extractors and inductive biases, each evaluated against a
+capacity-matched classical control, fail to improve on their controls, and four
+are significantly worse. All protocol and evaluation code is released.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -63,35 +66,45 @@ related individuals. Progress is measured on a small set of public benchmarks,
 and reported accuracies have risen steadily. This paper examines whether the
 evaluation protocols supporting those numbers are sound.
 
-We report three findings.
+We make three contributions, of which the first two concern how the task is
+posed and measured rather than which model is applied to it.
 
-\textbf{Identity leakage.} The conventional practice of splitting a corpus at
-the level of \emph{pairs} rather than \emph{identities} does not isolate the
-test set. FIW contains $57{,}120$ pairs drawn from only $95$ families and $472$
-distinct identities, so identities recur across pairs an average of $242$ times.
-Under a random pair-level split we measure that $100\%$ of test pairs share at
-least one identity with the training set. Any metric obtained this way is
-optimistic by an unknown margin.
+\textbf{A leakage-free protocol, and the leakage it removes.} Splitting a
+corpus at the level of \emph{pairs} rather than \emph{identities} does not
+isolate a test set. FIW draws $57{,}120$ pairs from only $95$ families and
+$472$ identities, so identities recur across pairs an average of $242$ times;
+under a random pair-level split we measure that $100\%$ of test pairs share an
+identity with training. Correcting this is less direct than it appears, because
+every negative pair joins two families and, treating families as vertices,
+yields a graph with a single connected component over all of FIW: no
+family-disjoint partition of the existing pairs exists, and negatives must be
+regenerated within each fold. That kinship datasets carry construction
+artefacts is known --- prior work has shown that negatives assembled by
+recombining family members admit shortcuts~\cite{TODO_samephoto} --- but we are
+not aware of a quantification of identity leakage under the splitting practice
+in common use, nor of a released protocol that removes it.
 
-\textbf{A dataset shortcut.} In the standard TSKinFace construction, all $800$
-positive pairs are drawn from within a family and all $800$ negatives across
-families. Family membership therefore predicts the label perfectly, and a model
-can exploit correlated capture conditions --- illumination, camera, background
---- instead of facial resemblance. We rebuild the negatives to include
-same-family non-kin pairs (father versus mother, who are co-photographed but not
-kin). Embedding separability drops from $0.7278$ to $0.6880$ ROC-AUC, isolating
-roughly nine points attributable to the shortcut.
+\textbf{Person-level rather than photograph-level verification.} The
+conventional formulation compares two photographs. FIW supplies a median of
+five photographs per identity, so this discards most of the evidence about each
+person. Template-based protocols in face recognition score a person represented
+by an image set~\cite{whitelam2017ijbb}; to our knowledge this has not been
+applied to kinship verification. Doing so improves ROC-AUC by $+0.077$ on FIW,
+and by construction leaves corpora with one photograph per person unchanged.
+We additionally show that father--mother--child triads carry information that
+pairwise decomposition destroys, worth a further $+0.032$ ROC-AUC.
 
 \textbf{A negative result for quantum-inspired metrics.} Quantum-inspired
-similarity, in which embeddings are mapped to rotation angles and compared by a
-simulated SWAP test, has been proposed for this task. We evaluate nine
-formulations against capacity-matched classical controls. None improves on its
-control; four are significantly worse. We give a structural explanation rather
-than attributing the outcome to implementation.
+similarity has been proposed for this task. We evaluate nine formulations
+against capacity-matched classical controls; none improves on its control and
+four are significantly worse. We give a structural account of why, rather than
+attributing the outcome to implementation.
 
-Our contributions are: (i) quantification of both biases with reproducible
-measurements; (ii) a corrected, released evaluation protocol; (iii) baseline
-results under it; and (iv) a pre-registered nine-formulation negative result.
+Concretely we contribute: (i) a measured quantification of identity leakage
+under conventional splitting, and a released protocol that removes it;
+(ii) person-level and triadic formulations of the task, with gains measured
+under that protocol; and (iii) a pre-registered nine-formulation negative
+result for quantum-inspired metrics.
 
 % ---------------------------------------------------------------------------
 \section{Related Work}
@@ -128,9 +141,15 @@ incidental correlations in preference to the intended signal, a failure mode
 catalogued as shortcut learning~\cite{geirhos2020shortcut} and, earlier, as
 dataset bias~\cite{torralba2011unbiased}.
 
-Both concerns apply directly to kinship verification and, to our knowledge,
-neither has been quantified on these benchmarks. Sections~\ref{sec:bias}
-and~\ref{sec:setlevel} do so.
+Both concerns apply directly to kinship verification. Construction artefacts in
+kinship corpora have been reported~\cite{TODO_samephoto}, but we are not aware
+of a quantification of identity leakage under the splitting practice in common
+use, nor of a person-level protocol for this task: existing multi-image work
+addresses image-set subspace representations or matching within family
+photographs, which is a different problem from aggregating a subject's
+photographs into a single template for pairwise kinship
+decisions~\cite{TODO_imageset_kinship}. Sections~\ref{sec:bias}
+and~\ref{sec:setlevel} address both gaps.
 
 \subsection{Quantum-inspired machine learning}
 
@@ -198,16 +217,32 @@ $173$ of $1{,}066$ pairs, leaving only $119$ test pairs. Regenerating negatives
 per side instead recovers the test set to $212$ pairs on KinFaceW-I and $400$ on
 KinFaceW-II.
 
-\subsection{The TSKinFace photo-session shortcut}
+\subsection{Family membership as a predictor in TSKinFace}
 
-Table~\ref{tab:ts} contrasts the standard TSKinFace pairing with our
-shortcut-free construction, in which half the negatives are drawn within a
-family as father--mother pairs: co-photographed, hence sharing every session
-cue, but not kin.
+That kinship benchmarks carry construction artefacts is established. Prior work
+has shown that negatives assembled by recombining members of family photographs
+permit a model to succeed without learning
+kinship~\cite{TODO_samephoto}, and the TSKinFace protocol documents its own
+negative-construction procedure~\cite{qin2015tri}. We do not claim to be the
+first to observe that this dataset family is vulnerable.
+
+The specific regularity we measure is distinct from the same-photograph effect,
+and worth separating. TSKinFace stores one cropped face per family member, so
+\emph{no} pair --- positive or negative --- shares a source photograph, and the
+same-photograph shortcut cannot arise. What does hold is that all $800$
+positives are drawn within a family and all $800$ negatives across families, so
+family membership predicts the label perfectly. A model can exploit correlated
+capture conditions --- illumination, camera, background --- shared by members
+photographed together.
+
+To measure the margin this affords, we rebuild the negatives so that half are
+drawn \emph{within} a family, pairing father against mother: co-photographed,
+hence sharing every session cue, but not kin.
 
 \begin{table}[t]
-\caption{TSKinFace pair construction. Under the standard protocol, family
-membership predicts the label perfectly.}
+\caption{TSKinFace pair construction. Under the standard protocol family
+membership predicts the label perfectly; no pair shares a source photograph in
+either construction.}
 \label{tab:ts}
 \centering
 \begin{tabular}{lccc}
@@ -220,11 +255,15 @@ Shortcut-free (ours) & 100\% & 50\% & 0.6880 \\
 \end{tabular}
 \end{table}
 
-The $0.0398$ AUC reduction is measured on raw embeddings without training, so it
-reflects separability available to any model, not a property of ours. We verify
-separately that our trained model does not rely on a related cue: $8.2\%$ of FIW
-positives come from the same source photograph (versus $0\%$ of negatives), and
-excluding them changes accuracy by $+0.08$ points ($82.53\% \to 82.61\%$).
+The $0.0398$ ROC-AUC reduction is measured on raw embeddings without training,
+so it reflects separability available to any model rather than a property of
+ours. All TSKinFace results in this paper use the shortcut-free construction.
+
+We check separately that our FIW results do not rest on the same-photograph
+effect that prior work identifies: $8.2\%$ of FIW positives are drawn from a
+single source photograph (against $0\%$ of negatives), and excluding them
+changes accuracy by $+0.08$ points ($82.53\% \to 82.61\%$). The effect is
+present in FIW but our model does not exploit it.
 
 % ---------------------------------------------------------------------------
 \section{Corrected Protocol}
@@ -601,17 +640,31 @@ covering the three natural roles, do not.
 % ---------------------------------------------------------------------------
 \section{Conclusion}
 
-Two properties of standard facial kinship verification protocols inflate
-reported performance: pair-level splitting leaks identities into the test set at
-a measured rate of $100\%$ on FIW, and the standard TSKinFace pairing admits a
-photo-session shortcut worth approximately nine ROC-AUC points. We provide a
-corrected grouped $k$-fold protocol, verify its integrity directly, and report
-baselines under it. We further report that nine quantum-inspired formulations,
-each against a matched control, fail to improve on classical baselines, and give
-a structural account of why. All code is released so that the protocol can be
-adopted and the results checked.
+We have argued that facial kinship verification is conventionally posed and
+measured in ways that both understate and overstate what the data supports.
+Pair-level splitting leaks identities into the test set at a rate we measure at
+$100\%$ on FIW; grouped $k$-fold with per-fold negative regeneration removes
+this and reduces seed-to-seed variation from $22.5$ to $12.1$ points. Against
+that protocol, treating verification as a person-level rather than
+photograph-level decision --- standard in template-based face recognition, but
+not previously applied here --- is worth $+0.077$ ROC-AUC on the one benchmark
+that supplies photograph sets, and by construction changes nothing on those
+that do not. Scoring parent--parent--child triads jointly adds $+0.032$ on
+TSKinFace.
 
-% ---------------------------------------------------------------------------
+We also report that nine quantum-inspired formulations, each against a
+capacity-matched classical control, fail to improve on their controls, with
+four significantly worse; the causes are structural rather than
+implementational. All code is released so that the protocol can be adopted and
+every claim checked.
+
+Two limitations bound these results. Set-level gains are measured on a single
+corpus, because only FIW stores multiple photographs per identity. And
+cross-gender parent--child verification remains the weakest case: mother--son
+reaches $0.712$ ROC-AUC on FIW against father--daughter's $0.993$, despite
+being the largest subset. We regard it as the most promising target for
+architectural work under the protocol proposed here.
+
 \section*{Reproducibility}
 
 Every numeric claim derives from JSON artefacts in \texttt{results/honest/}.

@@ -63,10 +63,28 @@ against them.
 
 ---
 
-## Verifying novelty — do this before writing more
+## Novelty check — COMPLETED
 
-Two claims carry the paper. Both need checking, and neither can be checked
-from inside this repository.
+Searches were run and the manuscript has been reframed accordingly.
+
+| Claim | Result | Consequence |
+|---|---|---|
+| TSKinFace negative-pair bias | **NOT novel** — prior work reports recombination shortcuts | Cite as prior art; we state explicitly that we are not first. Our measured regularity (same-family vs cross-family) is distinguished from the same-photograph effect, which cannot arise in TSKinFace since no pair shares a source image. |
+| Set-level / person-level kinship | **NOVEL** | Now the lead contribution. Title, abstract and introduction rebuilt around it. |
+| Identity-leakage quantification | **NOVEL** | Retained as a primary contribution, framed as quantification + released protocol rather than discovery of bias. |
+
+Two keys must now be filled:
+
+- `TODO_samephoto` — the "From Same Photo: Cheating on Visual Kinship
+  Challenges" analysis of recombined negatives. **Required**; the manuscript
+  cites it twice as prior art.
+- `TODO_imageset_kinship` — the closest multi-image kinship work (image-set
+  subspace or family-photo matching), cited to delimit what set-level means
+  here. **Required** to substantiate the novelty claim.
+
+---
+
+## Superseded: the original search plan
 
 **1. The TSKinFace photo-session shortcut.** Search:
 
