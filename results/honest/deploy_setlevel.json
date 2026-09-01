@@ -1,0 +1,17 @@
+{
+  "set_level": {
+    "accuracy": 73.39530765825587,
+    "roc_auc": 0.8228446697201162,
+    "fpr": 24.03718459495352,
+    "n_test_pairs": 9036,
+    "mean_set_size": 5.340909090909091,
+    "evaluation": "held-out family-disjoint fold; threshold calibrated on validation"
+  },
+  "triadic": {
+    "accuracy": 76.57657657657657,
+    "roc_auc": 0.8381624868111355,
+    "fpr": 22.52252252252252,
+    "n_test_triads": 222,
+    "evaluation": "held-out family-disjoint fold; threshold calibrated on validation"
+  }
+}
