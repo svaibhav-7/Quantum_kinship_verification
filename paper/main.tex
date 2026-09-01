@@ -10,6 +10,7 @@
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
+\graphicspath{{figures/}}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{url}
@@ -95,25 +96,55 @@ results under it; and (iv) a pre-registered nine-formulation negative result.
 % ---------------------------------------------------------------------------
 \section{Related Work}
 
-% TODO(before submission): This section must cite the actual literature. Every
-% entry below is a placeholder describing what belongs there. Do NOT populate
-% it with numbers that cannot be traced to a paper you have read --- an earlier
-% draft of this manuscript contained a baseline comparison table whose rows
-% could not be sourced, and it has been removed.
+% NOTE: citation keys below are placeholders. See paper/CITATIONS_TODO.md for
+% what each must support and how to verify it. Do not add a numeric claim from
+% a paper you have not read.
 
 \subsection{Kinship verification}
-Metric-learning approaches, deep pairwise and graph-based models, and the
-benchmarks themselves (KinFaceW, TSKinFace, FIW, and the RFIW challenge series).
+
+Early work framed the task as metric learning, learning a projection under
+which related faces lie closer than unrelated ones~\cite{lu2014neighborhood}.
+Subsequent methods replaced the hand-designed metric with deep pairwise
+encoders and, more recently, attention- and graph-based
+architectures~\cite{TODO_recent_sota}. Evaluation is concentrated on four
+corpora: KinFaceW-I and KinFaceW-II~\cite{lu2012kinfacew},
+TSKinFace~\cite{qin2015tri}, and Families In the Wild~\cite{robinson2018fiw},
+the last also underpinning the RFIW challenge series~\cite{robinson2020rfiw}.
+
+Reported accuracies are obtained under each dataset's official protocol. We
+therefore do not tabulate them against our results: Section~\ref{sec:bias}
+shows that those protocols admit two forms of optimistic bias, so a direct
+ranking would mislead in both directions.
 
 \subsection{Evaluation bias in vision benchmarks}
-Subject-disjoint versus random splitting in face recognition and biometrics;
-shortcut learning and spurious correlation; template- and set-based protocols
-such as IJB-B/C, which motivate our set-level discussion in
-Section~\ref{sec:limitations}.
+
+That benchmark protocols can inflate reported performance is established in
+adjacent fields. Face recognition distinguishes subject-disjoint from random
+splitting precisely because identity overlap leaks
+information~\cite{TODO_subject_disjoint}, and template-based protocols such as
+IJB-B/C score a \emph{person} represented by several images rather than a
+single photograph~\cite{whitelam2017ijbb}. More generally, models exploit
+incidental correlations in preference to the intended signal, a failure mode
+catalogued as shortcut learning~\cite{geirhos2020shortcut} and, earlier, as
+dataset bias~\cite{torralba2011unbiased}.
+
+Both concerns apply directly to kinship verification and, to our knowledge,
+neither has been quantified on these benchmarks. Sections~\ref{sec:bias}
+and~\ref{sec:setlevel} do so.
 
 \subsection{Quantum-inspired machine learning}
-Variational circuits, SWAP-test similarity, density-matrix classifiers, and
-prior reports of quantum-inspired gains on classical data.
+
+Quantum feature maps embed classical data in a Hilbert space where inner
+products act as kernels~\cite{schuld2019quantum}, with reported gains on
+classical tasks~\cite{havlicek2019supervised}. Related lines use SWAP-test
+state fidelity as a similarity measure and density matrices as classifiers.
+Such methods have been proposed for kinship verification, and the claim that
+they outperform classical counterparts on classical data is contested;
+dequantization results show that several purported advantages
+vanish under scrutiny~\cite{TODO_dequantization}.
+
+Section~\ref{sec:quantum} contributes to that debate empirically, evaluating
+nine formulations against capacity-matched classical controls.
 
 % ---------------------------------------------------------------------------
 \section{Sources of Optimistic Bias}
@@ -225,6 +256,16 @@ $559/559$ TSKinFace).
 
 \subsection{Effect on measurement stability}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_stability}
+\caption{Accuracy range under a single group-disjoint split across random
+seeds (grey) against grouped $k$-fold (blue, mean marked). A single split is
+too unstable to support a headline number: on FIW the seed-to-seed range spans
+$14.2$ points.}
+\label{fig:stability}
+\end{figure}
+
 Table~\ref{tab:stab} shows why a single group-disjoint split is insufficient.
 Accuracy on one split varies by up to $14.2$ points with the random seed,
 because FIW's test side reduces to a small number of families of very unequal
@@ -289,6 +330,15 @@ TSKinFace (shortcut-free) & $79.25 \pm 2.32$ & $0.8814 \pm 0.0192$ \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_main_results}
+\caption{Grouped 5-fold results, every family tested exactly once.
+(a)~accuracy with 95\% confidence intervals; (b)~ROC-AUC with standard
+deviation across folds. Dashed line marks the four-dataset mean.}
+\label{fig:main}
+\end{figure}
+
 Table~\ref{tab:main} reports results under the corrected protocol. We
 deliberately omit a comparison against published accuracies. Those numbers are
 obtained under each dataset's official protocol, which permits the leakage and
@@ -298,6 +348,14 @@ under the corrected protocol as work the community must do collectively, and we
 release our implementation to that end.
 
 \subsection{Per-relation analysis}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_relation}
+\caption{Per-relation ROC-AUC. Mother--son is the weakest relation on three of
+four datasets and, on FIW, the largest subset ($5{,}296$ pairs).}
+\label{fig:relation}
+\end{figure}
 
 Performance is markedly uneven across relation types. On FIW, father--daughter
 reaches $0.9933$ ROC-AUC while mother--son reaches $0.7124$ --- and mother--son
@@ -351,6 +409,16 @@ FIW & 7.30 & 0.7296 & \textbf{0.8066} & $\mathbf{+0.0771}$ \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_setlevel}
+\caption{Set-level representation. The gain appears only where photo sets
+exist ($n$ = mean images per identity). The three single-photograph corpora
+are bit-identical to the single-image baseline, which is the degradation
+guarantee asserted in the test suite.}
+\label{fig:setlevel}
+\end{figure}
+
 Table~\ref{tab:setlevel} reports the outcome. On FIW the representation is worth
 $+0.0771$ ROC-AUC, closely matching an untrained embedding-level estimate of
 $+0.071$, which indicates the gain is intrinsic to the representation rather
@@ -393,6 +461,14 @@ Triadic $+$ phase sweep & $69.50 \pm 2.41$ & $0.7887$ \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_triadic}
+\caption{Triadic scoring on TSKinFace. (a)~ROC-AUC by arm; (b)~per fold, with
+the triadic arm ahead in all five.}
+\label{fig:triadic}
+\end{figure}
+
 Triadic scoring improves ROC-AUC by $+0.0324$ over the best single parent
 (paired $t$-test over folds, $t = 14.93$, $p = 0.0001$; the gain is positive in
 all five folds). Negatives retain the true parents and substitute a child from
@@ -433,6 +509,15 @@ Purity regulariser & decorrelation penalty & $-0.9$, $p=0.047$ \\
 Under grouped $k$-fold with $20$ paired observations, enabling the SWAP-test
 branch yields $75.66\%$ against $76.34\%$ with it disabled (accuracy
 $p = 0.158$; ROC-AUC $p = 0.982$). The branch also costs $6$--$14\times$ runtime.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_quantum}
+\caption{Nine quantum-inspired formulations against classical controls matched
+for capacity or intent. None improves on its control; four are significantly
+worse. Bars are $\Delta$ROC-AUC in percentage points.}
+\label{fig:quantum}
+\end{figure}
 
 \subsection{A cautionary observation}
 
