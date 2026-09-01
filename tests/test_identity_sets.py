@@ -186,3 +186,69 @@ class TestIdentityKeyIsDatasetAware(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSpreadIsComputedInClosedForm(unittest.TestCase):
+    """The mean off-diagonal Gram entry has a closed form:
+
+        sum_{i!=j} <xi,xj> = ||sum_i xi||^2 - n     (unit vectors)
+
+    The original implementation materialised triu_indices, which allocated
+    ~n^2/2 index pairs and dominated the cost at large set sizes (46 ms of a
+    48 ms call at n=160). These tests pin the closed form against the explicit
+    computation so the optimisation cannot silently change the value.
+    """
+
+    def _explicit(self, X):
+        # Must use the same normalisation path as set_descriptor: comparing
+        # against a float32 reference showed a spurious 1.4e-07 mismatch that
+        # was an artefact of the check, not of the optimisation.
+        from src.identity_sets import _unit
+
+        Xn = _unit(X)
+        n = Xn.shape[0]
+        G = Xn @ Xn.T
+        iu = np.triu_indices(n, k=1)
+        return float(1.0 - G[iu].mean())
+
+    def test_matches_explicit_triu_computation(self):
+        rng = np.random.default_rng(0)
+        for n in (2, 3, 5, 17, 64, 233):
+            X = rng.normal(size=(n, 32))
+            self.assertAlmostEqual(set_descriptor(X)["spread"],
+                                   max(0.0, self._explicit(X)), places=11,
+                                   msg=f"n={n}")
+
+    def test_matches_on_real_embeddings(self):
+        """Synthetic Gaussians are an easy case; real embeddings are clustered
+        and expose cancellation that random vectors do not."""
+        import pickle
+
+        cache_path = os.path.join(project_root, "weights", "caches",
+                                  "all_datasets_cache.pkl")
+        if not os.path.exists(cache_path):
+            raise unittest.SkipTest("embedding cache not available")
+        vals = list(pickle.load(open(cache_path, "rb")).values())
+        rng = np.random.default_rng(0)
+        for n in (2, 5, 21, 89, 233):
+            idx = rng.choice(len(vals), n, replace=False)
+            X = np.stack([np.asarray(vals[i]) for i in idx])
+            self.assertAlmostEqual(set_descriptor(X)["spread"],
+                                   max(0.0, self._explicit(X)), places=10,
+                                   msg=f"n={n}")
+
+    def test_matches_for_near_identical_vectors(self):
+        """Numerically the hardest case: the closed form subtracts two nearly
+        equal quantities, so cancellation would show up here first."""
+        rng = np.random.default_rng(1)
+        base = rng.normal(size=64)
+        X = base + 1e-6 * rng.normal(size=(20, 64))
+        self.assertAlmostEqual(set_descriptor(X)["spread"],
+                               max(0.0, self._explicit(X)), places=8)
+
+    def test_still_zero_for_singleton_and_identical_sets(self):
+        rng = np.random.default_rng(2)
+        self.assertEqual(set_descriptor(rng.normal(size=(1, 16)))["spread"], 0.0)
+        v = rng.normal(size=16)
+        self.assertAlmostEqual(set_descriptor(np.stack([v] * 4))["spread"],
+                               0.0, places=9)
