@@ -71,3 +71,15 @@ legacy/**/*.pdf
 # Scratch
 scratch/
 tmp/
+
+# LaTeX build artifacts (keep .tex, .pdf and figures; drop the rest)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.spl
+*.synctex.gz
+*.bbl
+*.blg
+*.toc

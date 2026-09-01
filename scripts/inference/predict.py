@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """Kinship verification CLI.
 
-  python scripts/inference/predict.py --img1 parent.jpg --img2 child.jpg --relation fs
-  python scripts/inference/predict.py --pairs pairs.csv --out results.csv
+Single pair (one photo each):
+  predict.py --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
 
-CSV input: img1,img2,relation (header optional).
+Set-level (several photos per person; +0.077 ROC-AUC where sets exist):
+  predict.py --set-a p1.jpg p2.jpg p3.jpg --set-b c1.jpg c2.jpg
+
+Triadic (father + mother + child scored jointly; +0.032 ROC-AUC):
+  predict.py --father f.jpg --mother m.jpg --child c.jpg
+
+Batch:
+  predict.py --pairs pairs.csv --out results.csv     (img1,img2,relation)
 """
 import argparse, csv, os, sys
 
@@ -25,7 +32,62 @@ def main():
     ap.add_argument("--model", default=DEFAULT_CKPT)
     ap.add_argument("--threshold", type=float, help="override calibrated threshold")
     ap.add_argument("--domain", help="dataset domain for threshold (fiw, kinfacew-i, kinfacew-ii, tskinface)")
+    ap.add_argument("--set-a", nargs="+", metavar="IMG",
+                    help="all photos of person A (set-level scoring)")
+    ap.add_argument("--set-b", nargs="+", metavar="IMG",
+                    help="all photos of person B")
+    ap.add_argument("--father", help="triadic: father image")
+    ap.add_argument("--mother", help="triadic: mother image")
+    ap.add_argument("--child", help="triadic: child image")
     args = ap.parse_args()
+
+    # --- triadic -----------------------------------------------------------
+    if args.father or args.mother or args.child:
+        if not (args.father and args.mother and args.child):
+            sys.exit("error: triadic scoring needs --father, --mother and --child")
+        from src.set_predictor import TriadPredictor
+
+        path = os.path.join(project_root, "weights", "deploy", "triad_model.pkl")
+        if not os.path.exists(path):
+            sys.exit("error: triad model missing; run scripts/deploy/package_setlevel.py")
+        tp = TriadPredictor(path)
+        m = tp.metrics or {}
+        print("  triadic model  held-out: %.2f%% acc, %.4f AUC"
+              % (m.get("accuracy", 0), m.get("roc_auc", 0)))
+        print("  threshold: %.4f\n" % tp.threshold)
+        r = tp.predict_images(args.father, args.mother, args.child)
+        print("  probability : %.4f" % r["probability"])
+        print("  verdict     : %s"
+              % ("RELATED (KIN)" if r["is_kin"] else "NOT RELATED"))
+        print("  resembles   : %s (alpha=%.2f)" % (r["resembles"], r["alpha"]))
+        print("  cos(F,C)=%.4f  cos(M,C)=%.4f" % (r["cos_fc"], r["cos_mc"]))
+        return
+
+    # --- set-level ---------------------------------------------------------
+    if args.set_a or args.set_b:
+        if not (args.set_a and args.set_b):
+            sys.exit("error: set-level scoring needs both --set-a and --set-b")
+        from src.set_predictor import SetKinshipPredictor
+
+        path = os.path.join(project_root, "weights", "deploy", "set_model.pkl")
+        if not os.path.exists(path):
+            sys.exit("error: set model missing; run scripts/deploy/package_setlevel.py")
+        sp = SetKinshipPredictor(path)
+        m = sp.metrics or {}
+        print("  set-level model  held-out: %.2f%% acc, %.4f AUC (mean set size %.2f)"
+              % (m.get("accuracy", 0), m.get("roc_auc", 0), m.get("mean_set_size", 1)))
+        print("  threshold: %.4f\n" % sp.threshold)
+        for pth in list(args.set_a) + list(args.set_b):
+            if not os.path.exists(pth):
+                sys.exit("error: image not found: %s" % pth)
+        r = sp.predict_images(args.set_a, args.set_b)
+        print("  photos      : %d vs %d" % (r["n_a"], r["n_b"]))
+        print("  probability : %.4f" % r["probability"])
+        print("  verdict     : %s"
+              % ("RELATED (KIN)" if r["is_kin"] else "NOT RELATED"))
+        if r["n_a"] == 1 and r["n_b"] == 1:
+            print("  note        : one photo each -- this is the single-image path")
+        return
 
     if not os.path.exists(args.model):
         sys.exit(f"error: model not found at {args.model}\n"

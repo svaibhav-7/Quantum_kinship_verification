@@ -178,12 +178,48 @@ pip install -r requirements.txt
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/cu128
 ```
 
+### Try it on your own photos
+
+```bash
+# interactive -- prompts for photos
+python verify_kinship.py
+
+# two people, one photo each
+python verify_kinship.py --person-a mum.jpg --person-b me.jpg
+
+# several photos each (more accurate: +0.077 ROC-AUC where sets exist)
+python verify_kinship.py --person-a dad1.jpg dad2.jpg --person-b kid1.jpg kid2.jpg
+
+# folders and URLs work too
+python verify_kinship.py --person-a ./dad_photos/ --person-b https://site/kid.jpg
+
+# both parents plus a child, scored jointly
+python verify_kinship.py --father f.jpg --mother m.jpg --child c.jpg
+```
+
+Photographs are face-detected and cropped with MTCNN before scoring. This is
+required rather than cosmetic: the models were trained on tight face crops, and
+an uncropped photograph embeds at cosine **0.027** against its cropped version
+--- effectively an unrelated image. Detection restores it to **0.940**. Pass
+`--no-detect` only if your inputs are already tight crops.
+
+Photos without a detectable face are reported and skipped, not silently
+dropped.
+
 ### Predict
 
 ```bash
-# single pair
+# single pair, one photo each
 python scripts/inference/predict.py \
     --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
+
+# set-level: several photos per person (+0.077 ROC-AUC where sets exist)
+python scripts/inference/predict.py \
+    --set-a p1.jpg p2.jpg p3.jpg --set-b c1.jpg c2.jpg
+
+# triadic: father + mother + child scored jointly (+0.032 ROC-AUC)
+python scripts/inference/predict.py \
+    --father f.jpg --mother m.jpg --child c.jpg
 
 # batch from CSV (img1,img2,relation)
 python scripts/inference/predict.py --pairs pairs.csv --out results.csv
@@ -192,6 +228,22 @@ python scripts/inference/predict.py --pairs pairs.csv --out results.csv
 Relations: `fd` father-daughter, `fs` father-son, `md` mother-daughter,
 `ms` mother-son. `--domain` selects the calibrated operating point
 (`fiw`, `kinfacew-i`, `kinfacew-ii`, `tskinface`).
+
+Shipped models, each scored on a held-out family-disjoint fold:
+
+| Model | Accuracy | ROC-AUC | Use when |
+|---|---:|---:|---|
+| pairwise | 75.66% | 0.8497 | one photo per person |
+| set-level | 73.40% | 0.8228 | several photos per person |
+| triadic | 76.58% | 0.8382 | both parents and a child |
+
+The pairwise row averages four datasets under grouped 5-fold; the other two are
+single held-out folds on the corpora that support them, so the rows are not
+directly comparable. The like-for-like comparison on identical folds is in
+`RESULTS_HONEST.md`.
+
+Passing one photo per person to the set interface reproduces the single-image
+path exactly, so the set interface is always safe to use.
 
 ### Reproduce every number
 
