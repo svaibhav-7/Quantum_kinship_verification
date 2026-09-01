@@ -19,7 +19,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 sys.path.insert(0, project_root)
 
 RES = os.path.join(project_root, "results", "honest")
-OUT = os.path.join(project_root, "paper", "elsevier", "figures")
+OUT = os.path.join(project_root, "paper", os.environ.get("FIGDIR", "elsevier"), "figures")
 CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
 
 plt.rcParams.update({
