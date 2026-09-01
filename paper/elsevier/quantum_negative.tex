@@ -56,8 +56,17 @@ kernel-launch overhead and achieves a $380\times$ GPU speedup (192 to 73{,}094
 pairs/s) with identical output and gradients, verified by test. We also
 quantify the identity leakage admitted by the evaluation protocols under which
 positive quantum claims were made: 100\% of test pairs share an identity with
-training on the largest benchmark. All code, data splits, and evaluation
-scripts are released.
+training on the largest benchmark. Beyond the negative result we report three analyses that the corrected
+protocol makes interpretable. Errors concentrate sharply by relation type:
+mother--son reaches $0.712$ ROC-AUC against father--daughter's $0.993$ on the
+largest benchmark despite being its largest subset, and we show this disparity
+is induced during training rather than inherited from the embedding, which
+spans only $0.078$ ROC-AUC across the four relations. Aggregating several
+photographs of a person rather than one improves ROC-AUC by $+0.077$ where
+photograph sets exist, with most of the gain realised by the fifth photograph
+and none --- by construction --- on corpora storing a single photograph per
+individual. All code, data splits, evaluation scripts, and the JSON artefacts
+underlying every figure and table are released.
 \end{abstract}
 
 \begin{keyword}
@@ -170,6 +179,71 @@ leak alongside the classical features. Section~\ref{sec:protocol} quantifies
 this leak.
 
 % ---------------------------------------------------------------------------
+\section{Datasets and experimental setup}
+\label{sec:data}
+
+\subsection{Corpora}
+
+We use the four corpora on which facial kinship verification is conventionally
+evaluated. Table~\ref{tab:datasets} summarises their scale and, more
+importantly for this work, their structure: the number of distinct grouping
+units available for a leakage-free split, and how many photographs each stores
+per individual.
+
+\begin{table*}[t]
+\centering
+\caption{The four benchmark corpora, characterised by the properties that
+govern how they can be split and how much evidence they supply per person.
+Photographs per identity is the property that determines whether set-level
+aggregation is possible at all.}
+\label{tab:datasets}
+\begin{tabular}{lrrrrl}
+\toprule
+Corpus & Pairs & Families & Identities & Photos/identity & Image content \\
+\midrule
+KinFaceW-I & 1{,}066 & 533 & 1{,}066 & 1.00 & $64\times64$ cropped face \\
+KinFaceW-II & 2{,}000 & 1{,}000 & 2{,}000 & 1.00 & $64\times64$ cropped face \\
+TSKinFace & 2{,}236 & 559 & 1{,}677 & 1.00 & $64\times64$ cropped face \\
+FIW & 57{,}120 & 95 & 472 & 5.28 & $224\times224$ cropped face \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Two features of Table~\ref{tab:datasets} drive the rest of the paper. First,
+FIW draws $57{,}120$ pairs from only $95$ families and $472$ identities, a
+ratio of $121$ pairs per identity; the three smaller corpora store exactly one
+photograph per person and one person per pair slot. Second, only FIW supplies
+multiple photographs per individual, so it is the only corpus on which
+person-level aggregation can differ from the conventional formulation. We
+report per-corpus throughout rather than averaging, because an average over
+these four would conceal exactly that asymmetry.
+
+\subsection{Feature extraction}
+
+All experiments use a single frozen backbone: FaceNet (Inception-ResNet-v1)
+pretrained on VGGFace2, producing $512$-dimensional $\ell_2$-normalised
+embeddings. Holding the backbone fixed isolates the protocol and
+representation questions from representation-learning effects. It also bounds
+the claims: results here characterise this embedding space, and
+Section~\ref{sec:limitations} states the consequence.
+
+Benchmark images are already tight face crops, so no detection is applied in
+the evaluation pipeline. We note for completeness that this does not hold for
+arbitrary photographs: measured on this pipeline, a face embedded in a wider
+scene reaches cosine $0.027$ against its own cropped version, and MTCNN
+detection restores it to $0.940$.
+
+\subsection{Reproducibility}
+
+Every numeric claim in this paper derives from JSON artefacts written by the
+evaluation scripts, and each experiment is deterministic given its seed:
+repeated runs reproduce the reported figures to four decimal places. The
+implementation carries 138 tests, including assertions that no grouping unit
+spans a fold boundary and that the fast SWAP-test reformulation of
+Section~\ref{sec:efficiency} matches the reference simulator in both value and
+gradient.
+
+% ---------------------------------------------------------------------------
 \section{Evaluation protocol}
 \label{sec:protocol}
 
@@ -211,6 +285,18 @@ Test pairs whose family was seen in train & 11{,}424 / 11{,}424 (100\%) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_leakage}
+\caption{(a) Identity leakage on FIW. Under conventional pair-level splitting
+every test pair shares an identity with training; the family-disjoint protocol
+of Section~\ref{sec:protocol} reduces this to zero. (b) The family-size
+distribution that makes a single split unstable: the largest family alone
+accounts for $19\%$ of all pairs, so which families land in the test fold
+dominates the measurement.}
+\label{fig:leakage}
+\end{figure*}
 
 \subsection{Corrected protocol: grouped \texorpdfstring{$k$}{k}-fold}
 
@@ -521,6 +607,141 @@ method proved significantly \emph{worse} than no regulariser ($-0.0089$,
 $p = 0.047$). We report this because the single-seed reading was of the kind
 that is readily published, and it illustrates why capacity-matched controls
 and repeated trials are necessary when evaluating claims of this type.
+
+% ---------------------------------------------------------------------------
+\section{Extended analysis}
+\label{sec:extended}
+
+The preceding sections establish the protocol and the negative result. This
+section reports three further analyses that the corrected protocol makes
+interpretable: where the model's errors concentrate, how the person-level gain
+scales with the evidence supplied, and how the score distributions differ
+across corpora.
+
+\subsection{Where the errors concentrate}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_relation_gap}
+\caption{Per-relation difficulty before and after training. Raw FaceNet
+embeddings separate the four relations within a range of $0.078$ ROC-AUC; the
+trained model spans $0.281$. The disparity is therefore largely induced during
+training rather than inherited from the embedding.}
+\label{fig:relgap}
+\end{figure}
+
+\begin{table*}[t]
+\centering
+\caption{Per-relation ROC-AUC. The second column is raw cosine similarity on
+frozen embeddings with no training; the remainder are the trained model on each
+corpus. Mother--son is weakest on three of four corpora and is simultaneously
+the largest FIW subset ($5{,}296$ pairs).}
+\label{tab:relation}
+\begin{tabular}{lcccccc}
+\toprule
+Relation & Raw embedding & KinFaceW-I & KinFaceW-II & FIW & TSKinFace & Mean \\
+\midrule
+Father--daughter & 0.7434 & 0.9174 & 0.8529 & 0.9933 & 0.9612 & 0.9312 \\
+Father--son & 0.7841 & 0.8935 & 0.8875 & 0.9754 & 0.9124 & 0.9172 \\
+Mother--daughter & 0.7295 & 0.8400 & 0.8598 & 0.9668 & 0.9227 & 0.8973 \\
+Mother--son & 0.7065 & 0.9750 & 0.7795 & 0.7124 & 0.8483 & 0.8288 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Performance is markedly uneven across relation types
+(Table~\ref{tab:relation}). On FIW, father--daughter reaches $0.9933$ ROC-AUC
+while mother--son reaches $0.7124$ --- and mother--son is the \emph{largest}
+subset of that corpus. Averaged over corpora the ordering is mother--son
+($0.8288$), mother--daughter ($0.8973$), father--son ($0.9172$),
+father--daughter ($0.9312$).
+
+Figure~\ref{fig:relgap} isolates where this disparity originates. Measured on
+raw embeddings with no training at all, the four relations span only
+$0.7065$--$0.7841$, a range of $0.078$. After training the range is $0.281$.
+The frozen embedding is therefore not the binding constraint: most of the
+disparity is induced during training, plausibly because the relation-conditioned
+head fits the easier relations at the expense of the hardest one. We verified
+that this is not a labelling artefact --- gender fields in the FIW metadata are
+complete and well-formed across the families we audited --- and we regard
+cross-gender parent--child verification as the most promising target for
+future architectural work under this protocol.
+
+\subsection{How the person-level gain scales}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_setsize}
+\caption{Set-level ROC-AUC on FIW as a function of the number of photographs
+aggregated per person. Most of the available gain is realised by the fifth
+photograph; the curve is computed on frozen embeddings with no training, so it
+measures the representation rather than model capacity.}
+\label{fig:setsize}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Set-level ROC-AUC against photographs per person on FIW. Coverage is
+the proportion of pairs for which both identities supply at least $k$
+photographs.}
+\label{tab:setsize}
+\begin{tabular}{cccc}
+\toprule
+Photographs & ROC-AUC & Gain vs.\ 1 & Coverage \\
+\midrule
+1 & 0.7339 & $+0.0000$ & 100\% \\
+2 & 0.7744 & $+0.0405$ & 100\% \\
+3 & 0.7832 & $+0.0493$ & 100\% \\
+4 & 0.7923 & $+0.0584$ & 100\% \\
+5 & 0.7951 & $+0.0612$ & 99\% \\
+6 & 0.7978 & $+0.0639$ & 99\% \\
+8 & 0.8003 & $+0.0664$ & 99\% \\
+10 & 0.8042 & $+0.0702$ & 97\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:setsize} and Figure~\ref{fig:setsize} report how the gain
+depends on how many photographs are supplied. A second photograph is worth
+$+0.041$ ROC-AUC on its own --- more than half the total available gain --- and
+the curve is substantially flat beyond five, reaching $+0.070$ at ten. This has
+a practical reading: a deployment that can obtain roughly five photographs of
+each person captures nearly all of the benefit, and there is little return on
+collecting more.
+
+That the curve is computed on frozen embeddings, without any training, matters
+for interpretation. The gain is a property of aggregating evidence about a
+person, not of additional model capacity, which is consistent with the trained
+result of $+0.077$ reported under the full protocol.
+
+\subsection{Score distributions and operating points}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_score_distributions}
+\caption{Kin and non-kin score distributions on the held-out fold of each
+corpus. The overlap, rather than any single summary statistic, is what the
+reported ROC-AUC measures.}
+\label{fig:scores}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_roc_curves}
+\caption{ROC curves on the held-out fold of each corpus, with grouped $k$-fold
+mean ROC-AUC in parentheses.}
+\label{fig:roc}
+\end{figure}
+
+Figures~\ref{fig:scores} and~\ref{fig:roc} show the underlying score
+distributions rather than only their summaries. Two observations follow. The
+distributions overlap substantially on every corpus, which is the concrete form
+of the roughly one-in-four error rate implied by the accuracies in
+Table~\ref{tab:main}; and the degree of overlap differs enough between corpora
+that a single global decision threshold is inappropriate. We therefore
+calibrate per corpus on a group-disjoint validation slice: a single shared
+threshold costs between $0.7$ and $5.9$ accuracy points depending on the
+corpus.
 
 % ---------------------------------------------------------------------------
 \section{Why the approach fails}
