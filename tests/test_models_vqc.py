@@ -178,3 +178,46 @@ class TestAmplitudeVQC(unittest.TestCase):
         m = AmplitudeVQCClassifier(n_qubits_each=6, depth=2)
         self.assertEqual(m.proj.out_features, 2 ** 6)
         self.assertGreater(m.proj.out_features, 6)
+
+
+class TestAmplitudeReadouts(unittest.TestCase):
+    """The diagram specifies "Fidelity / Expectation". With angle encoding the
+    fidelity branch sat at exactly chance, but the encoding was the thing that
+    changed everything else, so it has to be retested here rather than assumed
+    to fail again."""
+
+    def test_both_readouts_are_selectable(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        e1, e2, r = _batch()
+        for readout, width in (("fidelity", 1), ("expectation", 8)):
+            m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout=readout)
+            self.assertEqual(m.measure(e1, e2, r).shape, (6, width))
+
+    def test_fidelity_readout_is_a_probability(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout="fidelity")
+        f = m.measure(*_batch())
+        self.assertTrue(torch.all(f >= -1e-6) and torch.all(f <= 1 + 1e-6))
+
+    def test_fidelity_varies_across_inputs(self):
+        """A constant readout would explain a chance result trivially; this
+        checks the signal is present even if the model cannot use it."""
+        from src.models_vqc import AmplitudeVQCClassifier
+        m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout="fidelity")
+        torch.manual_seed(3)
+        f = m.measure(torch.randn(64, 512), torch.randn(64, 512),
+                      torch.eye(4)[torch.randint(0, 4, (64,))])
+        self.assertGreater(float(f.std()), 1e-4)
+
+    def test_rejects_an_unknown_readout(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        with self.assertRaises(ValueError):
+            AmplitudeVQCClassifier(readout="nonsense")
+
+    def test_both_readouts_train(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        for readout in ("fidelity", "expectation"):
+            m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout=readout)
+            m(*_batch()).sum().backward()
+            self.assertGreater(float(m.vqc.theta.grad.abs().sum()), 0.0,
+                               f"{readout} readout gives no gradient")

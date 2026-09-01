@@ -138,14 +138,18 @@ class AmplitudeVQCClassifier(nn.Module):
     angle-encoded model and 0.58-0.63 for the capacity-matched control.
     """
 
-    def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3):
+    def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3,
+                 readout="expectation"):
         super().__init__()
+        if readout not in ("fidelity", "expectation"):
+            raise ValueError(f"unknown readout {readout!r}")
+        self.readout = readout
         self.n_each = n_qubits_each
         self.dim = 2 ** n_qubits_each
         self.proj = nn.Linear(embed_dim, self.dim)
         self.drop = nn.Dropout(dropout)
         self.vqc = JointRegisterVQC(n_qubits_each=n_qubits_each, depth=depth)
-        self.head = nn.Linear(2 * n_qubits_each, 1)
+        self.head = nn.Linear(1 if readout == "fidelity" else 2 * n_qubits_each, 1)
 
     def joint_state(self, emb1, emb2, rels):
         from .quantum_vqc import amplitude_encode
@@ -169,8 +173,13 @@ class AmplitudeVQCClassifier(nn.Module):
                 state = state[:, _cnot_indices(n, q, (q + 1) % n, dev)]
         return state
 
-    def forward_logits(self, emb1, emb2, rels):
+    def measure(self, emb1, emb2, rels):
+        """Both branches of the diagram's "Fidelity / Expectation" box."""
         s = self.joint_state(emb1, emb2, rels)
+        if self.readout == "fidelity":
+            amp = s[:, 0]
+            return (amp.real ** 2 + amp.imag ** 2).unsqueeze(1).clamp(0.0, 1.0)
+
         probs = s.real ** 2 + s.imag ** 2
         b, n = s.shape[0], self.vqc.n_total
         outs = []
@@ -178,7 +187,10 @@ class AmplitudeVQCClassifier(nn.Module):
             left, right = 2 ** q, 2 ** (n - q - 1)
             p = probs.reshape(b, left, 2, right)
             outs.append(p[:, :, 0, :].sum(dim=(1, 2)) - p[:, :, 1, :].sum(dim=(1, 2)))
-        return self.head(torch.stack(outs, dim=1))
+        return torch.stack(outs, dim=1)
+
+    def forward_logits(self, emb1, emb2, rels):
+        return self.head(self.measure(emb1, emb2, rels))
 
     def forward(self, emb1, emb2, rels):
         return torch.sigmoid(self.forward_logits(emb1, emb2, rels))

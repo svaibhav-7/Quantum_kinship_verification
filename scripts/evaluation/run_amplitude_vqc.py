@@ -34,7 +34,7 @@ from src.splits import family_of
 from src.ts_pairs import build_tskinface_pairs, family_of_ts
 
 CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
-ARMS = ("amplitude-vqc", "control")
+ARMS = ("amp-expectation", "amp-fidelity", "control")
 
 
 def keyfn_for(name):
@@ -86,9 +86,14 @@ def add_neg(pos, keyfn, seed):
 def train_eval(arm, fit, va, te, cache, args, seed, dev):
     torch.manual_seed(seed)
     np.random.seed(seed)
-    mk = AmplitudeVQCClassifier if arm == "amplitude-vqc" else AmplitudeControl
-    model = mk(n_qubits_each=args.qubits, depth=args.depth,
-               dropout=args.dropout).to(dev)
+    if arm == "control":
+        model = AmplitudeControl(n_qubits_each=args.qubits, depth=args.depth,
+                                 dropout=args.dropout).to(dev)
+    else:
+        model = AmplitudeVQCClassifier(
+            n_qubits_each=args.qubits, depth=args.depth, dropout=args.dropout,
+            readout="fidelity" if arm.endswith("fidelity") else "expectation"
+        ).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-3)
     lossf = torch.nn.BCEWithLogitsLoss()
 
@@ -194,45 +199,43 @@ def main():
                 line += "  %s=%.4f" % (arm, r["roc_auc"])
             print(line, flush=True)
 
-    print("\n  %-13s %15s %10s %9s" % ("dataset", "amplitude-vqc", "control", "delta"))
-    print("  " + "-" * 50)
+    print("\n  %-13s" % "dataset" + "".join("%17s" % a for a in ARMS))
+    print("  " + "-" * (13 + 17 * len(ARMS)))
     summary = {}
     for name in datasets:
-        v_ = [r["roc_auc"] for r in res["amplitude-vqc"][name]]
-        c_ = [r["roc_auc"] for r in res["control"][name]]
-        if not v_ or not c_:
+        if not all(res[a][name] for a in ARMS):
             continue
-        summary[name] = {
-            "amplitude_vqc": {
-                "roc_auc_mean": float(np.mean(v_)),
-                "roc_auc_sd": float(np.std(v_, ddof=1)) if len(v_) > 1 else 0.0,
+        summary[name] = {}
+        for a in ARMS:
+            vals = [r["roc_auc"] for r in res[a][name]]
+            summary[name][a] = {
+                "roc_auc_mean": float(np.mean(vals)),
+                "roc_auc_sd": float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0,
                 "accuracy_mean": float(np.mean(
-                    [r["accuracy"] for r in res["amplitude-vqc"][name]])),
-                "per_fold": v_},
-            "control": {
-                "roc_auc_mean": float(np.mean(c_)),
-                "roc_auc_sd": float(np.std(c_, ddof=1)) if len(c_) > 1 else 0.0,
-                "accuracy_mean": float(np.mean(
-                    [r["accuracy"] for r in res["control"][name]])),
-                "per_fold": c_},
-            "delta": float(np.mean(v_) - np.mean(c_))}
-        print("  %-13s %15.4f %10.4f %+9.4f"
-              % (name, np.mean(v_), np.mean(c_), np.mean(v_) - np.mean(c_)))
+                    [r["accuracy"] for r in res[a][name]])),
+                "per_fold": vals}
+        print("  %-13s" % name
+              + "".join("%17.4f" % summary[name][a]["roc_auc_mean"] for a in ARMS))
 
     if summary:
-        vm = float(np.mean([s["amplitude_vqc"]["roc_auc_mean"]
-                            for s in summary.values()]))
-        cm = float(np.mean([s["control"]["roc_auc_mean"]
-                            for s in summary.values()]))
-        print("\n  MEAN  vqc %.4f   control %.4f   delta %+.4f" % (vm, cm, vm - cm))
-        allv = [x for s in summary.values() for x in s["amplitude_vqc"]["per_fold"]]
+        means = {a: float(np.mean([s[a]["roc_auc_mean"] for s in summary.values()]))
+                 for a in ARMS}
+        print("\n  MEAN  " + "   ".join("%s %.4f" % (a, means[a]) for a in ARMS))
         allc = [x for s in summary.values() for x in s["control"]["per_fold"]]
-        if len(allv) > 2:
-            from scipy import stats
-            t, p = stats.ttest_rel(allv, allc)
-            print("  paired t-test over %d folds: t=%.2f  p=%.4f" % (len(allv), t, p))
-            summary["_test"] = {"n_folds": len(allv), "t": float(t), "p": float(p)}
-        summary["_mean"] = {"amplitude_vqc": vm, "control": cm, "delta": vm - cm}
+        summary["_test"] = {}
+        from scipy import stats
+        for a in ARMS:
+            if a == "control":
+                continue
+            av = [x for s in summary.values() for x in s[a]["per_fold"]]
+            if len(av) > 2:
+                t, p = stats.ttest_rel(av, allc)
+                print("  %-16s vs control: %+.4f  t=%.2f  p=%.4f"
+                      % (a, means[a] - means["control"], t, p))
+                summary["_test"][a] = {"n_folds": len(av),
+                                       "delta": means[a] - means["control"],
+                                       "t": float(t), "p": float(p)}
+        summary["_mean"] = means
 
     summary["_config"] = {"qubits_each": args.qubits, "depth": args.depth,
                           "quantum_params": vq.quantum_parameter_count(),
