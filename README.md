@@ -178,6 +178,34 @@ pip install -r requirements.txt
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/cu128
 ```
 
+### Try it on your own photos
+
+```bash
+# interactive -- prompts for photos
+python verify_kinship.py
+
+# two people, one photo each
+python verify_kinship.py --person-a mum.jpg --person-b me.jpg
+
+# several photos each (more accurate: +0.077 ROC-AUC where sets exist)
+python verify_kinship.py --person-a dad1.jpg dad2.jpg --person-b kid1.jpg kid2.jpg
+
+# folders and URLs work too
+python verify_kinship.py --person-a ./dad_photos/ --person-b https://site/kid.jpg
+
+# both parents plus a child, scored jointly
+python verify_kinship.py --father f.jpg --mother m.jpg --child c.jpg
+```
+
+Photographs are face-detected and cropped with MTCNN before scoring. This is
+required rather than cosmetic: the models were trained on tight face crops, and
+an uncropped photograph embeds at cosine **0.027** against its cropped version
+--- effectively an unrelated image. Detection restores it to **0.940**. Pass
+`--no-detect` only if your inputs are already tight crops.
+
+Photos without a detectable face are reported and skipped, not silently
+dropped.
+
 ### Predict
 
 ```bash
