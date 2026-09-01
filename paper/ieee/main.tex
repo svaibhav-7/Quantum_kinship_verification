@@ -80,7 +80,7 @@ yields a graph with a single connected component over all of FIW: no
 family-disjoint partition of the existing pairs exists, and negatives must be
 regenerated within each fold. That kinship datasets carry construction
 artefacts is known --- prior work has shown that negatives assembled by
-recombining family members admit shortcuts~\cite{TODO_samephoto} --- but we are
+recombining family members admit shortcuts~\cite{dawson2018samephoto} --- but we are
 not aware of a quantification of identity leakage under the splitting practice
 in common use, nor of a released protocol that removes it.
 
@@ -88,9 +88,13 @@ in common use, nor of a released protocol that removes it.
 conventional formulation compares two photographs. FIW supplies a median of
 five photographs per identity, so this discards most of the evidence about each
 person. Template-based protocols in face recognition score a person represented
-by an image set~\cite{whitelam2017ijbb}; to our knowledge this has not been
-applied to kinship verification. Doing so improves ROC-AUC by $+0.077$ on FIW,
-and by construction leaves corpora with one photograph per person unchanged.
+by an image set~\cite{whitelam2017ijbb}. Image sets have been used in kinship
+verification to learn a set-to-set metric~\cite{kohli2019imageset}; what we
+evaluate is different and simpler --- aggregating a subject's photographs into
+a single template scored by an ordinary pairwise decision --- and, to our
+knowledge, it has not been measured under a leakage-free protocol. Doing so
+improves ROC-AUC by $+0.077$ on FIW, and by construction leaves corpora with
+one photograph per person unchanged.
 We additionally show that father--mother--child triads carry information that
 pairwise decomposition destroys, worth a further $+0.032$ ROC-AUC.
 
@@ -119,7 +123,7 @@ Early work framed the task as metric learning, learning a projection under
 which related faces lie closer than unrelated ones~\cite{lu2014neighborhood}.
 Subsequent methods replaced the hand-designed metric with deep pairwise
 encoders and, more recently, attention- and graph-based
-architectures~\cite{TODO_recent_sota}. Evaluation is concentrated on four
+architectures~\cite{zhu2022kinship}. Evaluation is concentrated on four
 corpora: KinFaceW-I and KinFaceW-II~\cite{lu2012kinfacew},
 TSKinFace~\cite{qin2015tri}, and Families In the Wild~\cite{robinson2018fiw},
 the last also underpinning the RFIW challenge series~\cite{robinson2020rfiw}.
@@ -134,7 +138,7 @@ ranking would mislead in both directions.
 That benchmark protocols can inflate reported performance is established in
 adjacent fields. Face recognition distinguishes subject-disjoint from random
 splitting precisely because identity overlap leaks
-information~\cite{TODO_subject_disjoint}, and template-based protocols such as
+information~\cite{kemelmacher2016megaface}, and template-based protocols such as
 IJB-B/C score a \emph{person} represented by several images rather than a
 single photograph~\cite{whitelam2017ijbb}. More generally, models exploit
 incidental correlations in preference to the intended signal, a failure mode
@@ -142,13 +146,13 @@ catalogued as shortcut learning~\cite{geirhos2020shortcut} and, earlier, as
 dataset bias~\cite{torralba2011unbiased}.
 
 Both concerns apply directly to kinship verification. Construction artefacts in
-kinship corpora have been reported~\cite{TODO_samephoto}, but we are not aware
+kinship corpora have been reported~\cite{dawson2018samephoto}, but we are not aware
 of a quantification of identity leakage under the splitting practice in common
 use, nor of a person-level protocol for this task: existing multi-image work
 addresses image-set subspace representations or matching within family
 photographs, which is a different problem from aggregating a subject's
 photographs into a single template for pairwise kinship
-decisions~\cite{TODO_imageset_kinship}. Sections~\ref{sec:bias}
+decisions~\cite{kohli2019imageset}. Sections~\ref{sec:bias}
 and~\ref{sec:setlevel} address both gaps.
 
 \subsection{Quantum-inspired machine learning}
@@ -160,7 +164,7 @@ state fidelity as a similarity measure and density matrices as classifiers.
 Such methods have been proposed for kinship verification, and the claim that
 they outperform classical counterparts on classical data is contested;
 dequantization results show that several purported advantages
-vanish under scrutiny~\cite{TODO_dequantization}.
+vanish under scrutiny~\cite{tang2019quantum}.
 
 Section~\ref{sec:quantum} contributes to that debate empirically, evaluating
 nine formulations against capacity-matched classical controls.
@@ -185,7 +189,7 @@ reports the measured violation on FIW.
 \caption{Identity leakage under a random $80/20$ pair-level split of FIW.}
 \label{tab:leak}
 \centering
-\small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lr@{}}
 \toprule
 Quantity & Value \\
@@ -199,7 +203,8 @@ Largest family, share of all pairs & 19\% \\
 Test pairs sharing an identity with train & 11{,}424 / 11{,}424 (100\%) \\
 Test pairs whose family was seen in train & 11{,}424 / 11{,}424 (100\%) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{A non-obvious obstacle to correcting it}
@@ -223,7 +228,7 @@ KinFaceW-II.
 That kinship benchmarks carry construction artefacts is established. Prior work
 has shown that negatives assembled by recombining members of family photographs
 permit a model to succeed without learning
-kinship~\cite{TODO_samephoto}, and the TSKinFace protocol documents its own
+kinship~\cite{dawson2018samephoto}, and the TSKinFace protocol documents its own
 negative-construction procedure~\cite{qin2015tri}. We do not claim to be the
 first to observe that this dataset family is vulnerable.
 
@@ -246,7 +251,7 @@ membership predicts the label perfectly; no pair shares a source photograph in
 either construction.}
 \label{tab:ts}
 \centering
-\small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Construction & Same-fam.\ pos. & Same-fam.\ neg. & Cosine AUC \\
@@ -254,7 +259,8 @@ Construction & Same-fam.\ pos. & Same-fam.\ neg. & Cosine AUC \\
 Standard & 100\% & 0\% & 0.7278 \\
 Shortcut-free (ours) & 100\% & 50\% & 0.6880 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The $0.0398$ ROC-AUC reduction is measured on raw embeddings without training,
@@ -357,7 +363,7 @@ work and that the frozen backbone is not the binding constraint.
 \caption{Grouped 5-fold results. Every family tested exactly once.}
 \label{tab:main}
 \centering
-\small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Dataset & Accuracy (95\% CI) & ROC-AUC \\
@@ -369,7 +375,8 @@ TSKinFace (shortcut-free) & $79.25 \pm 2.32$ & $0.8814 \pm 0.0192$ \\
 \midrule
 \textbf{Mean} & $\mathbf{75.66}$ & $\mathbf{0.8497}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \begin{figure}[t]
@@ -532,8 +539,7 @@ intent (Table~\ref{tab:quantum}).
 \caption{Quantum-inspired formulations against matched classical controls.}
 \label{tab:quantum}
 \centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}llc@{}}
 \toprule
 Formulation & Control & Outcome \\
@@ -546,7 +552,8 @@ Entanglement entropy & cosine & $0.514$ alone \\
 POVM head & capacity-matched & $-5.5$ AUC \\
 Purity regulariser & decorrelation & $-0.9$, $p=0.047$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Under grouped $k$-fold with $20$ paired observations, enabling the SWAP-test
@@ -682,7 +689,7 @@ gradient.
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{99}
 
-\bibitem{TODO_samephoto}
+\bibitem{dawson2018samephoto}
 L.~Dawson, A.~Zisserman, and C.~Rupprecht, ``Same photo: Cheating on visual kinship challenges,'' in \emph{Proc. British Machine Vision Conf. (BMVC)}, 2018.
 
 \bibitem{whitelam2017ijbb}
@@ -691,7 +698,7 @@ C.~Whitelam, E.~Taborsky, A.~Blanton, B.~Maze, J.~Adams, T.~Miller, N.~Kalka, A.
 \bibitem{lu2014neighborhood}
 J.~Lu, X.~Zhou, Y.-P. Tan, Y.~Shang, and J.~Zhou, ``Neighborhood repulsed metric learning for kinship verification,'' \emph{IEEE Trans. Pattern Anal. Mach. Intell.}, vol.~36, no.~2, pp. 331--345, Feb. 2014.
 
-\bibitem{TODO_recent_sota}
+\bibitem{zhu2022kinship}
 S.~Zhu, C.~Gou, and F.-Y. Wang, ``Kinship verification via relation-aware graph convolutional network,'' \emph{IEEE Trans. Multimedia}, vol.~24, pp. 4349--4361, 2022.
 
 \bibitem{lu2012kinfacew}
@@ -706,7 +713,7 @@ J.~P.~Robinson, M.~Shao, Y.~Wu, H.~Wang, and Y.~Fu, ``Visual kinship recognition
 \bibitem{robinson2020rfiw}
 J.~P.~Robinson, M.~Shao, and Y.~Fu, ``Recognizing families in the wild (RFIW): The 4th edition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, 2020, pp. 858--866.
 
-\bibitem{TODO_subject_disjoint}
+\bibitem{kemelmacher2016megaface}
 I.~Kemelmacher-Shlizerman, S.~M.~Seitz, D.~Miller, and E.~Brossard, ``The MegaFace benchmark: Efficient identification on a million scale,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2016, pp. 4873--4882.
 
 \bibitem{geirhos2020shortcut}
@@ -715,7 +722,7 @@ R.~Geirhos, J.-H.~Jacobsen, C.~Michaelis, R.~Zemel, W.~Brendel, M.~Bethge, and F
 \bibitem{torralba2011unbiased}
 A.~Torralba and A.~A.~Efros, ``Unbiased look at dataset bias,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2011, pp. 1521--1528.
 
-\bibitem{TODO_imageset_kinship}
+\bibitem{kohli2019imageset}
 N.~Kohli, D.~Yadav, M.~Vatsa, R.~Singh, and A.~Noore, ``Supervised mixed norm metric learning for kinship verification on image sets,'' \emph{IEEE Trans. Inf. Forensics Security}, vol.~14, no.~5, pp. 1329--1342, 2019.
 
 \bibitem{schuld2019quantum}
@@ -724,7 +731,7 @@ M.~Schuld and N.~Killoran, ``Quantum machine learning in feature Hilbert spaces,
 \bibitem{havlicek2019supervised}
 V.~Havl{\'i}{\v{c}}ek, A.~D.~C{\'o}rcoles, K.~Temme, A.~W.~Harrow, A.~Kandala, J.~M.~Chow, and J.~M.~Gambetta, ``Supervised learning with quantum-enhanced feature spaces,'' \emph{Nature}, vol.~567, no.~7747, pp. 209--212, 2019.
 
-\bibitem{TODO_dequantization}
+\bibitem{tang2019quantum}
 E.~Tang, ``A quantum-inspired classical algorithm for recommendation systems,'' in \emph{Proc. 51st Annu. ACM SIGACT Symp. Theory of Comput. (STOC)}, 2019, pp. 217--228.
 
 \end{thebibliography}
