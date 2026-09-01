@@ -118,3 +118,121 @@ class CapacityMatchedControl(nn.Module):
     def predict(self, emb1, emb2, rels):
         return 0.5 * (self.forward(emb1, emb2, rels)
                       + self.forward(emb2, emb1, rels))
+
+
+class AmplitudeVQCClassifier(nn.Module):
+    """The supervisor's architecture with amplitude encoding.
+
+    Identical to `VQCKinshipClassifier` except at the input. Angle encoding
+    puts `n` numbers into `n` qubits, which forced a 512-d embedding through a
+    4-number bottleneck before `U(theta)` saw anything and held the model at
+    chance. Amplitude encoding puts `2**n` numbers into the same `n` qubits, so
+    at n=6 a 64-d projection is carried with no compression.
+
+    The joint state is the tensor product of the two encodings, giving the full
+    `2**(2n)` register. Concatenating instead yields `2**(n+1)` and silently
+    builds a register of the wrong size -- a bug that occurred during
+    development and is now pinned by test.
+
+    Measured on a pilot fold: 0.6905 test ROC-AUC, against ~0.50 for the
+    angle-encoded model and 0.58-0.63 for the capacity-matched control.
+    """
+
+    def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3):
+        super().__init__()
+        self.n_each = n_qubits_each
+        self.dim = 2 ** n_qubits_each
+        self.proj = nn.Linear(embed_dim, self.dim)
+        self.drop = nn.Dropout(dropout)
+        self.vqc = JointRegisterVQC(n_qubits_each=n_qubits_each, depth=depth)
+        self.head = nn.Linear(2 * n_qubits_each, 1)
+
+    def joint_state(self, emb1, emb2, rels):
+        from .quantum_vqc import amplitude_encode
+
+        a = amplitude_encode(self.drop(self.proj(emb1)), self.n_each)
+        b = amplitude_encode(self.drop(self.proj(emb2)), self.n_each)
+        # tensor product: (B, 2^n, 1) * (B, 1, 2^n) -> (B, 2^(2n))
+        s = (a.unsqueeze(2) * b.unsqueeze(1)).reshape(a.shape[0], -1)
+        return self._apply_circuit(s)
+
+    def _apply_circuit(self, state):
+        from .quantum_vqc import _apply_1q, _cnot_indices, _ry_rz
+
+        b, dev = state.shape[0], state.device
+        n = self.vqc.n_total
+        for d in range(self.vqc.depth):
+            for q in range(n):
+                m = _ry_rz(self.vqc.theta[d, q, 0], self.vqc.theta[d, q, 1], b, dev)
+                state = _apply_1q(state, m, q, n)
+            for q in range(n):
+                state = state[:, _cnot_indices(n, q, (q + 1) % n, dev)]
+        return state
+
+    def forward_logits(self, emb1, emb2, rels):
+        s = self.joint_state(emb1, emb2, rels)
+        probs = s.real ** 2 + s.imag ** 2
+        b, n = s.shape[0], self.vqc.n_total
+        outs = []
+        for q in range(n):
+            left, right = 2 ** q, 2 ** (n - q - 1)
+            p = probs.reshape(b, left, 2, right)
+            outs.append(p[:, :, 0, :].sum(dim=(1, 2)) - p[:, :, 1, :].sum(dim=(1, 2)))
+        return self.head(torch.stack(outs, dim=1))
+
+    def forward(self, emb1, emb2, rels):
+        return torch.sigmoid(self.forward_logits(emb1, emb2, rels))
+
+    @torch.no_grad()
+    def predict(self, emb1, emb2, rels):
+        return 0.5 * (self.forward(emb1, emb2, rels)
+                      + self.forward(emb2, emb1, rels))
+
+    def quantum_parameter_count(self):
+        return self.vqc.theta.numel()
+
+
+class AmplitudeControl(nn.Module):
+    """Control for `AmplitudeVQCClassifier`.
+
+    Matched on both axes that matter: the same 512 -> 2**n projection, so it
+    sees identical input capacity, and a head whose parameter count matches
+    U(theta). Only what processes the projected vectors differs -- a circuit in
+    one case, a classical head in the other.
+
+    Matching the projection is essential here. The amplitude VQC's advantage
+    over the angle-encoded model came from carrying more input dimensions, so a
+    control without the same projection would be losing on input width rather
+    than on the quantum layer, and the comparison would be meaningless.
+    """
+
+    def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3):
+        super().__init__()
+        self.n_each = n_qubits_each
+        self.dim = 2 ** n_qubits_each
+        self.proj = nn.Linear(embed_dim, self.dim)
+        self.drop = nn.Dropout(dropout)
+
+        target = 2 * (2 * n_qubits_each) * depth   # U(theta) parameter count
+        n_in = 2 * self.dim
+        w = max(1, round((target - 1) / (n_in + 2)))
+        self.head = nn.Sequential(
+            nn.Linear(n_in, w), nn.GELU(), nn.Linear(w, 1))
+
+    def head_parameter_count(self):
+        return sum(p.numel() for p in self.head.parameters())
+
+    def forward_logits(self, emb1, emb2, rels):
+        a = self.drop(self.proj(emb1))
+        b = self.drop(self.proj(emb2))
+        a = a / (torch.linalg.vector_norm(a, dim=1, keepdim=True) + 1e-12)
+        b = b / (torch.linalg.vector_norm(b, dim=1, keepdim=True) + 1e-12)
+        return self.head(torch.cat([a, b], dim=1))
+
+    def forward(self, emb1, emb2, rels):
+        return torch.sigmoid(self.forward_logits(emb1, emb2, rels))
+
+    @torch.no_grad()
+    def predict(self, emb1, emb2, rels):
+        return 0.5 * (self.forward(emb1, emb2, rels)
+                      + self.forward(emb2, emb1, rels))

@@ -130,3 +130,51 @@ class TestCapacityMatchedControl(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAmplitudeVQC(unittest.TestCase):
+    """The amplitude-encoded variant, which lifted the VQC from chance to
+    0.69 AUC on a pilot fold. The encoding is the only difference from the
+    angle-encoded model, so these tests pin that boundary."""
+
+    def setUp(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        torch.manual_seed(0)
+        self.m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2)
+
+    def test_outputs_a_probability_per_pair(self):
+        out = self.m(*_batch())
+        self.assertEqual(out.shape, (6, 1))
+        self.assertTrue(torch.all(out >= 0) and torch.all(out <= 1))
+
+    def test_joint_state_has_the_full_2n_qubit_dimension(self):
+        """The joint state is the TENSOR product of the two encodings.
+        Concatenating instead gives 2^(n+1) and silently builds the wrong
+        register -- a bug that occurred during development."""
+        e1, e2, r = _batch()
+        s = self.m.joint_state(e1, e2, r)
+        self.assertEqual(s.shape, (6, 2 ** (2 * 4)))
+
+    def test_joint_state_is_normalised(self):
+        e1, e2, r = _batch()
+        norms = torch.linalg.vector_norm(self.m.joint_state(e1, e2, r), dim=1)
+        torch.testing.assert_close(norms, torch.ones(6), rtol=1e-4, atol=1e-5)
+
+    def test_predict_is_symmetric(self):
+        self.m.eval()
+        e1, e2, r = _batch()
+        torch.testing.assert_close(self.m.predict(e1, e2, r),
+                                   self.m.predict(e2, e1, r),
+                                   rtol=1e-5, atol=1e-6)
+
+    def test_gradients_reach_the_circuit(self):
+        e1, e2, r = _batch()
+        self.m(e1, e2, r).sum().backward()
+        self.assertGreater(float(self.m.vqc.theta.grad.abs().sum()), 0.0)
+
+    def test_carries_more_input_dimensions_than_angle_encoding(self):
+        """The whole point: 2^n amplitudes rather than n angles."""
+        from src.models_vqc import AmplitudeVQCClassifier
+        m = AmplitudeVQCClassifier(n_qubits_each=6, depth=2)
+        self.assertEqual(m.proj.out_features, 2 ** 6)
+        self.assertGreater(m.proj.out_features, 6)

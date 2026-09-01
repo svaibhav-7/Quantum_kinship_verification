@@ -1,0 +1,12 @@
+[
+  {
+    "n": 6,
+    "depth": 6,
+    "quantum_params": 144,
+    "secs": 1278.2,
+    "expectation": 0.5029639542220296,
+    "fidelity": 0.5046043656207366,
+    "control": 0.7033499429543504,
+    "best_vqc_minus_control": -0.19874557733361375
+  }
+]
