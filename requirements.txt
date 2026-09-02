@@ -1,26 +1,31 @@
-# Core quantum computing
-qiskit>=1.0.0,<2.0.0
-qiskit-aer>=0.13.0
-qiskit-machine-learning>=0.8.0
+# Runtime dependencies, as actually imported by src/, scripts/ and tests/.
+#
+# Lower bounds are what the code needs; the exact versions the reported
+# results were produced with are pinned in ENVIRONMENT.md, which also records
+# the GPU, driver and CUDA build. Install those if you need to reproduce the
+# JSON artefacts in results/honest/ bit-for-bit.
+#
+# Note the numpy bound: results were produced under numpy 2.x. An earlier
+# version of this file pinned <2.0.0, which did not match the environment the
+# experiments ran in.
 
-# Deep learning
-torch>=2.0.0,<3.0.0
+torch>=2.0.0
 torchvision>=0.15.0
-torchaudio>=2.0.0
 
-# Scientific computing
-numpy>=1.24.0,<2.0.0
+numpy>=1.24.0
 scipy>=1.10.0
 scikit-learn>=1.2.0
 
-# Visualization and utilities
 matplotlib>=3.7.0
 Pillow>=9.5.0
 
-# Face detection and recognition
+# Backbone used to build weights/caches/*.pkl. Not needed to re-run the
+# experiments themselves, which read the cached embeddings.
 facenet-pytorch>=2.3.0
 
-# Optional but recommended
-jupyter>=1.0.0
-ipython>=8.0.0
-tqdm>=4.65.0
+pytest>=7.0.0
+
+# Not required. qiskit and qiskit-aer were listed previously but are not
+# imported anywhere in the active tree: the SWAP-test simulator is implemented
+# directly in PyTorch (src/quantum_core.py, src/quantum_fast.py) so that
+# gradients flow. torchaudio, jupyter and ipython were likewise unused.

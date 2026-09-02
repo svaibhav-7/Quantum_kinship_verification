@@ -12,6 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{booktabs}
+\usepackage[htt]{hyphenat}
 \usepackage{multirow}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
@@ -21,9 +22,13 @@
 \title{Person-Level Kinship Verification: Leakage-Free Evaluation, Set-Based
 Aggregation, and a Negative Result for Quantum-Inspired Metrics}
 
-\author{Sasi~Vaibhav% <-- add co-authors and affiliation before submission
-\thanks{Code and data-processing scripts:
-\url{https://github.com/svaibhav-7/Quantum_kinship_verification}}}
+\author{Sasi~Vaibhav~Sanka,
+        Kesireddy~Samith~Reddy,
+        Konala~Varshith,
+        Eelpanti~Mythri,
+        and~Madhu~Oruganti%
+\thanks{The authors are with the Department of Artificial Intelligence and Data Science, Koneru Lakshmaiah Education Foundation, Hyderabad-500075, India (e-mail: svaibhav@klu.ac.in).}%
+\thanks{Code and data-processing scripts: \url{https://github.com/svaibhav-7/Quantum_kinship_verification}}}
 
 \maketitle
 
@@ -50,7 +55,11 @@ $+0.032$ ROC-AUC on TSKinFace ($p = 0.0001$). Finally we report a systematic
 negative result: nine quantum-inspired formulations, spanning similarity
 measures, feature extractors and inductive biases, each evaluated against a
 capacity-matched classical control, fail to improve on their controls, and four
-are significantly worse. We further show that both findings replicate under a second backbone
+are significantly worse. Each of the nine reads its decision out of the quantum
+state as a single scalar; a companion study shows that this readout is itself a
+substantial bottleneck, so the negative result should be read as scoped to
+scalar-readout formulations rather than to quantum-inspired representations in
+general. We further show that both findings replicate under a second backbone
 (ArcFace), where the person-level gain is larger still ($+0.098$), and we
 document a subgroup artefact of independent methodological interest: an
 apparent $0.28$ ROC-AUC deficit for mother--son pairs proves to be a
@@ -115,7 +124,7 @@ Concretely we contribute: (i) a measured quantification of identity leakage
 under conventional splitting, and a released protocol that removes it;
 (ii) person-level and triadic formulations of the task, with gains measured
 under that protocol; and (iii) a pre-registered nine-formulation negative
-result for quantum-inspired metrics.
+result for scalar-readout quantum-inspired metrics.
 
 % ---------------------------------------------------------------------------
 \section{Related Work}
@@ -207,9 +216,9 @@ person-level aggregation can differ from the conventional formulation. We
 report per corpus rather than averaging, because an average over these four
 would conceal exactly that asymmetry.
 
-All experiments use a single frozen backbone: FaceNet (Inception-ResNet-v1)
-pretrained on VGGFace2, producing $512$-dimensional $\ell_2$-normalised
-embeddings. Holding it fixed isolates the protocol and representation questions
+Experiments use two frozen backbones: FaceNet (Inception-ResNet-v1)\cite{schroff2015facenet}
+pretrained on VGGFace2, and ArcFace, each producing $512$-dimensional $\ell_2$-normalised
+embeddings. Holding them fixed isolates the protocol and representation questions
 from representation-learning effects, and bounds the claims accordingly
 (Section~\ref{sec:limitations}).
 
@@ -648,6 +657,7 @@ are the corrected measurement. Under a protocol in which no family dominates,
 the four relations span $0.0310$ ROC-AUC.}
 \label{tab:relation_kfold}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
 Relation & Single fold & Mean & SD & Range & Families/fold \\
@@ -657,7 +667,7 @@ Father--son & 0.9754 & 0.7946 & 0.0752 & 0.7050--0.8942 & 12.2 \\
 Mother--daughter & 0.9668 & 0.7766 & 0.0601 & 0.7147--0.8730 & 14.4 \\
 Mother--son & 0.7124 & 0.7910 & 0.0381 & 0.7497--0.8390 & 12.4 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 Under the corrected measurement mother--son reaches $0.7910$, the second
@@ -719,6 +729,66 @@ That the curve is computed on frozen embeddings without training matters for
 interpretation: the gain is a property of aggregating evidence about a person,
 not of additional model capacity, consistent with the $+0.077$ obtained under
 the full protocol.
+
+\subsection{The operating point: accuracy against cost}
+\label{sec:opcost}
+
+Person-level scoring compares two photograph \emph{sets}, so its cost grows
+with set size while its accuracy saturates. Where those two curves cross is a
+deployment question that the accuracy curve alone does not answer, and we
+report it because practitioners must choose how many photographs to collect.
+
+\begin{table}[t]
+\centering
+\caption{Accuracy and cost against photographs per person. ROC-AUC is measured
+on FIW; timings are per pair on one CPU core at $512$ dimensions. Accuracy is
+flat beyond five photographs while cost continues to grow, which makes five a
+natural operating point.}
+\label{tab:opcost}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccccc}
+\toprule
+Photos & ROC-AUC & Gain & ms/pair & pairs/s & Slowdown \\
+\midrule
+1 & 0.7339 & $+0.0000$ & 0.078 & 12763 & 1.0$\times$ \\
+2 & 0.7744 & $+0.0405$ & 0.099 & 10078 & 1.3$\times$ \\
+5 & 0.7951 & $+0.0612$ & 0.117 & 8539 & 1.5$\times$ \\
+10 & 0.8042 & $+0.0702$ & 0.153 & 6544 & 2.0$\times$ \\
+20 & --- & --- & 0.215 & 4643 & 2.7$\times$ \\
+40 & --- & --- & 0.416 & 2402 & 5.3$\times$ \\
+80 & --- & --- & 1.502 & 666 & 19.2$\times$ \\
+160 & --- & --- & 3.132 & 319 & 40.0$\times$ \\
+320 & --- & --- & 10.718 & 93 & 136.8$\times$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Table~\ref{tab:opcost} places the two measurements side by side. Accuracy rises
+steeply to five photographs, capturing $+0.061$ of the $+0.070$ available at
+ten, and is essentially flat thereafter. Cost behaves in the opposite way: it
+is negligible to about twenty photographs and then grows steadily, reaching a
+$137\times$ slowdown at $320$.
+
+The practical consequence is a clear recommendation. \textbf{Five photographs
+per person is close to optimal on both axes}: it captures $87\%$ of the
+available accuracy gain at $1.5\times$ the single-photograph cost. Collecting
+more than roughly twenty buys no measurable accuracy while making the system
+progressively slower.
+
+We note also that the cost curve is a property of the implementation rather
+than of the method, and that the distinction matters. An earlier version of our
+code computed the within-set spread by materialising the full Gram matrix and
+extracting its upper triangle with an index array. That allocation dominated
+the call at large set sizes: $46$\,ms of a $48$\,ms call at $n = 160$. Because
+the required quantity is the mean off-diagonal entry, and for unit-norm rows
+$\sum_{i \neq j} \langle x_i, x_j \rangle = \lVert \sum_i x_i \rVert^2 - n$, it
+can be computed without forming the matrix at all. Doing so reduced the
+$n = 160$ cost from $89.8$\,ms to $3.1$\,ms, a $29\times$ improvement, and
+removed a discontinuity that had made the empirical growth appear
+super-quadratic. The values are unchanged; the equivalence is asserted by
+test. We mention this because a cost curve measured on an unoptimised
+implementation would have overstated the method's true scaling.
 
 \subsection{Score distributions and operating points}
 
@@ -908,6 +978,9 @@ the zero-phase special case. Sweeping the phase changes ROC-AUC by $-0.0006$
 This brings the total to nine formulations, none of which improves on its
 classical control.
 
+All nine share a property that the next subsection identifies as decisive: each
+compresses the quantum state to a single scalar before the decision is made.
+
 \subsection{Why the approach fails}
 
 The failures are structural rather than implementational. Interference-based
@@ -919,6 +992,19 @@ available for one identity --- a median of five --- so the resulting $\rho$ is
 dominated by its leading eigenvector, which is the mean, while accumulating
 noise from tail directions that are not estimable. This is why
 $\mathrm{Tr}(\rho_1\rho_2)$ scores \emph{below} simple mean-pooling.
+
+A third factor cuts across both, and bounds what the present negative result
+licenses. Every formulation above reads its decision out of the quantum state as
+one number. In a companion study we hold a variational circuit, its folds, its
+optimiser and its parameter budget fixed and vary only that readout: replacing
+scalar fidelity with a per-qubit expectation vector improves ROC-AUC by $+0.144$
+on FaceNet and $+0.115$ on ArcFace, positive in all eight backbone $\times$
+corpus combinations. The information is present in the state and the scalar
+discards it. We therefore scope the claim of this section to scalar-readout
+formulations. It does not follow, and we do not claim, that quantum-inspired
+representations are uninformative for this task; nor does the companion result
+establish a quantum advantage, since classical controls matched on readout width
+match or exceed the circuit on the largest corpus.
 
 \subsection{An efficiency contribution}
 
@@ -946,8 +1032,12 @@ count from $2$ to $12$.
 pairs per fold, giving confidence intervals of roughly $\pm 2$ points. FIW and
 TSKinFace are firmer.
 
-\textbf{Single backbone.} All results use frozen FaceNet embeddings. Whether the
-biases we quantify interact with backbone choice is untested.
+\textbf{Two backbones, both frozen.} Results are reported for frozen
+FaceNet and ArcFace embeddings, and the person-level gain is larger under
+ArcFace ($+0.098$ against $+0.077$). Both are trained for identity
+discrimination and produce $\ell_2$-normalised real-valued embeddings, so
+whether the biases we quantify interact with a structurally different
+representation remains untested.
 
 \textbf{Set-level gains are confined to one benchmark.} Only FIW stores
 multiple photographs per identity, so the $+0.0771$ ROC-AUC of
@@ -957,7 +1047,11 @@ corpora we could not test, is open.
 
 \textbf{Negative results are bounded.} We tested nine formulations; we do not
 claim no quantum-inspired method can help on this task, only that these nine,
-covering the three natural roles, do not.
+covering the three natural roles, do not. The bound is sharper than a general
+caution: all nine read the state out as a scalar, and a companion study shows
+that changing only that readout recovers a large effect. A negative result
+obtained through a scalar readout is confounded with the readout, and should
+not be generalised to the underlying representation.
 
 % ---------------------------------------------------------------------------
 \section{Conclusion}
@@ -1038,6 +1132,9 @@ N.~Kohli, D.~Yadav, M.~Vatsa, R.~Singh, and A.~Noore, ``Supervised mixed norm me
 
 \bibitem{schuld2019quantum}
 M.~Schuld and N.~Killoran, ``Quantum machine learning in feature Hilbert spaces,'' \emph{Phys. Rev. Lett.}, vol.~122, no.~4, p. 040504, 2019.
+
+\bibitem{schroff2015facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin, ``FaceNet: A unified embedding for face recognition and clustering,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2015, pp. 815--823.
 
 \bibitem{havlicek2019supervised}
 V.~Havl{\'i}{\v{c}}ek, A.~D.~C{\'o}rcoles, K.~Temme, A.~W.~Harrow, A.~Kandala, J.~M.~Chow, and J.~M.~Gambetta, ``Supervised learning with quantum-enhanced feature spaces,'' \emph{Nature}, vol.~567, no.~7747, pp. 209--212, 2019.

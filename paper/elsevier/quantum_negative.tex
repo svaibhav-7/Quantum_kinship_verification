@@ -1,6 +1,6 @@
 % ============================================================================
-% A Systematic Negative Result for Quantum-Inspired Similarity Metrics
-% in Facial Kinship Verification
+% Beyond Scalar Fidelity: Readout Bottlenecks in Quantum-Inspired
+% Facial Kinship Verification
 %
 % Elsevier elsarticle format.
 % All numeric claims trace to results/honest/*.json in the project root.
@@ -12,6 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{booktabs}
+\usepackage[htt]{hyphenat}
 \usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -24,27 +25,51 @@
 
 \journal{Pattern Recognition}
 
+\sloppy
 \begin{document}
 
 \begin{frontmatter}
 
-\title{A Systematic Negative Result for Quantum-Inspired Similarity Metrics
-in Facial Kinship Verification}
+\title{Beyond Scalar Fidelity: Readout Bottlenecks in Quantum-Inspired
+Facial Kinship Verification}
 
-\author[klu]{Sasi~Vaibhav\corref{cor1}}
+\author[1]{Sasi Vaibhav Sanka\corref{cor1}}
 \ead{svaibhav@klu.ac.in}
+\author[1]{Kesireddy Samith Reddy}
+\author[1]{Konala Varshith}
+\author[1]{Eelpanti Mythri}
+\author[1]{Madhu Oruganti}
 \cortext[cor1]{Corresponding author}
-\address[klu]{KL University, Vijayawada, Andhra Pradesh, India}
+
+\address[1]{Department of Artificial Intelligence and Data Science, Koneru Lakshmaiah Education Foundation, Hyderabad-500075, India}
 
 \begin{abstract}
 Quantum-inspired machine learning has been proposed for facial kinship
 verification, with claims that SWAP-test fidelity and related similarity
 metrics outperform classical alternatives on classical data. We evaluate this
-claim systematically. Nine quantum-inspired formulations---spanning the three
+claim systematically. Ten quantum-inspired formulations---spanning the three
 roles a quantum component can occupy (similarity measure, feature extractor,
 and inductive bias)---are each compared against a capacity-matched classical
-control under a leakage-free grouped $k$-fold protocol. None improves on its
-control; four are significantly worse. The failures are structural rather than
+control under a leakage-free grouped $k$-fold protocol. Nine do not improve on
+their controls; four are significantly worse. Every one of those nine reads its
+decision out of the quantum state as a single scalar. The tenth differs in that
+one respect---a per-qubit expectation vector rather than a scalar
+fidelity---and improves on its matched control by $+0.132$ ROC-AUC
+(95\% CI $[+0.099, +0.165]$, $p = 2.4 \times 10^{-7}$, 20 paired folds).
+Holding the quantum circuit, folds, optimiser and parameter budget fixed and
+replacing scalar fidelity with a vector-valued expectation measurement improves
+ROC-AUC by $+0.1438$ (95\% CI $[+0.116,+0.172]$) on FaceNet embeddings and
+$+0.1151$ (95\% CI $[+0.084,+0.147]$) on ArcFace, positive in all eight
+backbone $\times$ corpus combinations over $40$ grouped held-out folds. Every
+one of the nine failing formulations reads its decision out of the state as a
+single scalar, so scalarisation can substantially reduce the discriminative
+information recoverable from these representations. Although the vector-readout
+model showed a positive pooled comparison against capacity-matched classical
+controls, that advantage was not consistent across individual corpora and
+backbones, and we do not claim it; these results do not demonstrate quantum
+advantage. Significance is reported at two units of inference, folds and
+corpora, and the readout effect survives the conservative one
+($p = 0.007$ and $p = 0.025$ at $n = 4$ corpora). The nine failures are otherwise structural rather than
 implementational: interference-based formulations reduce to their classical
 counterparts because $\ell_2$-normalised face embeddings carry no phase
 structure to exploit, and density-matrix formulations require estimating a
@@ -74,6 +99,7 @@ underlying every figure and table are released.
 quantum-inspired machine learning \sep
 facial kinship verification \sep
 negative results \sep
+variational quantum classifier \sep
 SWAP test \sep
 evaluation protocol \sep
 data leakage
@@ -101,19 +127,37 @@ public, and the baseline methodology (frozen face embeddings fed to a
 trainable classifier) is standardised enough that the contribution of a
 new similarity measure can be isolated.
 
-This paper makes three contributions:
+This paper makes four contributions:
 
 \begin{enumerate}
-\item \textbf{A nine-formulation negative result.} We evaluate nine
+\item \textbf{A ten-formulation study.} We evaluate ten
 quantum-inspired formulations, spanning the three natural roles a quantum
 component can occupy: a similarity measure (SWAP-test fidelity, density
 fidelity, entanglement entropy), a feature extractor (POVM measurement head),
 and an inductive bias (purity regulariser, interference phase sweep). Each
-is compared against a capacity-matched classical control. None improves on
-its control; four are significantly worse ($p < 0.05$).
+is compared against a capacity-matched classical control. Nine do not improve
+on their controls; four are significantly worse ($p < 0.05$).
 
-\item \textbf{A structural account of why.} We show that the failures are
-not implementational but structural. Interference-based formulations collapse
+\item \textbf{A readout bottleneck, replicated across backbones and corpora.}
+The nine failing formulations share a property that is easy to overlook:
+each compresses the quantum state to a single scalar before the decision.
+The tenth---a variational circuit on a joint two-person register---is
+evaluated under two readouts that differ in nothing but width. Read out as a
+scalar fidelity it is indistinguishable from its control
+($-0.012$, $p = 0.26$); read out as a per-qubit expectation vector it exceeds
+that same control by $+0.132$ ROC-AUC
+(95\% CI $[+0.099, +0.165]$, $p = 2.4 \times 10^{-7}$).
+Because circuit, folds, and parameter budget are held fixed, the difference is
+attributable to the measurement. The effect is positive in all eight
+backbone $\times$ corpus combinations. This converts our structural account
+from an inference into a controlled measurement, and shows that a negative
+result for a quantum component can be an artefact of how it is read. We
+separately evaluate classical controls matched on readout width; that
+comparison is inconsistent across corpora and backbones and we report it as
+exploratory.
+
+\item \textbf{A structural account of why.} We show that the remaining
+failures are not implementational but structural. Interference-based formulations collapse
 to their classical counterparts because $\ell_2$-normalised embeddings carry
 no exploitable phase structure. Density-matrix formulations fail because the
 number of images per identity (median: five) is far too small to estimate a
@@ -198,6 +242,7 @@ govern how they can be split and how much evidence they supply per person.
 Photographs per identity is the property that determines whether set-level
 aggregation is possible at all.}
 \label{tab:datasets}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrl}
 \toprule
 Corpus & Pairs & Families & Identities & Photos/identity & Image content \\
@@ -207,7 +252,7 @@ KinFaceW-II & 2{,}000 & 1{,}000 & 2{,}000 & 1.00 & $64\times64$ cropped face \\
 TSKinFace & 2{,}236 & 559 & 1{,}677 & 1.00 & $64\times64$ cropped face \\
 FIW & 57{,}120 & 95 & 472 & 5.28 & $224\times224$ cropped face \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Two features of Table~\ref{tab:datasets} drive the rest of the paper. First,
@@ -221,9 +266,9 @@ these four would conceal exactly that asymmetry.
 
 \subsection{Feature extraction}
 
-All experiments use a single frozen backbone: FaceNet (Inception-ResNet-v1)
-pretrained on VGGFace2, producing $512$-dimensional $\ell_2$-normalised
-embeddings. Holding the backbone fixed isolates the protocol and
+Experiments use two frozen backbones: FaceNet (Inception-ResNet-v1)\cite{schroff2015facenet}
+pretrained on VGGFace2, and ArcFace, each producing $512$-dimensional $\ell_2$-normalised
+embeddings. Holding the backbones fixed isolates the protocol and
 representation questions from representation-learning effects. It also bounds
 the claims: results here characterise this embedding space, and
 Section~\ref{sec:limitations} states the consequence.
@@ -458,6 +503,7 @@ The classical convex mixture (zero phase) is the control.
 \label{sec:results}
 
 \subsection{Baseline performance under the corrected protocol}
+\label{sec:baseline}
 
 \begin{table}[t]
 \caption{Grouped 5-fold results. Every family tested exactly once.}
@@ -596,10 +642,13 @@ representations.}
 \end{tabular}
 \end{table}
 
-Nine formulations tested; none beating its classical control
-(Table~\ref{tab:q89}).
+Nine formulations tested so far, none beating its classical control
+(Table~\ref{tab:q89}). Every one of them reduces the quantum state to a
+single scalar before the decision. Section~\ref{sec:readout} tests that
+property directly.
 
 \subsection{A cautionary observation}
+\label{sec:cautionary}
 
 The purity regulariser (Formulation~7) initially measured $+1.3$ ROC-AUC on
 a single seed, with reduced variance---a result consistent with effective
@@ -638,6 +687,7 @@ frozen embeddings with no training; the remainder are the trained model on each
 corpus. Mother--son is weakest on three of four corpora and is simultaneously
 the largest FIW subset ($5{,}296$ pairs).}
 \label{tab:relation}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
 Relation & Raw embedding & KinFaceW-I & KinFaceW-II & FIW & TSKinFace & Mean \\
@@ -647,7 +697,7 @@ Father--son & 0.7841 & 0.8935 & 0.8875 & 0.9754 & 0.9124 & 0.9172 \\
 Mother--daughter & 0.7295 & 0.8400 & 0.8598 & 0.9668 & 0.9227 & 0.8973 \\
 Mother--son & 0.7065 & 0.9750 & 0.7795 & 0.7124 & 0.8483 & 0.8288 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Table~\ref{tab:relation} reports per-relation performance measured on a single
@@ -759,6 +809,65 @@ That the curve is computed on frozen embeddings, without any training, matters
 for interpretation. The gain is a property of aggregating evidence about a
 person, not of additional model capacity, which is consistent with the trained
 result of $+0.077$ reported under the full protocol.
+
+\subsection{The operating point: accuracy against cost}
+\label{sec:opcost}
+
+Person-level scoring compares two photograph \emph{sets}, so its cost grows
+with set size while its accuracy saturates. Where those two curves cross is a
+deployment question that the accuracy curve alone does not answer, and we
+report it because practitioners must choose how many photographs to collect.
+
+\begin{table}[t]
+\centering
+\caption{Accuracy and cost against photographs per person. ROC-AUC is measured
+on FIW; timings are per pair on one CPU core at $512$ dimensions. Accuracy is
+flat beyond five photographs while cost continues to grow, which makes five a
+natural operating point.}
+\label{tab:opcost}
+\small
+\begin{tabular}{cccccc}
+\toprule
+Photos & ROC-AUC & Gain & ms/pair & pairs/s & Slowdown \\
+\midrule
+1 & 0.7339 & $+0.0000$ & 0.078 & 12763 & 1.0$\times$ \\
+2 & 0.7744 & $+0.0405$ & 0.099 & 10078 & 1.3$\times$ \\
+5 & 0.7951 & $+0.0612$ & 0.117 & 8539 & 1.5$\times$ \\
+10 & 0.8042 & $+0.0702$ & 0.153 & 6544 & 2.0$\times$ \\
+20 & --- & --- & 0.215 & 4643 & 2.7$\times$ \\
+40 & --- & --- & 0.416 & 2402 & 5.3$\times$ \\
+80 & --- & --- & 1.502 & 666 & 19.2$\times$ \\
+160 & --- & --- & 3.132 & 319 & 40.0$\times$ \\
+320 & --- & --- & 10.718 & 93 & 136.8$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:opcost} places the two measurements side by side. Accuracy rises
+steeply to five photographs, capturing $+0.061$ of the $+0.070$ available at
+ten, and is essentially flat thereafter. Cost behaves in the opposite way: it
+is negligible to about twenty photographs and then grows steadily, reaching a
+$137\times$ slowdown at $320$.
+
+The practical consequence is a clear recommendation. \textbf{Five photographs
+per person is close to optimal on both axes}: it captures $87\%$ of the
+available accuracy gain at $1.5\times$ the single-photograph cost. Collecting
+more than roughly twenty buys no measurable accuracy while making the system
+progressively slower.
+
+We note also that the cost curve is a property of the implementation rather
+than of the method, and that the distinction matters. An earlier version of our
+code computed the within-set spread by materialising the full Gram matrix and
+extracting its upper triangle with an index array. That allocation dominated
+the call at large set sizes: $46$\,ms of a $48$\,ms call at $n = 160$. Because
+the required quantity is the mean off-diagonal entry, and for unit-norm rows
+$\sum_{i \neq j} \langle x_i, x_j \rangle = \lVert \sum_i x_i \rVert^2 - n$, it
+can be computed without forming the matrix at all. Doing so reduced the
+$n = 160$ cost from $89.8$\,ms to $3.1$\,ms, a $29\times$ improvement, and
+removed a discontinuity that had made the empirical growth appear
+super-quadratic. The values are unchanged; the equivalence is asserted by
+test. We mention this because a cost curve measured on an unoptimised
+implementation would have overstated the method's true scaling.
 
 \subsection{Score distributions and operating points}
 
@@ -922,6 +1031,359 @@ Even when the fidelity is supplied as \emph{one feature beside} the
 classical features (our architecture), it carries no information that is
 not already captured by the cosine similarity and the symmetric products.
 
+The account above is an inference from gradient norms and from the ranking of
+two architectures that differ in several respects at once. The next section
+tests it directly.
+
+% ---------------------------------------------------------------------------
+\section{Formulation 10: a readout ablation}
+\label{sec:readout}
+
+The nine formulations of Section~\ref{sec:formulations} share a property
+that the preceding analysis suggests is decisive: each compresses the quantum
+state to one number before the decision is made. Distinguishing
+\emph{the circuit carries no information} from \emph{the readout discards it}
+requires an experiment in which the circuit is held fixed and only the readout
+varies.
+
+\subsection{Architecture}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_architecture}
+\caption{Formulation~10. Both people are encoded into one joint register and processed by the same variational circuit; the arms differ only in the measurement applied to the resulting state (dashed box). Everything to its left is shared and held fixed across arms.}
+\label{fig:architecture}
+\end{figure}
+
+
+Formulation~10 is a variational quantum classifier on a joint register.
+Both people are encoded into one $2n$-qubit state of dimension $2^{2n}$,
+rather than encoded separately and compared, so that $U(\bm{\theta})$ can
+express correlations \emph{between} the two people. Each of $L$ layers applies
+$R_y(\theta) R_z(\theta)$ to every qubit followed by a CNOT ring over all $2n$
+qubits; the ring includes the bonds $n-1 \to n$ and $2n-1 \to 0$, which cross
+between the two halves. Without those bonds the circuit factorises and reduces
+to the separately-encoded case already tested.
+
+Amplitude encoding carries $2^n$ numbers into $n$ qubits. This matters: angle
+encoding, which carries $n$ numbers into $n$ qubits, forces the $512$-d
+embedding through a four-number bottleneck before $U(\bm{\theta})$ sees
+anything, and holds the model at chance ($0.502$ ROC-AUC on FIW). The
+comparison below would be uninformative under an encoding that starves the
+circuit of input.
+
+Two readouts are evaluated, differing in width alone:
+
+\begin{itemize}
+\item \textbf{Fidelity.} $|\braket{\psi_{\text{ref}}}{U(\bm{\theta})\psi}|^2$
+against the all-zeros reference --- one scalar, matching the nine.
+\item \textbf{Expectation.} Pauli-$Z$ expectation per qubit --- a $2n$-vector.
+\end{itemize}
+
+Everything else is identical: the same encoder, the same $U(\bm{\theta})$, the
+same folds, the same optimiser and schedule.
+
+Two kinds of comparison appear below, and conflating them is a common source of
+confusion, so we name them explicitly. The \textbf{global task baseline} is the
+best classical pipeline in this study (Section~\ref{sec:baseline},
+$0.8497$ mean ROC-AUC); it answers \emph{what is the best available method}.
+The \textbf{capacity-matched local control} shares the quantum arm's encoder,
+projection, folds and training schedule, differing only in what processes the
+projected vectors; it answers \emph{what does the circuit contribute}. The
+quantum model loses the first comparison and wins the second. Neither result
+substitutes for the other.
+
+Matching the control requires care. Our first control matched
+$U(\bm{\theta})$'s \emph{parameter count} by solving for a hidden width, which
+at every configuration in this study yields $w=1$: a
+$\mathrm{Linear}(2^{n+1} \to 1)$ bottleneck. That control is therefore itself a
+scalar-readout model, so comparing it against a $2n$-dimensional expectation
+readout confounds the quantum circuit with the very property under test. We
+report it for continuity but do not rely on it. The controls we rely on are
+matched on \emph{readout width}: each maps the same projected pair to exactly
+$2n$ values --- the number the circuit hands its classifier --- through an
+identical $\mathrm{Linear}(2n, 1)$ head, via a learned linear map, a learned
+MLP, or a frozen random projection.
+
+\subsection{Result}
+
+\begin{table}[t]
+\centering
+\caption{Formulation~10 under two readouts, against a capacity-matched
+classical control. Grouped 5-fold, family-disjoint, identical folds across
+arms. $n=6$, $L=4$; $96$ quantum parameters against $131$ control parameters.}
+\label{tab:readout}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Expectation & Fidelity & Control & Exp.\ $-$ Ctrl. \\
+\midrule
+FIW          & $0.6336$ & $0.5137$ & $0.5465$ & $+0.087$ \\
+KinFaceW-I   & $0.7049$ & $0.5391$ & $0.5350$ & $+0.170$ \\
+KinFaceW-II  & $0.6161$ & $0.5197$ & $0.5332$ & $+0.083$ \\
+TSKinFace    & $0.7373$ & $0.5441$ & $0.5507$ & $+0.187$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pooled over $20$ paired folds (Table~\ref{tab:readout}), the expectation
+readout exceeds its control by $+0.1316$ ROC-AUC
+(95\% CI $[+0.0986, +0.1646]$, $t = 7.82$, $p = 2.4 \times 10^{-7}$).
+The fidelity readout does not
+($-0.0122$, 95\% CI $[-0.0330, +0.0086]$, $p = 0.26$).
+
+The confidence interval for the expectation arm excludes zero; the interval
+for the fidelity arm contains it. Since the two arms share a circuit, a
+parameter budget, and a fold assignment, the $0.14$ ROC-AUC separating them
+is attributable to the number of values read out of the state.
+
+\subsection{How many observables are needed?}
+\label{sec:sweep}
+
+Section~\ref{sec:readout} contrasts one value against $2n$. That leaves
+open whether the gain accumulates with width or is won immediately, and the
+two imply different mechanisms. Retaining only the first $k$ per-qubit
+expectations on FIW, with the circuit and every other setting unchanged
+(Figure~\ref{fig:sweep}):
+
+\begin{center}
+\begin{tabular}{lrrrrrr}
+\toprule
+$k$ & $1$ & $2$ & $4$ & $6$ & $8$ & $12$ \\
+\midrule
+ROC-AUC & $0.547$ & $0.631$ & $0.642$ & $0.649$ & $0.643$ & $0.634$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_readout_sweep}
+\caption{Readout width against performance on FIW, same circuit throughout.
+A single observable performs near the scalar readout; two recover almost the
+whole effect; nothing is gained after. Qubits are ordered person~1 then
+person~2, so $k \leq 6$ reads one register only.}
+\label{fig:sweep}
+\end{figure}
+
+The curve is a step, not a slope. One observable ($0.547$) sits near scalar
+fidelity ($0.514$); two ($0.631$) recover $82\%$ of the gain to the
+plateau's highest point and $97\%$ of the gain to the full $2n$ readout;
+the remaining ten move the result by less than $0.02$, within fold noise. The
+constraint is therefore not readout width in any graded sense --- it is that
+a single number is a qualitatively different object from even a
+two-dimensional one.
+
+A second reading of the same curve is less comfortable for the architecture.
+Qubits are ordered person~1 then person~2, so every point up to $k=6$ reads
+person~1's register alone; $k=8$ is the first to include person~2. It does
+not rise ($-0.006$). The pair information the readout needs is already
+present in one register's marginals, which the CNOT ring puts there. The
+coupling is doing work inside the circuit; reading both halves out is not
+necessary. We report this because the joint register is motivated by
+cross-person correlation, and this measurement shows that motivation applies
+to the circuit rather than to the measurement.
+
+One caveat bounds the sweep: because low $k$ both narrows the readout and
+restricts it to one register, the two factors are varied together. The $k=8$
+comparison separates them at the point where it matters, but the curve below
+$k=8$ should be read as descriptive of width rather than as isolating it.
+
+\subsection{Is the gain merely representation width?}
+\label{sec:widthctl}
+
+The preceding comparison establishes that reading more values from the state
+helps. It does not establish that the \emph{circuit} matters: a classical map
+producing $2n$ values might do as well. We therefore replaced the
+parameter-matched control with controls matched on readout width, each mapping
+the same projected pair to $2n$ values through an identical
+$\mathrm{Linear}(2n,1)$ head, via a learned linear map, a learned MLP, or a
+frozen random projection.
+
+\begin{table}[t]
+\centering
+\caption{Quantum expectation arm against the strongest width-matched classical
+control per fold, by corpus and backbone. Grouped 5-fold.}
+\label{tab:widthctl}
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{FaceNet} & \multicolumn{2}{c}{ArcFace} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Corpus & $\Delta$ & $p$ & $\Delta$ & $p$ \\
+\midrule
+FIW          & $-0.030$ & $0.38$ & $+0.015$ & $0.39$ \\
+KinFaceW-I   & $+0.131$ & $0.002$ & $+0.098$ & $0.015$ \\
+KinFaceW-II  & $+0.084$ & $0.078$ & $+0.029$ & $0.142$ \\
+TSKinFace    & $+0.037$ & $0.408$ & $+0.147$ & $0.016$ \\
+\midrule
+Pooled       & $+0.055$ & $0.013$ & $+0.073$ & $0.0003$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The pooled comparison is positive on both backbones, but the per-corpus results
+do not support a general claim (Table~\ref{tab:widthctl}). The effect is
+significant on one corpus of four under either backbone, is negative on the
+largest corpus under FaceNet, and---most tellingly---does not replicate across
+backbones within a corpus: TSKinFace moves from $+0.037$ to $+0.147$ and FIW
+changes sign. Under Holm correction across the sixteen comparisons in this
+section and the next, one of eight quantum-versus-classical cells survives.
+
+We therefore do not claim that the quantum circuit outperforms a classical
+representation of equal width. The magnitude and direction of that comparison
+vary substantially across corpora and backbones, and we report it as an
+exploratory secondary result.
+
+Two observations survive this. First, the circuit consistently beats the
+\emph{frozen random} projection, so the readout must be learned, which is a
+weaker statement than quantum structure being necessary. Second, and separately,
+the comparison in Section~\ref{sec:readout-replication} does not involve a
+classical arm at all, and is unaffected by these considerations.
+
+\subsection{Readout replication across corpora and backbones}
+\label{sec:readout-replication}
+
+The scalar-versus-vector comparison holds the circuit, the encoder, the folds,
+the optimiser and the parameter budget fixed; the arms differ only in the
+measurement applied to the same state. Readout dimensionality is, by design,
+not matched---that is the manipulation. The claim tested is therefore narrow
+and precise: \emph{holding the quantum circuit and training protocol fixed,
+replacing scalar fidelity with a vector-valued measurement changes downstream
+performance}.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_readout}
+\caption{Readout effect by corpus and backbone. Scalar fidelity (blue) against the per-qubit expectation vector (orange) from the identical circuit. All eight backbone $\times$ corpus cells favour the vector readout. Dotted line marks chance.}
+\label{fig:readout}
+\end{figure}
+\begin{table}[t]
+\centering
+\caption{Readout effect (vector $-$ scalar ROC-AUC), by corpus and backbone.
+Both arms use the identical circuit; only the measurement differs.
+$2$ backbones $\times$ $4$ corpora $\times$ $5$ grouped folds $=$ $40$
+held-out fold evaluations.}
+\label{tab:readout-replication}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{3}{c}{FaceNet} & \multicolumn{3}{c}{ArcFace} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Corpus & Vector & Scalar & $\Delta$ & Vector & Scalar & $\Delta$ \\
+\midrule
+FIW          & $0.6336$ & $0.5137$ & $+0.120$ & $0.6795$ & $0.5198$ & $+0.160$ \\
+KinFaceW-I   & $0.7049$ & $0.5391$ & $+0.166$ & $0.6375$ & $0.5351$ & $+0.102$ \\
+KinFaceW-II  & $0.6161$ & $0.5197$ & $+0.096$ & $0.5318$ & $0.4898$ & $+0.042$ \\
+TSKinFace    & $0.7373$ & $0.5441$ & $+0.193$ & $0.6682$ & $0.5117$ & $+0.156$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All eight backbone $\times$ corpus cells are positive, ranging from $+0.042$ to
+$+0.193$ (Table~\ref{tab:readout-replication}). Pooled over folds:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Backbone & $\Delta$ ROC-AUC & 95\% CI & $p$ \\
+\midrule
+FaceNet & $+0.1438$ & $[+0.116, +0.172]$ & $1.9 \times 10^{-9}$ \\
+ArcFace & $+0.1151$ & $[+0.084, +0.147]$ & $3.2 \times 10^{-7}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Unit of inference}
+\label{sec:inference-unit}
+
+The pooled tests above treat each held-out fold as one paired observation.
+Folds within a corpus are group-disjoint by construction, but they are not
+independent draws: they partition one identity pool, and every arm sees the
+same partition. Fold-level $p$-values are therefore optimistic, and we do not
+rest the claim on their magnitude.
+
+Table~\ref{tab:inference-unit} repeats the comparison at the most
+conservative unit available here, one observation per corpus, where the four
+corpora are genuinely independent: different subjects, different collection
+protocols, different eras.
+
+\begin{table}[t]
+\centering
+\caption{The readout effect at two units of inference. The fold-level row is
+reported for continuity; the dataset-level row is the one we rely on.}
+\label{tab:inference-unit}
+\begin{tabular}{llrrr}
+\toprule
+Backbone & Unit & $n$ & $\Delta$ & $p$ \\
+\midrule
+\multirow{2}{*}{FaceNet} & fold & $20$ & $+0.1438$ & $1.9 \times 10^{-9}$ \\
+ & corpus & $4$ & $+0.1438$ & $0.0072$ \\
+\midrule
+\multirow{2}{*}{ArcFace} & fold & $20$ & $+0.1151$ & $3.2 \times 10^{-7}$ \\
+ & corpus & $4$ & $+0.1151$ & $0.0253$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $n=4$ the intervals widen to $[+0.074, +0.213]$ and $[+0.027, +0.203]$ and
+still exclude zero. A Wilcoxon signed-rank test at this $n$ attains a minimum
+$p$ of $0.125$ and so cannot reject at conventional levels regardless of
+effect size; we report instead that the effect is positive in $4/4$ corpora
+under both backbones, $8/8$ cells overall. The conclusion does not depend on
+the fold-level $p$-values.
+
+Both intervals exclude zero with margin, and the paired effect sizes are large
+(Cohen's $d_z = 2.38$ and $1.71$). Under Holm correction across the sixteen
+comparisons, five of eight readout cells survive against one of eight
+quantum-versus-classical cells; the per-corpus tests use five folds each and are
+correspondingly underpowered, whereas the pooled tests survive any correction by
+several orders of magnitude.
+
+
+\begin{table}[t]
+\centering
+\caption{Multiplicity correction over the sixteen paired comparisons in this section (two comparison families $\times$ two backbones $\times$ four corpora). Per-corpus tests use five folds each and are correspondingly underpowered; the pooled tests survive any correction by several orders of magnitude.}
+\label{tab:multiplicity}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrr}
+\toprule
+Comparison family & Cells surviving Holm & Surviving BH-FDR \\
+\midrule
+Readout (vector vs.\ scalar) & $5/8$ & $6/8$ \\
+Quantum vs.\ width-matched classical & $1/8$ & $2/8$ \\
+\midrule
+\multicolumn{3}{l}{\emph{Pooled (20 folds each):}} \\
+Readout, FaceNet & \multicolumn{2}{r}{$p = 1.9 \times 10^{-9}$} \\
+Readout, ArcFace & \multicolumn{2}{r}{$p = 3.2 \times 10^{-7}$} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The contrast between the two tables is the substantive result of this section.
+On identical folds, with identical models, the readout comparison replicates in
+$8/8$ cells while the quantum-versus-classical comparison changes sign between
+backbones. One of these is a stable property of the setup; the other is not.
+
+\subsection{What this does and does not establish}
+
+It establishes that scalarising the state substantially reduces the
+discriminative information recoverable from these circuits, and that the nine
+preceding negative results are confounded with readout width. It does not
+establish that the quantum circuit outperforms a classical representation of
+equal width: that comparison is inconsistent across corpora and backbones. It does not establish quantum advantage.
+Formulation~10 reaches $0.674$ mean ROC-AUC, below the $0.8497$ of the
+classical pipeline of Section~\ref{sec:baseline}, at $73.5\times$ the
+inference cost and $55\times$ the training cost --- simulation being strictly
+more expensive than the classical path it replaces. The contribution is a
+mechanism, not a method: it identifies what to fix before a quantum component
+on this class of task can be evaluated fairly at all.
+
+A further limit is intrinsic to classical simulation. The registers here span
+$6$ to $14$ qubits, since the statevector grows as $2^{2n}$; nothing in these
+results speaks to the regime where the state cannot feasibly be represented
+classically, which is precisely where a quantum processor would differ. Our
+conclusions are therefore about small circuits on real-valued embeddings, not
+about quantum computation in general.
+
 % ---------------------------------------------------------------------------
 \section{An efficiency contribution}
 \label{sec:efficiency}
@@ -1002,10 +1464,14 @@ introduce additional stochasticity through their parameterisation.
 \section{Limitations}
 \label{sec:limitations}
 
-\textbf{Single backbone.} All results use frozen FaceNet embeddings. Whether
-the failures interact with backbone choice is untested; a backbone that
-produces embeddings with exploitable structure might yield different
-conclusions.
+\textbf{Two backbones, both frozen.} Results are reported for frozen
+FaceNet and ArcFace embeddings. The readout effect replicates across both
+(all eight backbone $\times$ corpus cells), whereas the
+quantum-versus-classical comparison does not: it changes sign between
+backbones within a corpus. Both backbones are trained for identity
+discrimination and produce $\ell_2$-normalised real-valued embeddings, so
+they do not probe whether a representation carrying exploitable phase
+structure would yield different conclusions. That remains untested.
 
 \textbf{Small test sets.} KinFaceW-I and KinFaceW-II yield 212 and 400 test
 pairs per fold, giving confidence intervals of roughly $\pm 2$ points.
@@ -1022,13 +1488,34 @@ computational cost of simulation grows exponentially.
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have evaluated nine quantum-inspired formulations for facial kinship
+We have evaluated ten quantum-inspired formulations for facial kinship
 verification, each against a capacity-matched classical control under a
-leakage-free grouped $k$-fold protocol. None improves on its control; four
-are significantly worse. The failures are structural: interference-based
+leakage-free grouped $k$-fold protocol. Nine do not improve on their controls;
+four are significantly worse. Their failures are structural: interference-based
 methods collapse because $\ell_2$-normalised face embeddings carry no phase
 structure, and density-matrix methods fail because the number of images per
 identity is far too small to estimate a high-dimensional operator.
+
+The ten formulations do not, however, form a uniform negative result. All nine
+that fail read their decision out of the quantum state as a single scalar. The
+tenth, evaluated under two readouts differing in nothing else, is
+indistinguishable from its control when read as a scalar ($-0.012$, $p = 0.26$)
+and exceeds it by $+0.132$ ROC-AUC when read as a per-qubit expectation vector
+($p = 2.4 \times 10^{-7}$, robust across four seeds, five circuit
+configurations, and a shuffled-label ablation), and classical controls matched
+on readout width do not close the gap. Scalar readout is therefore a major
+limiting factor on this task --- a distinction that a study reporting only
+scalar-readout formulations would have missed, and one that applies to any
+evaluation compressing a quantum state to a single number before the decision.
+
+We stress what this does not show. Formulation~10 beats its capacity-matched
+local control but remains well below the global task baseline
+($0.674$ against $0.8497$ mean ROC-AUC) at $73.5\times$ the inference cost, and
+classical simulation of a circuit is strictly more expensive than the classical
+path it replaces. These are different comparisons answering different
+questions, and only the second speaks to practical deployment. The result is a
+correction to how such components are evaluated, not a demonstration of
+quantum advantage.
 
 Independently, we contribute a $380\times$ GPU speedup for the simulated
 SWAP test, which may be useful in other quantum-simulation contexts. We
@@ -1126,6 +1613,9 @@ of families in the wild, \emph{IEEE Trans. Pattern Anal. Mach. Intell.}
 \bibitem{robinson2020rfiw}
 J.P.~Robinson, M.~Shao, Y.~Fu, Recognizing families in the wild (RFIW): The
 4th edition, in: Proc. CVPRW, 2020, pp.~858--866.
+
+\bibitem{schroff2015facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin, ``FaceNet: A unified embedding for face recognition and clustering,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2015, pp. 815--823.
 
 \bibitem{kemelmacher2016megaface}
 I.~Kemelmacher-Shlizerman, S.M.~Seitz, D.~Miller, E.~Brossard, The MegaFace

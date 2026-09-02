@@ -38,6 +38,18 @@ TRIAD_MODEL = os.path.join(PROJECT_ROOT, "weights", "deploy", "triad_model.pkl")
 BAR = "=" * 62
 
 
+def detect_default_for(predictor):
+    """Face detection must match how the model was fitted.
+
+    The embeddings a model was fitted on and the embeddings it is served must
+    be produced the same way. Measured on 387 person-pairs, serving
+    MTCNN-cropped embeddings to a model fitted on uncropped ones flipped
+    30.2% of verdicts (mean score shift 0.20) even though aggregate ROC-AUC
+    looked unchanged -- which is why aggregate AUC is the wrong check.
+    """
+    return getattr(predictor, "preprocessing", "uncropped") == "cropped"
+
+
 def _rule(title=""):
     print(BAR if not title else f"\n{title}\n" + "-" * 62)
 
@@ -86,7 +98,11 @@ def run_pair(a_raw, b_raw, detect):
         sys.exit("model missing. Run: python scripts/deploy/package_setlevel.py")
 
     pred = SetKinshipPredictor(SET_MODEL)
+    if detect is None:
+        detect = detect_default_for(pred)
     _rule("PHOTOS")
+    print(f"  model was fitted on {pred.preprocessing} faces; "
+          f"detection {'ON' if detect else 'OFF'}")
     A = _gather("person A", a_raw, detect)
     B = _gather("person B", b_raw, detect)
 
@@ -105,7 +121,11 @@ def run_triad(f_raw, m_raw, c_raw, detect):
         sys.exit("model missing. Run: python scripts/deploy/package_setlevel.py")
 
     pred = TriadPredictor(TRIAD_MODEL)
+    if detect is None:
+        detect = detect_default_for(pred)
     _rule("PHOTOS")
+    print(f"  model was fitted on {pred.preprocessing} faces; "
+          f"detection {'ON' if detect else 'OFF'}")
     F = _gather("father", f_raw, detect).mean(axis=0)
     M = _gather("mother", m_raw, detect).mean(axis=0)
     C = _gather("child", c_raw, detect).mean(axis=0)
@@ -170,11 +190,14 @@ def main():
     ap.add_argument("--father", nargs="+", metavar="PHOTO")
     ap.add_argument("--mother", nargs="+", metavar="PHOTO")
     ap.add_argument("--child", nargs="+", metavar="PHOTO")
-    ap.add_argument("--no-detect", action="store_true",
-                    help="skip face detection (use if photos are already "
-                         "tight face crops)")
+    ap.add_argument("--detect", dest="detect", action="store_true",
+                    default=None,
+                    help="force face detection on")
+    ap.add_argument("--no-detect", dest="detect", action="store_false",
+                    help="force face detection off")
     args = ap.parse_args()
-    detect = not args.no_detect
+    # Left unset, the tool follows whatever the model was fitted on.
+    detect = args.detect
 
     try:
         if args.father or args.mother or args.child:

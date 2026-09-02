@@ -1,0 +1,94 @@
+{
+  "FIW": {
+    "single": {
+      "accuracy_mean": 66.52804721301827,
+      "accuracy_ci95": 1.399939528785243,
+      "roc_auc_mean": 0.7295772351302542,
+      "folds": 5,
+      "mean_set_size": 7.295992786917353
+    },
+    "set": {
+      "accuracy_mean": 72.15316628421354,
+      "accuracy_ci95": 2.117176875193502,
+      "roc_auc_mean": 0.8066352314132264,
+      "folds": 5,
+      "mean_set_size": 7.295992786917353
+    },
+    "set+density": {
+      "accuracy_mean": 71.87610469959323,
+      "accuracy_ci95": 2.160207594406495,
+      "roc_auc_mean": 0.8060759048627514,
+      "folds": 5,
+      "mean_set_size": 7.295992786917353
+    }
+  },
+  "KinFaceW-I": {
+    "single": {
+      "accuracy_mean": 63.78857344383707,
+      "accuracy_ci95": 1.1999232283226557,
+      "roc_auc_mean": 0.7210121248780442,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 63.78857344383707,
+      "accuracy_ci95": 1.1999232283226557,
+      "roc_auc_mean": 0.7210121248780442,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 63.97548933168754,
+      "accuracy_ci95": 1.5529379278409063,
+      "roc_auc_mean": 0.7205559498139332,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  },
+  "KinFaceW-II": {
+    "single": {
+      "accuracy_mean": 70.25,
+      "accuracy_ci95": 1.1902058645461295,
+      "roc_auc_mean": 0.76724,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 70.25,
+      "accuracy_ci95": 1.1902058645461295,
+      "roc_auc_mean": 0.76724,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 70.45,
+      "accuracy_ci95": 1.5292396803640687,
+      "roc_auc_mean": 0.76732,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  },
+  "TSKinFace": {
+    "single": {
+      "accuracy_mean": 65.15524453024453,
+      "accuracy_ci95": 1.7954806366292078,
+      "roc_auc_mean": 0.7305809915463933,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 65.15524453024453,
+      "accuracy_ci95": 1.7954806366292078,
+      "roc_auc_mean": 0.7305809915463933,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 65.24493243243244,
+      "accuracy_ci95": 1.791008512277892,
+      "roc_auc_mean": 0.7300118817538581,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  }
+}

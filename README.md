@@ -27,12 +27,28 @@ are:
   negative is cross-family (800/800 vs 0/800), so a model can score ~84% by
   recognising a shared photo session rather than kinship. Closing it costs
   about **9 ROC-AUC points**.
-- **A negative result.** A quantum-inspired SWAP-test fidelity module adds
-  **nothing measurable** over standard pair features (20 paired folds,
-  p = 0.158 accuracy, p = 0.982 AUC) while costing 6-14x runtime.
+- **A negative result, and its cause.** A quantum-inspired SWAP-test fidelity
+  module adds **nothing measurable** over standard pair features (20 paired
+  folds, p = 0.158 accuracy, p = 0.982 AUC) while costing 6-14x runtime.
+  Ten formulations were tested; nine fail against capacity-matched controls,
+  and all nine read the quantum state out as a **single scalar**. Holding the
+  circuit, folds and parameter budget fixed and changing only that readout to
+  a per-qubit expectation vector recovers **+0.144 ROC-AUC** (FaceNet) and
+  **+0.115** (ArcFace), positive in all 8 backbone x corpus cells over 40
+  grouped folds. The information was in the state; the scalar discarded it.
+  A width sweep locates the constraint precisely: one observable scores 0.547
+  on FIW against 0.514 for scalar fidelity, **two** reach 0.631, and the
+  remaining ten add nothing. The bottleneck is the single number, not readout
+  width in any graded sense.
 
 Under corrected grouped 5-fold evaluation, a 1.9M-parameter classifier reaches
 **75.66% mean accuracy / 0.8497 mean ROC-AUC** across four datasets.
+
+Two things the readout result does **not** show, stated plainly: it is not a
+quantum advantage -- classical controls matched on readout width match or
+exceed the circuit on the largest corpus -- and it is not a speedup, the
+simulated circuit being ~73x slower at inference than the classical path.
+The contribution is a caution about how such components are evaluated.
 
 Full methodology, per-fold numbers and audit results: **[RESULTS_HONEST.md](RESULTS_HONEST.md)**.
 
@@ -267,7 +283,9 @@ pytest tests/ -q                              # 61 tests
 This repository began as a quantum-inspired kinship system reporting 77.8% on
 FIW. Re-examination found that number was measured with 100% identity leakage,
 and that nine quantum-inspired formulations each failed against a
-capacity-matched classical control.
+capacity-matched classical control. A tenth formulation, differing from the
+nine only in how the quantum state is read out, then showed that those nine
+failures were confounded with the readout itself.
 
 **[docs/project_history.pdf](docs/project_history.pdf)** records the full route:
 the diagnostics that prompted the change, why each quantum formulation failed
@@ -281,9 +299,29 @@ In brief:
 | FIW | 76.0% (100% identity leakage) | 72.21% ± 1.55 (family-disjoint) |
 | TSKinFace | 83.3% (photo-session shortcut) | 79.25% ± 2.32 (shortcut closed) |
 | Seed stability | 22.5-point spread | 12.1 points |
-| Quantum claim | "removing it costs 7.5%" | 9 formulations, none beats its control |
+| Quantum claim | "removing it costs 7.5%" | 9 scalar-readout formulations fail; the readout is the bottleneck |
 
 The numbers went down. That drop is the leakage and the shortcut leaving.
+
+### Manuscripts
+
+Two papers are written from this work; both compile from `paper/` (verified
+with `pdflatex -halt-on-error`, zero undefined references) and every numeric
+claim traces to a JSON artefact in `results/honest/`. `tests/test_manuscripts.py`
+guards the source against defects that reach a PDF silently.
+
+| Path | Leads with |
+|---|---|
+| [paper/elsevier/quantum_negative.pdf](paper/elsevier/quantum_negative.pdf) | the readout bottleneck: ten formulations, and why nine of them failed |
+| [paper/ieee/main.pdf](paper/ieee/main.pdf) | person-level verification under leakage-free evaluation |
+
+An earlier headline in this project -- that the quantum arm beat its
+capacity-matched control by +0.132 ROC-AUC -- did not survive scrutiny: the
+control had been matched on parameter count, which collapsed it to a
+one-dimensional readout. Against controls matched on readout width the
+comparison is inconsistent across corpora and backbones, and it is no longer
+claimed. The readout result, where both arms are quantum, is unaffected and
+replicates 8/8.
 
 ---
 

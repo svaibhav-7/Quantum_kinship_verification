@@ -120,5 +120,50 @@ class TestFaceExtraction(unittest.TestCase):
             self.assertEqual(embs[0].shape, (512,))
 
 
+
+
+class TestPreprocessingConsistency(unittest.TestCase):
+    """The model is fitted on embeddings produced one way; the user tool must
+    produce them the same way. Serving MTCNN-cropped embeddings to a model
+    fitted on uncropped ones flipped 30.2% of verdicts on 387 person-pairs.
+
+    The artifact therefore records how it was fitted, and the tool must honour
+    that record rather than choosing independently.
+    """
+
+    def test_artifact_declares_its_preprocessing(self):
+        import pickle
+
+        path = os.path.join(project_root, "weights", "deploy", "set_model.pkl")
+        if not os.path.exists(path):
+            self.skipTest("set model not built")
+        with open(path, "rb") as f:
+            m = pickle.load(f)
+        self.assertIn("preprocessing", m,
+                      "artifact does not record how it was fitted")
+        self.assertIn(m["preprocessing"], ("cropped", "uncropped"))
+
+    def test_predictor_exposes_required_preprocessing(self):
+        from src.set_predictor import SetKinshipPredictor
+
+        path = os.path.join(project_root, "weights", "deploy", "set_model.pkl")
+        if not os.path.exists(path):
+            self.skipTest("set model not built")
+        p = SetKinshipPredictor(path)
+        self.assertIn(p.preprocessing, ("cropped", "uncropped"))
+
+    def test_tool_default_matches_the_artifact(self):
+        """Regression guard for the mismatch this class documents."""
+        from src.set_predictor import SetKinshipPredictor
+        import verify_kinship
+
+        path = os.path.join(project_root, "weights", "deploy", "set_model.pkl")
+        if not os.path.exists(path):
+            self.skipTest("set model not built")
+        p = SetKinshipPredictor(path)
+        self.assertEqual(verify_kinship.detect_default_for(p),
+                         p.preprocessing == "cropped")
+
+
 if __name__ == "__main__":
     unittest.main()
