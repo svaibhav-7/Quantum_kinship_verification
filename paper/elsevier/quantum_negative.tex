@@ -65,7 +65,9 @@ information recoverable from these representations. Although the vector-readout
 model showed a positive pooled comparison against capacity-matched classical
 controls, that advantage was not consistent across individual corpora and
 backbones, and we do not claim it; these results do not demonstrate quantum
-advantage. The nine failures are otherwise structural rather than
+advantage. Significance is reported at two units of inference, folds and
+corpora, and the readout effect survives the conservative one
+($p = 0.007$ and $p = 0.025$ at $n = 4$ corpora). The nine failures are otherwise structural rather than
 implementational: interference-based formulations reduce to their classical
 counterparts because $\ell_2$-normalised face embeddings carry no phase
 structure to exploit, and density-matrix formulations require estimating a
@@ -1233,6 +1235,45 @@ ArcFace & $+0.1151$ & $[+0.084, +0.147]$ & $3.2 \times 10^{-7}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\subsection{Unit of inference}
+\label{sec:inference-unit}
+
+The pooled tests above treat each held-out fold as one paired observation.
+Folds within a corpus are group-disjoint by construction, but they are not
+independent draws: they partition one identity pool, and every arm sees the
+same partition. Fold-level $p$-values are therefore optimistic, and we do not
+rest the claim on their magnitude.
+
+Table~\ref{tab:inference-unit} repeats the comparison at the most
+conservative unit available here, one observation per corpus, where the four
+corpora are genuinely independent: different subjects, different collection
+protocols, different eras.
+
+\begin{table}[t]
+\centering
+\caption{The readout effect at two units of inference. The fold-level row is
+reported for continuity; the dataset-level row is the one we rely on.}
+\label{tab:inference-unit}
+\begin{tabular}{llrrr}
+\toprule
+Backbone & Unit & $n$ & $\Delta$ & $p$ \\
+\midrule
+\multirow{2}{*}{FaceNet} & fold & $20$ & $+0.1438$ & $1.9 \times 10^{-9}$ \\
+ & corpus & $4$ & $+0.1438$ & $0.0072$ \\
+\midrule
+\multirow{2}{*}{ArcFace} & fold & $20$ & $+0.1151$ & $3.2 \times 10^{-7}$ \\
+ & corpus & $4$ & $+0.1151$ & $0.0253$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $n=4$ the intervals widen to $[+0.074, +0.213]$ and $[+0.027, +0.203]$ and
+still exclude zero. A Wilcoxon signed-rank test at this $n$ attains a minimum
+$p$ of $0.125$ and so cannot reject at conventional levels regardless of
+effect size; we report instead that the effect is positive in $4/4$ corpora
+under both backbones, $8/8$ cells overall. The conclusion does not depend on
+the fold-level $p$-values.
 
 Both intervals exclude zero with margin, and the paired effect sizes are large
 (Cohen's $d_z = 2.38$ and $1.71$). Under Holm correction across the sixteen
