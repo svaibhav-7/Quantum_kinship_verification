@@ -140,31 +140,49 @@ def fig_readout():
 
 # ---------------------------------------------------------------------------
 def fig_readout_sweep():
-    """ROC-AUC against number of retained observables."""
-    ks, series = [], {c: [] for c in ("KinFaceW-I", "FIW")}
-    for k in (1, 2, 4, 6, 8, 10, 12):
-        f = os.path.join(RES, f"amp_k{k}.json")
-        if not os.path.exists(f):
-            continue
-        j = json.load(open(f)); ks.append(k)
-        for c in series:
-            series[c].append(j[c]["amp-expectation"]["roc_auc_mean"]
-                             if c in j else np.nan)
-    if len(ks) < 2:
-        print("  [skip] fig_readout_sweep: sweep still running")
+    """ROC-AUC against the number of retained observables, on FIW.
+
+    k=12 is the full-vector run in amp_readouts.json; k<12 are the sweep runs.
+    The scalar-fidelity line is the same circuit read as one number, and is the
+    comparison the curve is about.
+    """
+    pts = []
+    for k in (1, 2, 4, 6, 8, 10):
+        f = os.path.join(RES, "amp_k%d.json" % k)
+        if os.path.exists(f):
+            j = json.load(open(f))
+            if "FIW" in j:
+                pts.append((k, j["FIW"]["amp-expectation"]["roc_auc_mean"]))
+    full = json.load(open(os.path.join(RES, "amp_readouts.json")))["FIW"]
+    pts.append((12, full["amp-expectation"]["roc_auc_mean"]))
+    scalar = full["amp-fidelity"]["roc_auc_mean"]
+    if len(pts) < 3:
+        print("  [skip] fig_readout_sweep: too few points")
         return
 
-    fig, ax = plt.subplots(figsize=(3.4, 2.7))
-    for c, col, m in (("KinFaceW-I", C_NEW, "o"), ("FIW", C_BASE, "s")):
-        ax.plot(ks, series[c], marker=m, color=col, lw=1.4, ms=4, label=c)
+    ks = [k for k, _ in pts]
+    vs = [v for _, v in pts]
+    fig, ax = plt.subplots(figsize=(3.6, 2.8))
+    ax.plot(ks, vs, marker="o", color=C_NEW, lw=1.5, ms=4.5,
+            label="expectation, $k$ observables")
+    ax.axhline(scalar, color=C_BASE, lw=1.3, ls="--",
+               label="scalar fidelity (1 value)")
     ax.axhline(0.5, color=C_MUTED, lw=0.8, ls=":")
-    ax.axvline(6.5, color=C_MUTED, lw=0.8, ls="--")
-    ax.text(6.7, ax.get_ylim()[0] + 0.012, "2nd register enters",
-            fontsize=6.5, color=C_MUTED, rotation=90, va="bottom")
+    ax.annotate("", xy=(2, vs[1]), xytext=(1, vs[0]),
+                arrowprops=dict(arrowstyle="-", lw=0))
+    ax.annotate("+%.3f" % (vs[1] - vs[0]), xy=(1.5, (vs[0] + vs[1]) / 2),
+                xytext=(6, -2), textcoords="offset points",
+                fontsize=7.5, color=C_NEW)
+    # k<=6 reads person 1 only; person 2 first enters at k=8.
+    ax.axvline(7, color=C_MUTED, lw=0.8, ls="--")
+    ax.text(7.25, min(vs) + 0.008, "person 2 enters", fontsize=6.5,
+            color=C_MUTED, rotation=90, va="bottom")
     ax.set_xlabel("observables retained, $k$")
-    ax.set_ylabel("ROC-AUC")
+    ax.set_ylabel("ROC-AUC (FIW)")
     ax.set_xticks(ks)
-    ax.legend(frameon=False, loc="lower right")
+    ax.legend(frameon=False, loc="center right", fontsize=7.5,
+              bbox_to_anchor=(1.0, 0.42))
+    ax.set_ylim(min(min(vs), scalar) - 0.02, max(vs) + 0.012)
     save(fig, "fig_readout_sweep")
 
 

@@ -1136,6 +1136,58 @@ for the fidelity arm contains it. Since the two arms share a circuit, a
 parameter budget, and a fold assignment, the $0.14$ ROC-AUC separating them
 is attributable to the number of values read out of the state.
 
+\subsection{How many observables are needed?}
+\label{sec:sweep}
+
+Section~\ref{sec:readout} contrasts one value against $2n$. That leaves
+open whether the gain accumulates with width or is won immediately, and the
+two imply different mechanisms. Retaining only the first $k$ per-qubit
+expectations on FIW, with the circuit and every other setting unchanged
+(Figure~\ref{fig:sweep}):
+
+\begin{center}
+\begin{tabular}{lrrrrrr}
+\toprule
+$k$ & $1$ & $2$ & $4$ & $6$ & $8$ & $12$ \\
+\midrule
+ROC-AUC & $0.547$ & $0.631$ & $0.642$ & $0.649$ & $0.643$ & $0.634$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_readout_sweep}
+\caption{Readout width against performance on FIW, same circuit throughout.
+A single observable performs near the scalar readout; two recover almost the
+whole effect; nothing is gained after. Qubits are ordered person~1 then
+person~2, so $k \leq 6$ reads one register only.}
+\label{fig:sweep}
+\end{figure}
+
+The curve is a step, not a slope. One observable ($0.547$) sits near scalar
+fidelity ($0.514$); two ($0.631$) recover $82\%$ of the gain to the
+plateau's highest point and $97\%$ of the gain to the full $2n$ readout;
+the remaining ten move the result by less than $0.02$, within fold noise. The
+constraint is therefore not readout width in any graded sense --- it is that
+a single number is a qualitatively different object from even a
+two-dimensional one.
+
+A second reading of the same curve is less comfortable for the architecture.
+Qubits are ordered person~1 then person~2, so every point up to $k=6$ reads
+person~1's register alone; $k=8$ is the first to include person~2. It does
+not rise ($-0.006$). The pair information the readout needs is already
+present in one register's marginals, which the CNOT ring puts there. The
+coupling is doing work inside the circuit; reading both halves out is not
+necessary. We report this because the joint register is motivated by
+cross-person correlation, and this measurement shows that motivation applies
+to the circuit rather than to the measurement.
+
+One caveat bounds the sweep: because low $k$ both narrows the readout and
+restricts it to one register, the two factors are varied together. The $k=8$
+comparison separates them at the point where it matters, but the curve below
+$k=8$ should be read as descriptive of width rather than as isolating it.
+
 \subsection{Is the gain merely representation width?}
 \label{sec:widthctl}
 

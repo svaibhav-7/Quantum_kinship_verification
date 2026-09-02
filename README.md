@@ -36,6 +36,10 @@ are:
   a per-qubit expectation vector recovers **+0.144 ROC-AUC** (FaceNet) and
   **+0.115** (ArcFace), positive in all 8 backbone x corpus cells over 40
   grouped folds. The information was in the state; the scalar discarded it.
+  A width sweep locates the constraint precisely: one observable scores 0.547
+  on FIW against 0.514 for scalar fidelity, **two** reach 0.631, and the
+  remaining ten add nothing. The bottleneck is the single number, not readout
+  width in any graded sense.
 
 Under corrected grouped 5-fold evaluation, a 1.9M-parameter classifier reaches
 **75.66% mean accuracy / 0.8497 mean ROC-AUC** across four datasets.
