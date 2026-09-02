@@ -100,6 +100,17 @@ def train_eval(arm, fit, va, te, cache, args, seed, dev):
     T = tuple(t.to(dev) for t in prepare_pair_tensors(fit, cache))
     V = tuple(t.to(dev) for t in prepare_pair_tensors(va, cache))
     E = tuple(t.to(dev) for t in prepare_pair_tensors(te, cache))
+
+    # Shuffled-label control: permute TRAIN labels only, leaving validation and
+    # test intact. Any arm that still scores above chance is reading something
+    # other than kinship (leakage, or a fold artefact), so this must come back
+    # at ~0.50 for the headline result to mean anything.
+    if getattr(args, "shuffle_labels", False):
+        g = torch.Generator(device="cpu").manual_seed(seed + 9973)
+        T = (T[0], T[1],
+             T[2][torch.randperm(len(T[2]), generator=g).to(dev)],
+             T[3])
+
     vy = V[2].view(-1).cpu().numpy()
 
     best, best_state, since = -1.0, None, 0
@@ -152,6 +163,8 @@ def main():
     ap.add_argument("--cap-per-family", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--datasets", nargs="+", default=None)
+    ap.add_argument("--shuffle-labels", action="store_true",
+                    help="permute training labels; every arm should fall to ~0.50")
     ap.add_argument("--tag", default="amplitude_vqc")
     args = ap.parse_args()
 
@@ -218,23 +231,28 @@ def main():
               + "".join("%17.4f" % summary[name][a]["roc_auc_mean"] for a in ARMS))
 
     if summary:
-        means = {a: float(np.mean([s[a]["roc_auc_mean"] for s in summary.values()]))
+        # Bind the per-dataset rows before any bookkeeping key is added to
+        # `summary`: iterating summary.values() after inserting "_test"
+        # treats that dict as a dataset and raises KeyError on the arm.
+        rows = list(summary.values())
+        means = {a: float(np.mean([s[a]["roc_auc_mean"] for s in rows]))
                  for a in ARMS}
         print("\n  MEAN  " + "   ".join("%s %.4f" % (a, means[a]) for a in ARMS))
-        allc = [x for s in summary.values() for x in s["control"]["per_fold"]]
-        summary["_test"] = {}
+        allc = [x for s in rows for x in s["control"]["per_fold"]]
+        tests = {}
         from scipy import stats
         for a in ARMS:
             if a == "control":
                 continue
-            av = [x for s in summary.values() for x in s[a]["per_fold"]]
+            av = [x for s in rows for x in s[a]["per_fold"]]
             if len(av) > 2:
                 t, p = stats.ttest_rel(av, allc)
                 print("  %-16s vs control: %+.4f  t=%.2f  p=%.4f"
                       % (a, means[a] - means["control"], t, p))
-                summary["_test"][a] = {"n_folds": len(av),
-                                       "delta": means[a] - means["control"],
-                                       "t": float(t), "p": float(p)}
+                tests[a] = {"n_folds": len(av),
+                            "delta": means[a] - means["control"],
+                            "t": float(t), "p": float(p)}
+        summary["_test"] = tests
         summary["_mean"] = means
 
     summary["_config"] = {"qubits_each": args.qubits, "depth": args.depth,
