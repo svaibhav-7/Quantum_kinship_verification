@@ -215,9 +215,9 @@ person-level aggregation can differ from the conventional formulation. We
 report per corpus rather than averaging, because an average over these four
 would conceal exactly that asymmetry.
 
-All experiments use a single frozen backbone: FaceNet (Inception-ResNet-v1)
-pretrained on VGGFace2, producing $512$-dimensional $\ell_2$-normalised
-embeddings. Holding it fixed isolates the protocol and representation questions
+Experiments use two frozen backbones: FaceNet (Inception-ResNet-v1)\cite{schroff2015facenet}
+pretrained on VGGFace2, and ArcFace, each producing $512$-dimensional $\ell_2$-normalised
+embeddings. Holding them fixed isolates the protocol and representation questions
 from representation-learning effects, and bounds the claims accordingly
 (Section~\ref{sec:limitations}).
 
@@ -1029,8 +1029,12 @@ count from $2$ to $12$.
 pairs per fold, giving confidence intervals of roughly $\pm 2$ points. FIW and
 TSKinFace are firmer.
 
-\textbf{Single backbone.} All results use frozen FaceNet embeddings. Whether the
-biases we quantify interact with backbone choice is untested.
+\textbf{Two backbones, both frozen.} Results are reported for frozen
+FaceNet and ArcFace embeddings, and the person-level gain is larger under
+ArcFace ($+0.098$ against $+0.077$). Both are trained for identity
+discrimination and produce $\ell_2$-normalised real-valued embeddings, so
+whether the biases we quantify interact with a structurally different
+representation remains untested.
 
 \textbf{Set-level gains are confined to one benchmark.} Only FIW stores
 multiple photographs per identity, so the $+0.0771$ ROC-AUC of
@@ -1125,6 +1129,9 @@ N.~Kohli, D.~Yadav, M.~Vatsa, R.~Singh, and A.~Noore, ``Supervised mixed norm me
 
 \bibitem{schuld2019quantum}
 M.~Schuld and N.~Killoran, ``Quantum machine learning in feature Hilbert spaces,'' \emph{Phys. Rev. Lett.}, vol.~122, no.~4, p. 040504, 2019.
+
+\bibitem{schroff2015facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin, ``FaceNet: A unified embedding for face recognition and clustering,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2015, pp. 815--823.
 
 \bibitem{havlicek2019supervised}
 V.~Havl{\'i}{\v{c}}ek, A.~D.~C{\'o}rcoles, K.~Temme, A.~W.~Harrow, A.~Kandala, J.~M.~Chow, and J.~M.~Gambetta, ``Supervised learning with quantum-enhanced feature spaces,'' \emph{Nature}, vol.~567, no.~7747, pp. 209--212, 2019.

@@ -261,9 +261,9 @@ these four would conceal exactly that asymmetry.
 
 \subsection{Feature extraction}
 
-All experiments use a single frozen backbone: FaceNet (Inception-ResNet-v1)
-pretrained on VGGFace2, producing $512$-dimensional $\ell_2$-normalised
-embeddings. Holding the backbone fixed isolates the protocol and
+Experiments use two frozen backbones: FaceNet (Inception-ResNet-v1)\cite{schroff2015facenet}
+pretrained on VGGFace2, and ArcFace, each producing $512$-dimensional $\ell_2$-normalised
+embeddings. Holding the backbones fixed isolates the protocol and
 representation questions from representation-learning effects. It also bounds
 the claims: results here characterise this embedding space, and
 Section~\ref{sec:limitations} states the consequence.
@@ -1109,12 +1109,12 @@ arms. $n=6$, $L=4$; $96$ quantum parameters against $131$ control parameters.}
 \label{tab:readout}
 \begin{tabular}{lrrrr}
 \toprule
-Dataset & Expectation & Fidelity & Control & Exp.\ $-$ Ctrl. \
+Dataset & Expectation & Fidelity & Control & Exp.\ $-$ Ctrl. \\
 \midrule
-FIW          & $0.6336$ & $0.5137$ & $0.5465$ & $+0.087$ \
-KinFaceW-I   & $0.7049$ & $0.5391$ & $0.5350$ & $+0.170$ \
-KinFaceW-II  & $0.6161$ & $0.5197$ & $0.5332$ & $+0.083$ \
-TSKinFace    & $0.7373$ & $0.5441$ & $0.5507$ & $+0.187$ \
+FIW          & $0.6336$ & $0.5137$ & $0.5465$ & $+0.087$ \\
+KinFaceW-I   & $0.7049$ & $0.5391$ & $0.5350$ & $+0.170$ \\
+KinFaceW-II  & $0.6161$ & $0.5197$ & $0.5332$ & $+0.083$ \\
+TSKinFace    & $0.7373$ & $0.5441$ & $0.5507$ & $+0.187$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1148,16 +1148,16 @@ control per fold, by corpus and backbone. Grouped 5-fold.}
 \label{tab:widthctl}
 \begin{tabular}{lrrrr}
 \toprule
-& \multicolumn{2}{c}{FaceNet} & \multicolumn{2}{c}{ArcFace} \
+& \multicolumn{2}{c}{FaceNet} & \multicolumn{2}{c}{ArcFace} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-Corpus & $\Delta$ & $p$ & $\Delta$ & $p$ \
+Corpus & $\Delta$ & $p$ & $\Delta$ & $p$ \\
 \midrule
-FIW          & $-0.030$ & $0.38$ & $+0.015$ & $0.39$ \
-KinFaceW-I   & $+0.131$ & $0.002$ & $+0.098$ & $0.015$ \
-KinFaceW-II  & $+0.084$ & $0.078$ & $+0.029$ & $0.142$ \
-TSKinFace    & $+0.037$ & $0.408$ & $+0.147$ & $0.016$ \
+FIW          & $-0.030$ & $0.38$ & $+0.015$ & $0.39$ \\
+KinFaceW-I   & $+0.131$ & $0.002$ & $+0.098$ & $0.015$ \\
+KinFaceW-II  & $+0.084$ & $0.078$ & $+0.029$ & $0.142$ \\
+TSKinFace    & $+0.037$ & $0.408$ & $+0.147$ & $0.016$ \\
 \midrule
-Pooled       & $+0.055$ & $0.013$ & $+0.073$ & $0.0003$ \
+Pooled       & $+0.055$ & $0.013$ & $+0.073$ & $0.0003$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1366,10 +1366,14 @@ introduce additional stochasticity through their parameterisation.
 \section{Limitations}
 \label{sec:limitations}
 
-\textbf{Single backbone.} All results use frozen FaceNet embeddings. Whether
-the failures interact with backbone choice is untested; a backbone that
-produces embeddings with exploitable structure might yield different
-conclusions.
+\textbf{Two backbones, both frozen.} Results are reported for frozen
+FaceNet and ArcFace embeddings. The readout effect replicates across both
+(all eight backbone $\times$ corpus cells), whereas the
+quantum-versus-classical comparison does not: it changes sign between
+backbones within a corpus. Both backbones are trained for identity
+discrimination and produce $\ell_2$-normalised real-valued embeddings, so
+they do not probe whether a representation carrying exploitable phase
+structure would yield different conclusions. That remains untested.
 
 \textbf{Small test sets.} KinFaceW-I and KinFaceW-II yield 212 and 400 test
 pairs per fold, giving confidence intervals of roughly $\pm 2$ points.
@@ -1511,6 +1515,9 @@ of families in the wild, \emph{IEEE Trans. Pattern Anal. Mach. Intell.}
 \bibitem{robinson2020rfiw}
 J.P.~Robinson, M.~Shao, Y.~Fu, Recognizing families in the wild (RFIW): The
 4th edition, in: Proc. CVPRW, 2020, pp.~858--866.
+
+\bibitem{schroff2015facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin, ``FaceNet: A unified embedding for face recognition and clustering,'' in \emph{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2015, pp. 815--823.
 
 \bibitem{kemelmacher2016megaface}
 I.~Kemelmacher-Shlizerman, S.M.~Seitz, D.~Miller, E.~Brossard, The MegaFace

@@ -301,8 +301,10 @@ The numbers went down. That drop is the leakage and the shortcut leaving.
 
 ### Manuscripts
 
-Two papers are written from this work; both compile from `paper/` and every
-numeric claim traces to a JSON artefact in `results/honest/`.
+Two papers are written from this work; both compile from `paper/` (verified
+with `pdflatex -halt-on-error`, zero undefined references) and every numeric
+claim traces to a JSON artefact in `results/honest/`. `tests/test_manuscripts.py`
+guards the source against defects that reach a PDF silently.
 
 | Path | Leads with |
 |---|---|
