@@ -1,4 +1,7 @@
-# Citations — resolved
+<!-- Renamed from CITATIONS_TODO.md. Two external reviews read the old
+     filename and concluded related work was unfinished; it is not. -->
+
+# Citations - status: complete
 
 This file was a worklist for filling placeholder citation keys. It is kept
 because an external review read the stale version and concluded, reasonably,

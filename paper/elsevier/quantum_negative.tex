@@ -12,6 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{booktabs}
+\usepackage[htt]{hyphenat}
 \usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -24,6 +25,7 @@
 
 \journal{Pattern Recognition}
 
+\sloppy
 \begin{document}
 
 \begin{frontmatter}
@@ -240,6 +242,7 @@ govern how they can be split and how much evidence they supply per person.
 Photographs per identity is the property that determines whether set-level
 aggregation is possible at all.}
 \label{tab:datasets}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrl}
 \toprule
 Corpus & Pairs & Families & Identities & Photos/identity & Image content \\
@@ -249,7 +252,7 @@ KinFaceW-II & 2{,}000 & 1{,}000 & 2{,}000 & 1.00 & $64\times64$ cropped face \\
 TSKinFace & 2{,}236 & 559 & 1{,}677 & 1.00 & $64\times64$ cropped face \\
 FIW & 57{,}120 & 95 & 472 & 5.28 & $224\times224$ cropped face \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Two features of Table~\ref{tab:datasets} drive the rest of the paper. First,
@@ -684,6 +687,7 @@ frozen embeddings with no training; the remainder are the trained model on each
 corpus. Mother--son is weakest on three of four corpora and is simultaneously
 the largest FIW subset ($5{,}296$ pairs).}
 \label{tab:relation}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
 Relation & Raw embedding & KinFaceW-I & KinFaceW-II & FIW & TSKinFace & Mean \\
@@ -693,7 +697,7 @@ Father--son & 0.7841 & 0.8935 & 0.8875 & 0.9754 & 0.9124 & 0.9172 \\
 Mother--daughter & 0.7295 & 0.8400 & 0.8598 & 0.9668 & 0.9227 & 0.8973 \\
 Mother--son & 0.7065 & 0.9750 & 0.7795 & 0.7124 & 0.8483 & 0.8288 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Table~\ref{tab:relation} reports per-relation performance measured on a single
@@ -1287,6 +1291,7 @@ several orders of magnitude.
 \centering
 \caption{Multiplicity correction over the sixteen paired comparisons in this section (two comparison families $\times$ two backbones $\times$ four corpora). Per-corpus tests use five folds each and are correspondingly underpowered; the pooled tests survive any correction by several orders of magnitude.}
 \label{tab:multiplicity}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrr}
 \toprule
 Comparison family & Cells surviving Holm & Surviving BH-FDR \\
@@ -1298,7 +1303,7 @@ Quantum vs.\ width-matched classical & $1/8$ & $2/8$ \\
 Readout, FaceNet & \multicolumn{2}{r}{$p = 1.9 \times 10^{-9}$} \\
 Readout, ArcFace & \multicolumn{2}{r}{$p = 3.2 \times 10^{-7}$} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 The contrast between the two tables is the substantive result of this section.

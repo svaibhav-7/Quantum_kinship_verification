@@ -12,6 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{booktabs}
+\usepackage[htt]{hyphenat}
 \usepackage{multirow}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
@@ -656,6 +657,7 @@ are the corrected measurement. Under a protocol in which no family dominates,
 the four relations span $0.0310$ ROC-AUC.}
 \label{tab:relation_kfold}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
 Relation & Single fold & Mean & SD & Range & Families/fold \\
@@ -665,7 +667,7 @@ Father--son & 0.9754 & 0.7946 & 0.0752 & 0.7050--0.8942 & 12.2 \\
 Mother--daughter & 0.9668 & 0.7766 & 0.0601 & 0.7147--0.8730 & 14.4 \\
 Mother--son & 0.7124 & 0.7910 & 0.0381 & 0.7497--0.8390 & 12.4 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 Under the corrected measurement mother--son reaches $0.7910$, the second
@@ -744,6 +746,7 @@ flat beyond five photographs while cost continues to grow, which makes five a
 natural operating point.}
 \label{tab:opcost}
 \small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{cccccc}
 \toprule
 Photos & ROC-AUC & Gain & ms/pair & pairs/s & Slowdown \\
@@ -758,7 +761,7 @@ Photos & ROC-AUC & Gain & ms/pair & pairs/s & Slowdown \\
 160 & --- & --- & 3.132 & 319 & 40.0$\times$ \\
 320 & --- & --- & 10.718 & 93 & 136.8$\times$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 Table~\ref{tab:opcost} places the two measurements side by side. Accuracy rises

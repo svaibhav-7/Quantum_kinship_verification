@@ -55,5 +55,32 @@ class TestManuscriptSource(unittest.TestCase):
             self.assertIn("ArcFace", s)
 
 
+class TestManuscriptTypography(unittest.TestCase):
+    """Overfull boxes print as text running into the margin.
+
+    Both papers carried 15 each before submission preparation; a reviewer
+    flagged them. Thresholds are set at the current state so a regression
+    is caught, not so a clean build is demanded of prose TeX cannot break.
+    """
+
+    LIMITS = {"main.log": 1, "quantum_negative.log": 2}
+
+    def test_overfull_boxes_within_budget(self):
+        for name, limit in self.LIMITS.items():
+            log = None
+            for d in ("ieee", "elsevier"):
+                c = os.path.join(ROOT, "paper", d, name)
+                if os.path.exists(c):
+                    log = c
+                    break
+            if log is None:
+                self.skipTest("%s not built" % name)
+            n = _read(log).count("Overfull")
+            self.assertLessEqual(
+                n, limit,
+                "%s has %d overfull boxes (budget %d); rebuild and inspect"
+                % (name, n, limit))
+
+
 if __name__ == "__main__":
     unittest.main()
