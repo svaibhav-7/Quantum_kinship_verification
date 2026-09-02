@@ -1,6 +1,6 @@
 % ============================================================================
-% A Systematic Negative Result for Quantum-Inspired Similarity Metrics
-% in Facial Kinship Verification
+% What Limits Quantum-Inspired Similarity Metrics in Facial Kinship
+% Verification: Ten Formulations and a Readout Ablation
 %
 % Elsevier elsarticle format.
 % All numeric claims trace to results/honest/*.json in the project root.
@@ -28,8 +28,8 @@
 
 \begin{frontmatter}
 
-\title{A Systematic Negative Result for Quantum-Inspired Similarity Metrics
-in Facial Kinship Verification}
+\title{What Limits Quantum-Inspired Similarity Metrics in Facial
+Kinship Verification: Ten Formulations and a Readout Ablation}
 
 \author[klu]{Sasi~Vaibhav\corref{cor1}}
 \ead{svaibhav@klu.ac.in}
@@ -40,11 +40,18 @@ in Facial Kinship Verification}
 Quantum-inspired machine learning has been proposed for facial kinship
 verification, with claims that SWAP-test fidelity and related similarity
 metrics outperform classical alternatives on classical data. We evaluate this
-claim systematically. Nine quantum-inspired formulations---spanning the three
+claim systematically. Ten quantum-inspired formulations---spanning the three
 roles a quantum component can occupy (similarity measure, feature extractor,
 and inductive bias)---are each compared against a capacity-matched classical
-control under a leakage-free grouped $k$-fold protocol. None improves on its
-control; four are significantly worse. The failures are structural rather than
+control under a leakage-free grouped $k$-fold protocol. Nine do not improve on
+their controls; four are significantly worse. Every one of those nine reads its
+decision out of the quantum state as a single scalar. The tenth differs in that
+one respect---a per-qubit expectation vector rather than a scalar
+fidelity---and improves on its matched control by $+0.132$ ROC-AUC
+(95\% CI $[+0.099, +0.165]$, $p = 2.4 	imes 10^{-7}$, 20 paired folds).
+Holding the circuit, folds, and parameter budget fixed and varying only the
+readout isolates the binding constraint: the scalar readout, not the quantum
+component. The nine failures are otherwise structural rather than
 implementational: interference-based formulations reduce to their classical
 counterparts because $\ell_2$-normalised face embeddings carry no phase
 structure to exploit, and density-matrix formulations require estimating a
@@ -74,6 +81,7 @@ underlying every figure and table are released.
 quantum-inspired machine learning \sep
 facial kinship verification \sep
 negative results \sep
+variational quantum classifier \sep
 SWAP test \sep
 evaluation protocol \sep
 data leakage
@@ -101,19 +109,33 @@ public, and the baseline methodology (frozen face embeddings fed to a
 trainable classifier) is standardised enough that the contribution of a
 new similarity measure can be isolated.
 
-This paper makes three contributions:
+This paper makes four contributions:
 
 \begin{enumerate}
-\item \textbf{A nine-formulation negative result.} We evaluate nine
+\item \textbf{A ten-formulation study.} We evaluate ten
 quantum-inspired formulations, spanning the three natural roles a quantum
 component can occupy: a similarity measure (SWAP-test fidelity, density
 fidelity, entanglement entropy), a feature extractor (POVM measurement head),
 and an inductive bias (purity regulariser, interference phase sweep). Each
-is compared against a capacity-matched classical control. None improves on
-its control; four are significantly worse ($p < 0.05$).
+is compared against a capacity-matched classical control. Nine do not improve
+on their controls; four are significantly worse ($p < 0.05$).
 
-\item \textbf{A structural account of why.} We show that the failures are
-not implementational but structural. Interference-based formulations collapse
+\item \textbf{A readout ablation that identifies the binding constraint.}
+The nine failing formulations share a property that is easy to overlook:
+each compresses the quantum state to a single scalar before the decision.
+The tenth---a variational circuit on a joint two-person register---is
+evaluated under two readouts that differ in nothing but width. Read out as a
+scalar fidelity it is indistinguishable from its control
+($-0.012$, $p = 0.26$); read out as a per-qubit expectation vector it exceeds
+that same control by $+0.132$ ROC-AUC
+(95\% CI $[+0.099, +0.165]$, $p = 2.4 \times 10^{-7}$).
+Because circuit, folds, and parameter budget are held fixed, the difference
+is attributable to readout width alone. This converts our structural account
+from an inference into a controlled measurement, and shows that a negative
+result for a quantum component can be an artefact of how it is read.
+
+\item \textbf{A structural account of why.} We show that the remaining
+failures are not implementational but structural. Interference-based formulations collapse
 to their classical counterparts because $\ell_2$-normalised embeddings carry
 no exploitable phase structure. Density-matrix formulations fail because the
 number of images per identity (median: five) is far too small to estimate a
@@ -458,6 +480,7 @@ The classical convex mixture (zero phase) is the control.
 \label{sec:results}
 
 \subsection{Baseline performance under the corrected protocol}
+\label{sec:baseline}
 
 \begin{table}[t]
 \caption{Grouped 5-fold results. Every family tested exactly once.}
@@ -596,10 +619,13 @@ representations.}
 \end{tabular}
 \end{table}
 
-Nine formulations tested; none beating its classical control
-(Table~\ref{tab:q89}).
+Nine formulations tested so far, none beating its classical control
+(Table~\ref{tab:q89}). Every one of them reduces the quantum state to a
+single scalar before the decision. Section~\ref{sec:readout} isolates that
+property as the binding constraint.
 
 \subsection{A cautionary observation}
+\label{sec:cautionary}
 
 The purity regulariser (Formulation~7) initially measured $+1.3$ ROC-AUC on
 a single seed, with reduced variance---a result consistent with effective
@@ -981,6 +1007,117 @@ Even when the fidelity is supplied as \emph{one feature beside} the
 classical features (our architecture), it carries no information that is
 not already captured by the cosine similarity and the symmetric products.
 
+The account above is an inference from gradient norms and from the ranking of
+two architectures that differ in several respects at once. The next section
+tests it directly.
+
+% ---------------------------------------------------------------------------
+\section{Formulation 10: a readout ablation}
+\label{sec:readout}
+
+The nine formulations of Section~\ref{sec:formulations} share a property
+that the preceding analysis suggests is decisive: each compresses the quantum
+state to one number before the decision is made. Distinguishing
+\emph{the circuit carries no information} from \emph{the readout discards it}
+requires an experiment in which the circuit is held fixed and only the readout
+varies.
+
+\subsection{Architecture}
+
+Formulation~10 is a variational quantum classifier on a joint register.
+Both people are encoded into one $2n$-qubit state of dimension $2^{2n}$,
+rather than encoded separately and compared, so that $U(\bm{\theta})$ can
+express correlations \emph{between} the two people. Each of $L$ layers applies
+$R_y(\theta) R_z(\theta)$ to every qubit followed by a CNOT ring over all $2n$
+qubits; the ring includes the bonds $n-1 \to n$ and $2n-1 \to 0$, which cross
+between the two halves. Without those bonds the circuit factorises and reduces
+to the separately-encoded case already tested.
+
+Amplitude encoding carries $2^n$ numbers into $n$ qubits. This matters: angle
+encoding, which carries $n$ numbers into $n$ qubits, forces the $512$-d
+embedding through a four-number bottleneck before $U(\bm{\theta})$ sees
+anything, and holds the model at chance ($0.502$ ROC-AUC on FIW). The
+comparison below would be uninformative under an encoding that starves the
+circuit of input.
+
+Two readouts are evaluated, differing in width alone:
+
+\begin{itemize}
+\item \textbf{Fidelity.} $|\braket{\psi_{\text{ref}}}{U(\bm{\theta})\psi}|^2$
+against the all-zeros reference --- one scalar, matching the nine.
+\item \textbf{Expectation.} Pauli-$Z$ expectation per qubit --- a $2n$-vector.
+\end{itemize}
+
+Everything else is identical: the same encoder, the same $U(\bm{\theta})$, the
+same folds, the same optimiser and schedule. The control is a classical head
+with the same $512 \to 2^n$ projection and at least as many trainable
+parameters as $U(\bm{\theta})$ ($131$ against $96$).
+
+\subsection{Result}
+
+\begin{table}[t]
+\centering
+\caption{Formulation~10 under two readouts, against a capacity-matched
+classical control. Grouped 5-fold, family-disjoint, identical folds across
+arms. $n=6$, $L=4$; $96$ quantum parameters against $131$ control parameters.}
+\label{tab:readout}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Expectation & Fidelity & Control & Exp.\ $-$ Ctrl. \
+\midrule
+FIW          & $0.6336$ & $0.5137$ & $0.5465$ & $+0.087$ \
+KinFaceW-I   & $0.7049$ & $0.5391$ & $0.5350$ & $+0.170$ \
+KinFaceW-II  & $0.6161$ & $0.5197$ & $0.5332$ & $+0.083$ \
+TSKinFace    & $0.7373$ & $0.5441$ & $0.5507$ & $+0.187$ \
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pooled over $20$ paired folds (Table~\ref{tab:readout}), the expectation
+readout exceeds its control by $+0.1316$ ROC-AUC
+(95\% CI $[+0.0986, +0.1646]$, $t = 7.82$, $p = 2.4 \times 10^{-7}$).
+The fidelity readout does not
+($-0.0122$, 95\% CI $[-0.0330, +0.0086]$, $p = 0.26$).
+
+The confidence interval for the expectation arm excludes zero; the interval
+for the fidelity arm contains it. Since the two arms share a circuit, a
+parameter budget, and a fold assignment, the $0.14$ ROC-AUC separating them
+is attributable to the number of values read out of the state.
+
+\subsection{Validation}
+
+A single configuration reporting a large effect is the pattern that
+Section~\ref{sec:cautionary} warns against, so we subject this result to the
+same controls.
+
+\emph{Shuffled labels.} Permuting training labels while leaving validation and
+test intact drives the expectation arm from $0.7049$ to $0.5034$ on
+KinFaceW-I, a fall of $0.20$; its controls fall by $0.02$. A model exploiting
+leakage or a fold artefact retains its score under this ablation. This one
+does not.
+
+\emph{Seeds.} Across four seeds the margin is
+$+0.1698$, $+0.1759$, $+0.1629$, $+0.1802$
+(mean $+0.1722$, s.d.\ $0.0075$), each significant independently.
+
+\emph{Architecture.} Across five configurations spanning register dimensions
+$256$ to $16{,}384$ and $48$ to $112$ quantum parameters, every configuration
+is positive (mean $+0.1547$, s.d.\ $0.0162$). Notably $n=6, L=2$ matches
+$n=6, L=4$ at half the depth and half the parameters, so the effect does not
+track circuit capacity. The fidelity arm is null in all fourteen runs.
+
+\subsection{What this does and does not establish}
+
+It establishes that a quantum layer can beat a capacity-matched classical
+control on this task, and that the nine preceding negative results are
+confounded with readout width. It does not establish quantum advantage.
+Formulation~10 reaches $0.674$ mean ROC-AUC, below the $0.8497$ of the
+classical pipeline of Section~\ref{sec:baseline}, at $73.5\times$ the
+inference cost and $55\times$ the training cost --- simulation being strictly
+more expensive than the classical path it replaces. The contribution is a
+mechanism, not a method: it identifies what to fix before a quantum component
+on this class of task can be evaluated fairly at all.
+
 % ---------------------------------------------------------------------------
 \section{An efficiency contribution}
 \label{sec:efficiency}
@@ -1081,13 +1218,32 @@ computational cost of simulation grows exponentially.
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have evaluated nine quantum-inspired formulations for facial kinship
+We have evaluated ten quantum-inspired formulations for facial kinship
 verification, each against a capacity-matched classical control under a
-leakage-free grouped $k$-fold protocol. None improves on its control; four
-are significantly worse. The failures are structural: interference-based
+leakage-free grouped $k$-fold protocol. Nine do not improve on their controls;
+four are significantly worse. Their failures are structural: interference-based
 methods collapse because $\ell_2$-normalised face embeddings carry no phase
 structure, and density-matrix methods fail because the number of images per
 identity is far too small to estimate a high-dimensional operator.
+
+The ten formulations do not, however, form a uniform negative result. All nine
+that fail read their decision out of the quantum state as a single scalar. The
+tenth, evaluated under two readouts differing in nothing else, is
+indistinguishable from its control when read as a scalar ($-0.012$, $p = 0.26$)
+and exceeds it by $+0.132$ ROC-AUC when read as a per-qubit expectation vector
+($p = 2.4 \times 10^{-7}$, robust across four seeds, five circuit
+configurations, and a shuffled-label ablation). The binding constraint on this
+task is therefore the readout, not the quantum component --- a distinction that
+a study reporting only scalar-readout formulations would have missed, and one
+that applies to any evaluation compressing a quantum state to a single number
+before the decision.
+
+We stress what this does not show. Formulation~10 remains below the classical
+pipeline it is compared against ($0.674$ against $0.8497$ mean ROC-AUC) at
+$73.5\times$ the inference cost, and classical simulation of a circuit is
+strictly more expensive than the classical path it replaces. The result is a
+correction to how such components are evaluated, not a demonstration of
+quantum advantage.
 
 Independently, we contribute a $380\times$ GPU speedup for the simulated
 SWAP test, which may be useful in other quantum-simulation contexts. We
