@@ -34,7 +34,10 @@ from src.multi_dataset import _kfw_family
 from src.splits import family_of
 from src.ts_pairs import build_tskinface_pairs, family_of_ts
 
-CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
+CACHES = {
+    "facenet": os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl"),
+    "arcface": os.path.join(project_root, "weights", "caches", "arcface_cache.pkl"),
+}
 ARMS = ("amp-expectation", "amp-fidelity", "control",
         "ctl-width-linear", "ctl-width-mlp", "ctl-width-random")
 
@@ -171,6 +174,9 @@ def main():
     ap.add_argument("--cap-per-family", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--datasets", nargs="+", default=None)
+    ap.add_argument("--backbone", choices=sorted(CACHES), default="facenet",
+                    help="embedding backbone; replicating the readout ablation "
+                         "across backbones tests whether it is FaceNet-specific")
     ap.add_argument("--shuffle-labels", action="store_true",
                     help="permute training labels; every arm should fall to ~0.50")
     ap.add_argument("--tag", default="amplitude_vqc")
@@ -184,8 +190,10 @@ def main():
     print("  U(theta) %d params, control head %d params  (device %s)"
           % (vq.quantum_parameter_count(), ct.head_parameter_count(), dev))
 
+    cache_path = CACHES[args.backbone]
+    print("  backbone %s  (%s)" % (args.backbone, os.path.basename(cache_path)))
     cache = {os.path.normcase(os.path.abspath(k)): val
-             for k, val in pickle.load(open(CACHE, "rb")).items()}
+             for k, val in pickle.load(open(cache_path, "rb")).items()}
 
     def cov(ps):
         return [p for p in ps

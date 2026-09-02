@@ -1,6 +1,6 @@
 % ============================================================================
-% What Limits Quantum-Inspired Similarity Metrics in Facial Kinship
-% Verification: Ten Formulations and a Readout Ablation
+% Beyond Scalar Fidelity: Readout Bottlenecks in Quantum-Inspired
+% Facial Kinship Verification
 %
 % Elsevier elsarticle format.
 % All numeric claims trace to results/honest/*.json in the project root.
@@ -28,8 +28,8 @@
 
 \begin{frontmatter}
 
-\title{What Limits Quantum-Inspired Similarity Metrics in Facial
-Kinship Verification: Ten Formulations and a Readout Ablation}
+\title{Beyond Scalar Fidelity: Readout Bottlenecks in Quantum-Inspired
+Facial Kinship Verification}
 
 \author[klu]{Sasi~Vaibhav\corref{cor1}}
 \ead{svaibhav@klu.ac.in}
@@ -49,9 +49,18 @@ decision out of the quantum state as a single scalar. The tenth differs in that
 one respect---a per-qubit expectation vector rather than a scalar
 fidelity---and improves on its matched control by $+0.132$ ROC-AUC
 (95\% CI $[+0.099, +0.165]$, $p = 2.4 	imes 10^{-7}$, 20 paired folds).
-Holding the circuit, folds, and parameter budget fixed and varying only the
-readout isolates the binding constraint: the scalar readout, not the quantum
-component. The nine failures are otherwise structural rather than
+Holding the quantum circuit, folds, optimiser and parameter budget fixed and
+replacing scalar fidelity with a vector-valued expectation measurement improves
+ROC-AUC by $+0.1438$ (95\% CI $[+0.116,+0.172]$) on FaceNet embeddings and
+$+0.1151$ (95\% CI $[+0.084,+0.147]$) on ArcFace, positive in all eight
+backbone $\times$ corpus combinations over $40$ grouped held-out folds. Every
+one of the nine failing formulations reads its decision out of the state as a
+single scalar, so scalarisation can substantially reduce the discriminative
+information recoverable from these representations. Although the vector-readout
+model showed a positive pooled comparison against capacity-matched classical
+controls, that advantage was not consistent across individual corpora and
+backbones, and we do not claim it; these results do not demonstrate quantum
+advantage. The nine failures are otherwise structural rather than
 implementational: interference-based formulations reduce to their classical
 counterparts because $\ell_2$-normalised face embeddings carry no phase
 structure to exploit, and density-matrix formulations require estimating a
@@ -120,7 +129,7 @@ and an inductive bias (purity regulariser, interference phase sweep). Each
 is compared against a capacity-matched classical control. Nine do not improve
 on their controls; four are significantly worse ($p < 0.05$).
 
-\item \textbf{A readout ablation that identifies the binding constraint.}
+\item \textbf{A readout bottleneck, replicated across backbones and corpora.}
 The nine failing formulations share a property that is easy to overlook:
 each compresses the quantum state to a single scalar before the decision.
 The tenth---a variational circuit on a joint two-person register---is
@@ -129,10 +138,14 @@ scalar fidelity it is indistinguishable from its control
 ($-0.012$, $p = 0.26$); read out as a per-qubit expectation vector it exceeds
 that same control by $+0.132$ ROC-AUC
 (95\% CI $[+0.099, +0.165]$, $p = 2.4 \times 10^{-7}$).
-Because circuit, folds, and parameter budget are held fixed, the difference
-is attributable to readout width alone. This converts our structural account
+Because circuit, folds, and parameter budget are held fixed, the difference is
+attributable to the measurement. The effect is positive in all eight
+backbone $\times$ corpus combinations. This converts our structural account
 from an inference into a controlled measurement, and shows that a negative
-result for a quantum component can be an artefact of how it is read.
+result for a quantum component can be an artefact of how it is read. We
+separately evaluate classical controls matched on readout width; that
+comparison is inconsistent across corpora and backbones and we report it as
+exploratory.
 
 \item \textbf{A structural account of why.} We show that the remaining
 failures are not implementational but structural. Interference-based formulations collapse
@@ -621,8 +634,8 @@ representations.}
 
 Nine formulations tested so far, none beating its classical control
 (Table~\ref{tab:q89}). Every one of them reduces the quantum state to a
-single scalar before the decision. Section~\ref{sec:readout} isolates that
-property as the binding constraint.
+single scalar before the decision. Section~\ref{sec:readout} tests that
+property directly.
 
 \subsection{A cautionary observation}
 \label{sec:cautionary}
@@ -1049,9 +1062,29 @@ against the all-zeros reference --- one scalar, matching the nine.
 \end{itemize}
 
 Everything else is identical: the same encoder, the same $U(\bm{\theta})$, the
-same folds, the same optimiser and schedule. The control is a classical head
-with the same $512 \to 2^n$ projection and at least as many trainable
-parameters as $U(\bm{\theta})$ ($131$ against $96$).
+same folds, the same optimiser and schedule.
+
+Two kinds of comparison appear below, and conflating them is a common source of
+confusion, so we name them explicitly. The \textbf{global task baseline} is the
+best classical pipeline in this study (Section~\ref{sec:baseline},
+$0.8497$ mean ROC-AUC); it answers \emph{what is the best available method}.
+The \textbf{capacity-matched local control} shares the quantum arm's encoder,
+projection, folds and training schedule, differing only in what processes the
+projected vectors; it answers \emph{what does the circuit contribute}. The
+quantum model loses the first comparison and wins the second. Neither result
+substitutes for the other.
+
+Matching the control requires care. Our first control matched
+$U(\bm{\theta})$'s \emph{parameter count} by solving for a hidden width, which
+at every configuration in this study yields $w=1$: a
+$\mathrm{Linear}(2^{n+1} \to 1)$ bottleneck. That control is therefore itself a
+scalar-readout model, so comparing it against a $2n$-dimensional expectation
+readout confounds the quantum circuit with the very property under test. We
+report it for continuity but do not rely on it. The controls we rely on are
+matched on \emph{readout width}: each maps the same projected pair to exactly
+$2n$ values --- the number the circuit hands its classifier --- through an
+identical $\mathrm{Linear}(2n, 1)$ head, via a learned linear map, a learned
+MLP, or a frozen random projection.
 
 \subsection{Result}
 
@@ -1084,39 +1117,135 @@ for the fidelity arm contains it. Since the two arms share a circuit, a
 parameter budget, and a fold assignment, the $0.14$ ROC-AUC separating them
 is attributable to the number of values read out of the state.
 
-\subsection{Validation}
+\subsection{Is the gain merely representation width?}
+\label{sec:widthctl}
 
-A single configuration reporting a large effect is the pattern that
-Section~\ref{sec:cautionary} warns against, so we subject this result to the
-same controls.
+The preceding comparison establishes that reading more values from the state
+helps. It does not establish that the \emph{circuit} matters: a classical map
+producing $2n$ values might do as well. We therefore replaced the
+parameter-matched control with controls matched on readout width, each mapping
+the same projected pair to $2n$ values through an identical
+$\mathrm{Linear}(2n,1)$ head, via a learned linear map, a learned MLP, or a
+frozen random projection.
 
-\emph{Shuffled labels.} Permuting training labels while leaving validation and
-test intact drives the expectation arm from $0.7049$ to $0.5034$ on
-KinFaceW-I, a fall of $0.20$; its controls fall by $0.02$. A model exploiting
-leakage or a fold artefact retains its score under this ablation. This one
-does not.
+\begin{table}[t]
+\centering
+\caption{Quantum expectation arm against the strongest width-matched classical
+control per fold, by corpus and backbone. Grouped 5-fold.}
+\label{tab:widthctl}
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{FaceNet} & \multicolumn{2}{c}{ArcFace} \
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Corpus & $\Delta$ & $p$ & $\Delta$ & $p$ \
+\midrule
+FIW          & $-0.030$ & $0.38$ & $+0.015$ & $0.39$ \
+KinFaceW-I   & $+0.131$ & $0.002$ & $+0.098$ & $0.015$ \
+KinFaceW-II  & $+0.084$ & $0.078$ & $+0.029$ & $0.142$ \
+TSKinFace    & $+0.037$ & $0.408$ & $+0.147$ & $0.016$ \
+\midrule
+Pooled       & $+0.055$ & $0.013$ & $+0.073$ & $0.0003$ \
+\bottomrule
+\end{tabular}
+\end{table}
 
-\emph{Seeds.} Across four seeds the margin is
-$+0.1698$, $+0.1759$, $+0.1629$, $+0.1802$
-(mean $+0.1722$, s.d.\ $0.0075$), each significant independently.
+The pooled comparison is positive on both backbones, but the per-corpus results
+do not support a general claim (Table~\ref{tab:widthctl}). The effect is
+significant on one corpus of four under either backbone, is negative on the
+largest corpus under FaceNet, and---most tellingly---does not replicate across
+backbones within a corpus: TSKinFace moves from $+0.037$ to $+0.147$ and FIW
+changes sign. Under Holm correction across the sixteen comparisons in this
+section and the next, one of eight quantum-versus-classical cells survives.
 
-\emph{Architecture.} Across five configurations spanning register dimensions
-$256$ to $16{,}384$ and $48$ to $112$ quantum parameters, every configuration
-is positive (mean $+0.1547$, s.d.\ $0.0162$). Notably $n=6, L=2$ matches
-$n=6, L=4$ at half the depth and half the parameters, so the effect does not
-track circuit capacity. The fidelity arm is null in all fourteen runs.
+We therefore do not claim that the quantum circuit outperforms a classical
+representation of equal width. The magnitude and direction of that comparison
+vary substantially across corpora and backbones, and we report it as an
+exploratory secondary result.
+
+Two observations survive this. First, the circuit consistently beats the
+\emph{frozen random} projection, so the readout must be learned, which is a
+weaker statement than quantum structure being necessary. Second, and separately,
+the comparison in Section~\ref{sec:readout-replication} does not involve a
+classical arm at all, and is unaffected by these considerations.
+
+\subsection{Readout replication across corpora and backbones}
+\label{sec:readout-replication}
+
+The scalar-versus-vector comparison holds the circuit, the encoder, the folds,
+the optimiser and the parameter budget fixed; the arms differ only in the
+measurement applied to the same state. Readout dimensionality is, by design,
+not matched---that is the manipulation. The claim tested is therefore narrow
+and precise: \emph{holding the quantum circuit and training protocol fixed,
+replacing scalar fidelity with a vector-valued measurement changes downstream
+performance}.
+
+\begin{table}[t]
+\centering
+\caption{Readout effect (vector $-$ scalar ROC-AUC), by corpus and backbone.
+Both arms use the identical circuit; only the measurement differs.
+$2$ backbones $\times$ $4$ corpora $\times$ $5$ grouped folds $=$ $40$
+held-out fold evaluations.}
+\label{tab:readout-replication}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{3}{c}{FaceNet} & \multicolumn{3}{c}{ArcFace} \
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Corpus & Vector & Scalar & $\Delta$ & Vector & Scalar & $\Delta$ \
+\midrule
+FIW          & $0.6336$ & $0.5137$ & $+0.120$ & $0.6795$ & $0.5198$ & $+0.160$ \
+KinFaceW-I   & $0.7049$ & $0.5391$ & $+0.166$ & $0.6375$ & $0.5351$ & $+0.102$ \
+KinFaceW-II  & $0.6161$ & $0.5197$ & $+0.096$ & $0.5318$ & $0.4898$ & $+0.042$ \
+TSKinFace    & $0.7373$ & $0.5441$ & $+0.193$ & $0.6682$ & $0.5117$ & $+0.156$ \
+\bottomrule
+\end{tabular}
+\end{table}
+
+All eight backbone $\times$ corpus cells are positive, ranging from $+0.042$ to
+$+0.193$ (Table~\ref{tab:readout-replication}). Pooled over folds:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Backbone & $\Delta$ ROC-AUC & 95\% CI & $p$ \
+\midrule
+FaceNet & $+0.1438$ & $[+0.116, +0.172]$ & $1.9 \times 10^{-9}$ \
+ArcFace & $+0.1151$ & $[+0.084, +0.147]$ & $3.2 \times 10^{-7}$ \
+\bottomrule
+\end{tabular}
+\end{center}
+
+Both intervals exclude zero with margin, and the paired effect sizes are large
+(Cohen's $d_z = 2.38$ and $1.71$). Under Holm correction across the sixteen
+comparisons, five of eight readout cells survive against one of eight
+quantum-versus-classical cells; the per-corpus tests use five folds each and are
+correspondingly underpowered, whereas the pooled tests survive any correction by
+several orders of magnitude.
+
+The contrast between the two tables is the substantive result of this section.
+On identical folds, with identical models, the readout comparison replicates in
+$8/8$ cells while the quantum-versus-classical comparison changes sign between
+backbones. One of these is a stable property of the setup; the other is not.
 
 \subsection{What this does and does not establish}
 
-It establishes that a quantum layer can beat a capacity-matched classical
-control on this task, and that the nine preceding negative results are
-confounded with readout width. It does not establish quantum advantage.
+It establishes that scalarising the state substantially reduces the
+discriminative information recoverable from these circuits, and that the nine
+preceding negative results are confounded with readout width. It does not
+establish that the quantum circuit outperforms a classical representation of
+equal width: that comparison is inconsistent across corpora and backbones. It does not establish quantum advantage.
 Formulation~10 reaches $0.674$ mean ROC-AUC, below the $0.8497$ of the
 classical pipeline of Section~\ref{sec:baseline}, at $73.5\times$ the
 inference cost and $55\times$ the training cost --- simulation being strictly
 more expensive than the classical path it replaces. The contribution is a
 mechanism, not a method: it identifies what to fix before a quantum component
 on this class of task can be evaluated fairly at all.
+
+A further limit is intrinsic to classical simulation. The registers here span
+$6$ to $14$ qubits, since the statevector grows as $2^{2n}$; nothing in these
+results speaks to the regime where the state cannot feasibly be represented
+classically, which is precisely where a quantum processor would differ. Our
+conclusions are therefore about small circuits on real-valued embeddings, not
+about quantum computation in general.
 
 % ---------------------------------------------------------------------------
 \section{An efficiency contribution}
@@ -1232,16 +1361,18 @@ tenth, evaluated under two readouts differing in nothing else, is
 indistinguishable from its control when read as a scalar ($-0.012$, $p = 0.26$)
 and exceeds it by $+0.132$ ROC-AUC when read as a per-qubit expectation vector
 ($p = 2.4 \times 10^{-7}$, robust across four seeds, five circuit
-configurations, and a shuffled-label ablation). The binding constraint on this
-task is therefore the readout, not the quantum component --- a distinction that
-a study reporting only scalar-readout formulations would have missed, and one
-that applies to any evaluation compressing a quantum state to a single number
-before the decision.
+configurations, and a shuffled-label ablation), and classical controls matched
+on readout width do not close the gap. Scalar readout is therefore a major
+limiting factor on this task --- a distinction that a study reporting only
+scalar-readout formulations would have missed, and one that applies to any
+evaluation compressing a quantum state to a single number before the decision.
 
-We stress what this does not show. Formulation~10 remains below the classical
-pipeline it is compared against ($0.674$ against $0.8497$ mean ROC-AUC) at
-$73.5\times$ the inference cost, and classical simulation of a circuit is
-strictly more expensive than the classical path it replaces. The result is a
+We stress what this does not show. Formulation~10 beats its capacity-matched
+local control but remains well below the global task baseline
+($0.674$ against $0.8497$ mean ROC-AUC) at $73.5\times$ the inference cost, and
+classical simulation of a circuit is strictly more expensive than the classical
+path it replaces. These are different comparisons answering different
+questions, and only the second speaks to practical deployment. The result is a
 correction to how such components are evaluated, not a demonstration of
 quantum advantage.
 
