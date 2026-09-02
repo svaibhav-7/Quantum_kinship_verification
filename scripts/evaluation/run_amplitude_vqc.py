@@ -28,13 +28,15 @@ from sklearn.metrics import roc_auc_score
 from src.calibration import calibrate_threshold, operating_point
 from src.data_loaders import load_fiw_pairs, load_kinfacew_pairs, prepare_pair_tensors
 from src.kfold import balance_group_sizes, grouped_kfold
-from src.models_vqc import AmplitudeControl, AmplitudeVQCClassifier
+from src.models_vqc import (AmplitudeControl, AmplitudeVQCClassifier,
+                            WidthMatchedControl)
 from src.multi_dataset import _kfw_family
 from src.splits import family_of
 from src.ts_pairs import build_tskinface_pairs, family_of_ts
 
 CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
-ARMS = ("amp-expectation", "amp-fidelity", "control")
+ARMS = ("amp-expectation", "amp-fidelity", "control",
+        "ctl-width-linear", "ctl-width-mlp", "ctl-width-random")
 
 
 def keyfn_for(name):
@@ -89,6 +91,12 @@ def train_eval(arm, fit, va, te, cache, args, seed, dev):
     if arm == "control":
         model = AmplitudeControl(n_qubits_each=args.qubits, depth=args.depth,
                                  dropout=args.dropout).to(dev)
+    elif arm.startswith("ctl-width-"):
+        # Matched on readout width, not just parameter count: reads out the
+        # same 2n values the circuit hands its classifier.
+        model = WidthMatchedControl(
+            n_qubits_each=args.qubits, depth=args.depth, dropout=args.dropout,
+            mode=arm.rsplit("-", 1)[1]).to(dev)
     else:
         model = AmplitudeVQCClassifier(
             n_qubits_each=args.qubits, depth=args.depth, dropout=args.dropout,

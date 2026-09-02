@@ -248,3 +248,72 @@ class AmplitudeControl(nn.Module):
     def predict(self, emb1, emb2, rels):
         return 0.5 * (self.forward(emb1, emb2, rels)
                       + self.forward(emb2, emb1, rels))
+
+
+class WidthMatchedControl(nn.Module):
+    """Classical control matched on READOUT WIDTH, not just parameter count.
+
+    `AmplitudeControl` matches U(theta)'s parameter count by solving for a
+    hidden width, which at every configuration used in this project collapses
+    to w=1 -- so it is itself a scalar-readout model. Comparing it against the
+    2n-dimensional expectation readout confounds "quantum" with "not
+    compressed to a scalar", which is the whole hypothesis under test.
+
+    This control reads out exactly `2 * n_qubits_each` values from the same
+    512 -> 2**n projection, matching what the circuit hands its classifier, and
+    feeds them to an identical Linear(2n, 1). `mode` selects what produces
+    those values:
+
+      "linear" : a learned linear map              (equal-width projection)
+      "mlp"    : a learned nonlinear map           (equal-width MLP)
+      "random" : a fixed random projection         (no learning in the readout)
+
+    Together with the quantum arm these separate three explanations of the
+    observed margin: quantum structure, readout width, or learned nonlinearity.
+    """
+
+    def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3,
+                 mode="linear", hidden=64):
+        super().__init__()
+        if mode not in ("linear", "mlp", "random"):
+            raise ValueError(f"unknown mode {mode!r}")
+        self.mode = mode
+        self.n_each = n_qubits_each
+        self.dim = 2 ** n_qubits_each
+        self.width = 2 * n_qubits_each          # == the circuit's readout width
+        self.proj = nn.Linear(embed_dim, self.dim)
+        self.drop = nn.Dropout(dropout)
+
+        n_in = 2 * self.dim
+        if mode == "linear":
+            self.readout = nn.Linear(n_in, self.width)
+        elif mode == "mlp":
+            self.readout = nn.Sequential(
+                nn.Linear(n_in, hidden), nn.GELU(), nn.Linear(hidden, self.width))
+        else:
+            self.readout = nn.Linear(n_in, self.width)
+            for p in self.readout.parameters():
+                p.requires_grad_(False)
+        self.head = nn.Linear(self.width, 1)     # identical to the VQC's head
+
+    def head_parameter_count(self):
+        return sum(p.numel() for p in self.head.parameters()) + sum(
+            p.numel() for p in self.readout.parameters() if p.requires_grad)
+
+    def _features(self, emb1, emb2):
+        a = self.drop(self.proj(emb1))
+        b = self.drop(self.proj(emb2))
+        a = a / (torch.linalg.vector_norm(a, dim=1, keepdim=True) + 1e-12)
+        b = b / (torch.linalg.vector_norm(b, dim=1, keepdim=True) + 1e-12)
+        return torch.cat([a, b], dim=1)
+
+    def forward_logits(self, emb1, emb2, rels):
+        return self.head(torch.tanh(self.readout(self._features(emb1, emb2))))
+
+    def forward(self, emb1, emb2, rels):
+        return torch.sigmoid(self.forward_logits(emb1, emb2, rels))
+
+    @torch.no_grad()
+    def predict(self, emb1, emb2, rels):
+        return 0.5 * (self.forward(emb1, emb2, rels)
+                      + self.forward(emb2, emb1, rels))
