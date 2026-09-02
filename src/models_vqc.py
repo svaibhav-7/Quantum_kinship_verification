@@ -139,7 +139,7 @@ class AmplitudeVQCClassifier(nn.Module):
     """
 
     def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3,
-                 readout="expectation"):
+                 readout="expectation", n_observables=None):
         super().__init__()
         if readout not in ("fidelity", "expectation"):
             raise ValueError(f"unknown readout {readout!r}")
@@ -149,7 +149,21 @@ class AmplitudeVQCClassifier(nn.Module):
         self.proj = nn.Linear(embed_dim, self.dim)
         self.drop = nn.Dropout(dropout)
         self.vqc = JointRegisterVQC(n_qubits_each=n_qubits_each, depth=depth)
-        self.head = nn.Linear(1 if readout == "fidelity" else 2 * n_qubits_each, 1)
+
+        # `n_observables` retains only the first k per-qubit <Z> values, which
+        # sweeps readout width between the scalar and full-vector extremes on
+        # one unchanged circuit. Qubits are ordered person-1 then person-2, so
+        # small k reads only the first register -- the sweep therefore varies
+        # width and cross-register coverage together, and is descriptive of the
+        # width trend rather than an isolation of it.
+        full = 2 * n_qubits_each
+        if readout == "expectation" and n_observables is not None:
+            if not 1 <= n_observables <= full:
+                raise ValueError(f"n_observables must be in [1, {full}]")
+            self.n_observables = n_observables
+        else:
+            self.n_observables = full
+        self.head = nn.Linear(1 if readout == "fidelity" else self.n_observables, 1)
 
     def joint_state(self, emb1, emb2, rels):
         from .quantum_vqc import amplitude_encode
@@ -187,7 +201,7 @@ class AmplitudeVQCClassifier(nn.Module):
             left, right = 2 ** q, 2 ** (n - q - 1)
             p = probs.reshape(b, left, 2, right)
             outs.append(p[:, :, 0, :].sum(dim=(1, 2)) - p[:, :, 1, :].sum(dim=(1, 2)))
-        return torch.stack(outs, dim=1)
+        return torch.stack(outs, dim=1)[:, :self.n_observables]
 
     def forward_logits(self, emb1, emb2, rels):
         return self.head(self.measure(emb1, emb2, rels))

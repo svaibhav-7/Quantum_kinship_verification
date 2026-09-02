@@ -1037,6 +1037,14 @@ varies.
 
 \subsection{Architecture}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_architecture}
+\caption{Formulation~10. Both people are encoded into one joint register and processed by the same variational circuit; the arms differ only in the measurement applied to the resulting state (dashed box). Everything to its left is shared and held fixed across arms.}
+\label{fig:architecture}
+\end{figure}
+
+
 Formulation~10 is a variational quantum classifier on a joint register.
 Both people are encoded into one $2n$-qubit state of dimension $2^{2n}$,
 rather than encoded separately and compared, so that $U(\bm{\theta})$ can
@@ -1179,6 +1187,13 @@ and precise: \emph{holding the quantum circuit and training protocol fixed,
 replacing scalar fidelity with a vector-valued measurement changes downstream
 performance}.
 
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_readout}
+\caption{Readout effect by corpus and backbone. Scalar fidelity (blue) against the per-qubit expectation vector (orange) from the identical circuit. All eight backbone $\times$ corpus cells favour the vector readout. Dotted line marks chance.}
+\label{fig:readout}
+\end{figure}
 \begin{table}[t]
 \centering
 \caption{Readout effect (vector $-$ scalar ROC-AUC), by corpus and backbone.
@@ -1220,6 +1235,25 @@ comparisons, five of eight readout cells survive against one of eight
 quantum-versus-classical cells; the per-corpus tests use five folds each and are
 correspondingly underpowered, whereas the pooled tests survive any correction by
 several orders of magnitude.
+
+
+\begin{table}[t]
+\centering
+\caption{Multiplicity correction over the sixteen paired comparisons in this section (two comparison families $\times$ two backbones $\times$ four corpora). Per-corpus tests use five folds each and are correspondingly underpowered; the pooled tests survive any correction by several orders of magnitude.}
+\label{tab:multiplicity}
+\begin{tabular}{lrr}
+\toprule
+Comparison family & Cells surviving Holm & Surviving BH-FDR \\
+\midrule
+Readout (vector vs.\ scalar) & $5/8$ & $6/8$ \\
+Quantum vs.\ width-matched classical & $1/8$ & $2/8$ \\
+\midrule
+\multicolumn{3}{l}{\emph{Pooled (20 folds each):}} \\
+Readout, FaceNet & \multicolumn{2}{r}{$p = 1.9 \times 10^{-9}$} \\
+Readout, ArcFace & \multicolumn{2}{r}{$p = 3.2 \times 10^{-7}$} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 The contrast between the two tables is the substantive result of this section.
 On identical folds, with identical models, the readout comparison replicates in

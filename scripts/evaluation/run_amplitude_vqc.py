@@ -103,7 +103,8 @@ def train_eval(arm, fit, va, te, cache, args, seed, dev):
     else:
         model = AmplitudeVQCClassifier(
             n_qubits_each=args.qubits, depth=args.depth, dropout=args.dropout,
-            readout="fidelity" if arm.endswith("fidelity") else "expectation"
+            readout="fidelity" if arm.endswith("fidelity") else "expectation",
+            n_observables=args.n_observables,
         ).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-3)
     lossf = torch.nn.BCEWithLogitsLoss()
@@ -174,6 +175,9 @@ def main():
     ap.add_argument("--cap-per-family", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--datasets", nargs="+", default=None)
+    ap.add_argument("--n-observables", type=int, default=None,
+                    help="retain only the first k per-qubit <Z> values "
+                         "(readout-width sweep); default keeps all 2n")
     ap.add_argument("--backbone", choices=sorted(CACHES), default="facenet",
                     help="embedding backbone; replicating the readout ablation "
                          "across backbones tests whether it is FaceNet-specific")
