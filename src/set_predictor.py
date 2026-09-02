@@ -54,7 +54,8 @@ def _load(path):
 # Training
 # ---------------------------------------------------------------------------
 
-def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25):
+def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25,
+                    preprocessing="uncropped"):
     """Fit the set-level model.
 
     galleries: {identity: (n, d) array}
@@ -84,11 +85,13 @@ def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25):
     thr = calibrate_threshold(y, s, objective="accuracy", max_fpr=max_fpr)
 
     _save({"scaler": scaler, "clf": clf, "threshold": float(thr),
-           "feature_order": list(FEATURE_ORDER), "kind": "set"}, out_path)
+           "feature_order": list(FEATURE_ORDER), "kind": "set",
+           "preprocessing": preprocessing}, out_path)
     return out_path
 
 
-def train_triad_model(rows, out_path, seed=42, max_fpr=0.25):
+def train_triad_model(rows, out_path, seed=42, max_fpr=0.25,
+                      preprocessing="uncropped"):
     """Fit the triadic model. rows: [(F, M, C, label)] as embeddings."""
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
@@ -109,7 +112,8 @@ def train_triad_model(rows, out_path, seed=42, max_fpr=0.25):
     thr = calibrate_threshold(y, s, objective="accuracy", max_fpr=max_fpr)
 
     _save({"scaler": scaler, "clf": clf, "threshold": float(thr),
-           "feature_order": list(TRIAD_FEATURE_ORDER), "kind": "triad"}, out_path)
+           "feature_order": list(TRIAD_FEATURE_ORDER), "kind": "triad",
+           "preprocessing": preprocessing}, out_path)
     return out_path
 
 
@@ -128,6 +132,10 @@ class SetKinshipPredictor:
         self.clf = m["clf"]
         self.threshold = float(m["threshold"])
         self.metrics = m.get("metrics", {})
+        # How the fitting embeddings were produced. Serving embeddings made a
+        # different way flipped 30.2% of verdicts on 387 person-pairs, so the
+        # caller must match this rather than choose independently.
+        self.preprocessing = m.get("preprocessing", "uncropped")
 
     def predict_sets(self, A, B):
         A, B = _as_set(A, "A"), _as_set(B, "B")
@@ -174,6 +182,7 @@ class TriadPredictor:
         self.clf = m["clf"]
         self.threshold = float(m["threshold"])
         self.metrics = m.get("metrics", {})
+        self.preprocessing = m.get("preprocessing", "uncropped")
 
     def predict_triad(self, F, M, C):
         f = triad_features(np.asarray(F).ravel(),
