@@ -31,10 +31,15 @@
 \title{Beyond Scalar Fidelity: Readout Bottlenecks in Quantum-Inspired
 Facial Kinship Verification}
 
-\author[klu]{Sasi~Vaibhav\corref{cor1}}
+\author[1]{Sasi Vaibhav Sanka\corref{cor1}}
 \ead{svaibhav@klu.ac.in}
+\author[1]{Kesireddy Samith Reddy}
+\author[1]{Konala Varshith}
+\author[1]{Eelpanti Mythri}
+\author[1]{Madhu Oruganti}
 \cortext[cor1]{Corresponding author}
-\address[klu]{KL University, Vijayawada, Andhra Pradesh, India}
+
+\address[1]{Department of Artificial Intelligence and Data Science, Koneru Lakshmaiah Education Foundation, Hyderabad-500075, India}
 
 \begin{abstract}
 Quantum-inspired machine learning has been proposed for facial kinship
@@ -48,7 +53,7 @@ their controls; four are significantly worse. Every one of those nine reads its
 decision out of the quantum state as a single scalar. The tenth differs in that
 one respect---a per-qubit expectation vector rather than a scalar
 fidelity---and improves on its matched control by $+0.132$ ROC-AUC
-(95\% CI $[+0.099, +0.165]$, $p = 2.4 	imes 10^{-7}$, 20 paired folds).
+(95\% CI $[+0.099, +0.165]$, $p = 2.4 \times 10^{-7}$, 20 paired folds).
 Holding the quantum circuit, folds, optimiser and parameter budget fixed and
 replacing scalar fidelity with a vector-valued expectation measurement improves
 ROC-AUC by $+0.1438$ (95\% CI $[+0.116,+0.172]$) on FaceNet embeddings and
@@ -1203,14 +1208,14 @@ held-out fold evaluations.}
 \label{tab:readout-replication}
 \begin{tabular}{lrrrrrr}
 \toprule
-& \multicolumn{3}{c}{FaceNet} & \multicolumn{3}{c}{ArcFace} \
+& \multicolumn{3}{c}{FaceNet} & \multicolumn{3}{c}{ArcFace} \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Corpus & Vector & Scalar & $\Delta$ & Vector & Scalar & $\Delta$ \
+Corpus & Vector & Scalar & $\Delta$ & Vector & Scalar & $\Delta$ \\
 \midrule
-FIW          & $0.6336$ & $0.5137$ & $+0.120$ & $0.6795$ & $0.5198$ & $+0.160$ \
-KinFaceW-I   & $0.7049$ & $0.5391$ & $+0.166$ & $0.6375$ & $0.5351$ & $+0.102$ \
-KinFaceW-II  & $0.6161$ & $0.5197$ & $+0.096$ & $0.5318$ & $0.4898$ & $+0.042$ \
-TSKinFace    & $0.7373$ & $0.5441$ & $+0.193$ & $0.6682$ & $0.5117$ & $+0.156$ \
+FIW          & $0.6336$ & $0.5137$ & $+0.120$ & $0.6795$ & $0.5198$ & $+0.160$ \\
+KinFaceW-I   & $0.7049$ & $0.5391$ & $+0.166$ & $0.6375$ & $0.5351$ & $+0.102$ \\
+KinFaceW-II  & $0.6161$ & $0.5197$ & $+0.096$ & $0.5318$ & $0.4898$ & $+0.042$ \\
+TSKinFace    & $0.7373$ & $0.5441$ & $+0.193$ & $0.6682$ & $0.5117$ & $+0.156$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1221,10 +1226,10 @@ $+0.193$ (Table~\ref{tab:readout-replication}). Pooled over folds:
 \begin{center}
 \begin{tabular}{lrrr}
 \toprule
-Backbone & $\Delta$ ROC-AUC & 95\% CI & $p$ \
+Backbone & $\Delta$ ROC-AUC & 95\% CI & $p$ \\
 \midrule
-FaceNet & $+0.1438$ & $[+0.116, +0.172]$ & $1.9 \times 10^{-9}$ \
-ArcFace & $+0.1151$ & $[+0.084, +0.147]$ & $3.2 \times 10^{-7}$ \
+FaceNet & $+0.1438$ & $[+0.116, +0.172]$ & $1.9 \times 10^{-9}$ \\
+ArcFace & $+0.1151$ & $[+0.084, +0.147]$ & $3.2 \times 10^{-7}$ \\
 \bottomrule
 \end{tabular}
 \end{center}

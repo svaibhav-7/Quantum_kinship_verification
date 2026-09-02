@@ -112,6 +112,14 @@ tmp/
 *.log
 install*.log
 
+# --- local media / generated attachments --------------------------------------
+# A typoed folder name was being created as a personal asset dump; keep it out
+# of the repository even if it is later renamed locally.
+assests/
+assets/
+**/assests/
+**/assets/
+
 # --- OS and editors ----------------------------------------------------------
 .DS_Store
 Thumbs.db
