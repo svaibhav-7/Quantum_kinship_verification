@@ -322,6 +322,7 @@ guards the source against defects that reach a PDF silently.
 |---|---|
 | [paper/elsevier/quantum_negative.pdf](paper/elsevier/quantum_negative.pdf) | the readout bottleneck: ten formulations, and why nine of them failed |
 | [paper/ieee/main.pdf](paper/ieee/main.pdf) | person-level verification under leakage-free evaluation |
+| [paper/elsevier_person/main.pdf](paper/elsevier_person/main.pdf) | the same paper as `ieee/`, typeset for Elsevier (generated) |
 
 An earlier headline in this project -- that the quantum arm beat its
 capacity-matched control by +0.132 ROC-AUC -- did not survive scrutiny: the

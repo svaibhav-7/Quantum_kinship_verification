@@ -88,3 +88,43 @@ class TestManuscriptTypography(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestElsevierPersonEdition(unittest.TestCase):
+    """paper/elsevier_person is generated from paper/ieee.
+
+    The value of a second format is that it is the same paper. If the two
+    drift, one of them is wrong and a reader cannot tell which, so this
+    asserts that nothing but layout commands differs.
+    """
+
+    IEEE = os.path.join(ROOT, "paper", "ieee", "main.tex")
+    ELS = os.path.join(ROOT, "paper", "elsevier_person", "main.tex")
+    LAYOUT_ONLY = {"columnwidth", "linewidth", "resizebox"}
+
+    def _body_words(self, path):
+        s = _read(path)
+        s = s[s.index("section{Introduction"):]
+        s = re.sub(r"%.*", "", s)
+        return re.findall(r"[A-Za-z]{3,}", s)
+
+    def test_generated_edition_exists(self):
+        self.assertTrue(os.path.exists(self.ELS),
+                        "run scripts/convert_ieee_to_elsarticle.py")
+
+    def test_body_differs_only_in_layout_commands(self):
+        import difflib
+        a, b = self._body_words(self.IEEE), self._body_words(self.ELS)
+        sm = difflib.SequenceMatcher(None, a, b)
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == "equal":
+                continue
+            changed = set(a[i1:i2]) | set(b[j1:j2])
+            self.assertTrue(
+                changed <= self.LAYOUT_ONLY,
+                "content differs beyond layout: %s" % sorted(changed - self.LAYOUT_ONLY))
+
+    def test_numeric_claims_are_identical(self):
+        na = set(re.findall(r"\d+\.\d+", _read(self.IEEE)))
+        nb = set(re.findall(r"\d+\.\d+", _read(self.ELS)))
+        self.assertEqual(na, nb, "numeric claims diverge between editions")
