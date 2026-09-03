@@ -1,12 +1,17 @@
 % ============================================================================
-% Evaluation Protocol Flaws in Facial Kinship Verification
+% Person-Level Kinship Verification -- Elsevier (elsarticle) edition.
+%
+% GENERATED from paper/ieee/main.tex by
+% scripts/convert_ieee_to_elsarticle.py. Edit the IEEE source, not this
+% file: content is identical by construction and every numeric claim
+% still traces to results/honest/*.json.
 %
 % All numeric claims in this manuscript trace to results/honest/*.json and are
 % reproducible via scripts/evaluation/run_kfold.py. Do not add a figure or a
 % baseline row without a verifiable source.
 % ============================================================================
 
-\documentclass[journal,12pt]{IEEEtran}
+\documentclass[preprint,12pt]{elsarticle}
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
@@ -14,23 +19,28 @@
 \usepackage{booktabs}
 \usepackage[htt]{hyphenat}
 \usepackage{multirow}
-\usepackage{url}
 \usepackage[hidelinks]{hyperref}
+\journal{Pattern Recognition}
 
+\sloppy
 \begin{document}
+
+\begin{frontmatter}
 
 \title{Person-Level Kinship Verification: Leakage-Free Evaluation, Set-Based
 Aggregation, and a Negative Result for Quantum-Inspired Metrics}
 
-\author{Sasi~Vaibhav~Sanka,
-        Kesireddy~Samith~Reddy,
-        Konala~Varshith,
-        Eelpanti~Mythri,
-        and~Madhu~Oruganti%
-\thanks{The authors are with the Department of Artificial Intelligence and Data Science, Koneru Lakshmaiah Education Foundation, Hyderabad-500075, India (e-mail: svaibhav@klu.ac.in).}%
-\thanks{Code and data-processing scripts: \url{https://github.com/svaibhav-7/Quantum_kinship_verification}}}
+\author[1]{Sasi Vaibhav Sanka\corref{cor1}}
+\ead{svaibhav@klu.ac.in}
+\author[1]{Kesireddy Samith Reddy}
+\author[1]{Konala Varshith}
+\author[1]{Eelpanti Mythri}
+\author[1]{Madhu Oruganti}
+\cortext[cor1]{Corresponding author}
 
-\maketitle
+\address[1]{Department of Artificial Intelligence and Data Science, Koneru Lakshmaiah Education Foundation, Hyderabad-500075, India}
+
+
 
 \begin{abstract}
 Facial kinship verification is evaluated almost exclusively as a
@@ -69,10 +79,16 @@ together with the JSON artefacts underlying every figure and table, is
 released.
 \end{abstract}
 
-\begin{IEEEkeywords}
-Facial kinship verification, evaluation protocol, dataset bias, data leakage,
-quantum-inspired machine learning, negative results.
-\end{IEEEkeywords}
+\begin{keyword}
+Facial kinship verification \sep
+evaluation protocol \sep
+dataset bias \sep
+data leakage \sep
+quantum-inspired machine learning \sep
+negative results
+\end{keyword}
+
+\end{frontmatter}
 
 % ---------------------------------------------------------------------------
 \section{Introduction}
@@ -248,7 +264,7 @@ reports the measured violation on FIW.
 \caption{Identity leakage under a random $80/20$ pair-level split of FIW.}
 \label{tab:leak}
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lr@{}}
 \toprule
 Quantity & Value \\
@@ -320,7 +336,7 @@ membership predicts the label perfectly; no pair shares a source photograph in
 either construction.}
 \label{tab:ts}
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Construction & Same-fam.\ pos. & Same-fam.\ neg. & Cosine AUC \\
@@ -374,7 +390,7 @@ $559/559$ TSKinFace).
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_stability}
+\includegraphics[width=\linewidth]{fig_stability}
 \caption{Accuracy range under a single group-disjoint split across random
 seeds (grey) against grouped $k$-fold (blue, mean marked). A single split is
 too unstable to support a headline number: on FIW the seed-to-seed range spans
@@ -432,7 +448,7 @@ work and that the frozen backbone is not the binding constraint.
 \caption{Grouped 5-fold results. Every family tested exactly once.}
 \label{tab:main}
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Dataset & Accuracy (95\% CI) & ROC-AUC \\
@@ -450,7 +466,7 @@ TSKinFace (shortcut-free) & $79.25 \pm 2.32$ & $0.8814 \pm 0.0192$ \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_main_results}
+\includegraphics[width=\linewidth]{fig_main_results}
 \caption{Grouped 5-fold results, every family tested exactly once.
 (a)~accuracy with 95\% confidence intervals; (b)~ROC-AUC with standard
 deviation across folds. Dashed line marks the four-dataset mean.}
@@ -469,7 +485,7 @@ release our implementation to that end.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_relation}
+\includegraphics[width=\linewidth]{fig_relation}
 \caption{Per-relation ROC-AUC. Mother--son is the weakest relation on three of
 four datasets and, on FIW, the largest subset ($5{,}296$ pairs).}
 \label{fig:relation}
@@ -518,7 +534,7 @@ FIW & 7.30 & 0.7296 & \textbf{0.8066} & $\mathbf{+0.0771}$ \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_setlevel}
+\includegraphics[width=\linewidth]{fig_setlevel}
 \caption{Set-level representation. The gain appears only where photo sets
 exist ($n$ = mean images per identity). The three single-photograph corpora
 are bit-identical to the single-image baseline, which is the degradation
@@ -570,7 +586,7 @@ Triadic $+$ phase sweep & $69.50 \pm 2.41$ & $0.7887$ \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_triadic}
+\includegraphics[width=\linewidth]{fig_triadic}
 \caption{Triadic scoring on TSKinFace. (a)~ROC-AUC by arm; (b)~per fold, with
 the triadic arm ahead in all five.}
 \label{fig:triadic}
@@ -594,7 +610,7 @@ supplied, and how the score distributions differ across corpora.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_relation_gap}
+\includegraphics[width=\linewidth]{fig_relation_gap}
 \caption{Per-relation difficulty before and after training. Raw FaceNet
 embeddings separate the four relations within $0.078$ ROC-AUC; the trained
 model spans $0.281$. The disparity is therefore largely induced during training
@@ -609,6 +625,7 @@ corpus. Mother--son is weakest on three of four corpora while being the largest
 FIW subset ($5{,}296$ pairs).}
 \label{tab:relation}
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
 Relation & Raw embedding & KinFaceW-I & KinFaceW-II & FIW & TSKinFace & Mean \\
@@ -618,7 +635,7 @@ Father--son & 0.7841 & 0.8935 & 0.8875 & 0.9754 & 0.9124 & 0.9172 \\
 Mother--daughter & 0.7295 & 0.8400 & 0.8598 & 0.9668 & 0.9227 & 0.8973 \\
 Mother--son & 0.7065 & 0.9750 & 0.7795 & 0.7124 & 0.8483 & 0.8288 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
 
 Table~\ref{tab:relation} reports per-relation performance measured on a
@@ -689,7 +706,7 @@ treated as provisional until it is shown to survive resampling.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_setsize}
+\includegraphics[width=\linewidth]{fig_setsize}
 \caption{Set-level ROC-AUC on FIW against the number of photographs aggregated
 per person. Most of the available gain is realised by the fifth photograph.
 Computed on frozen embeddings with no training, so it measures the
@@ -746,7 +763,7 @@ flat beyond five photographs while cost continues to grow, which makes five a
 natural operating point.}
 \label{tab:opcost}
 \small
-\resizebox{\columnwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{cccccc}
 \toprule
 Photos & ROC-AUC & Gain & ms/pair & pairs/s & Slowdown \\
@@ -803,7 +820,7 @@ ROC-AUC measures.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_roc_curves}
+\includegraphics[width=\linewidth]{fig_roc_curves}
 \caption{ROC curves on the held-out fold of each corpus, with grouped $k$-fold
 mean ROC-AUC in parentheses.}
 \label{fig:roc}
@@ -920,7 +937,7 @@ intent (Table~\ref{tab:quantum}).
 \caption{Quantum-inspired formulations against matched classical controls.}
 \label{tab:quantum}
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llc@{}}
 \toprule
 Formulation & Control & Outcome \\
@@ -943,7 +960,7 @@ $p = 0.158$; ROC-AUC $p = 0.982$). The branch also costs $6$--$14\times$ runtime
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_quantum}
+\includegraphics[width=\linewidth]{fig_quantum}
 \caption{Nine quantum-inspired formulations against classical controls matched
 for capacity or intent. None improves on its control; four are significantly
 worse. Bars are $\Delta$ROC-AUC in percentage points.}
