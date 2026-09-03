@@ -164,21 +164,29 @@ Quantum_kinship/
 │   ├── calibration.py            # FPR-constrained threshold calibration
 │   ├── predictor.py              # Deployment inference, per-domain thresholds
 │   ├── quantum_core.py           # Reference simulator (validates quantum_fast)
+│   ├── quantum_vqc.py            # Joint-register VQC; both readouts
+│   ├── models_vqc.py             # VQC classifiers and their matched controls
+│   ├── identity_sets.py          # Person-level (photo-set) representation
+│   ├── triads.py                 # Father-mother-child triadic scoring
 │   ├── models_improved.py        # FaceFeatureExtractor (FaceNet wrapper)
 │   └── data_loaders.py           # Dataset parsers
 ├── scripts/
 │   ├── deploy/build_all_caches.py    # Extract FaceNet embeddings (GPU)
 │   ├── training/train_multi.py       # Train on all 4 datasets pooled
 │   ├── evaluation/run_kfold.py       # Grouped 5-fold evaluation
+│   ├── evaluation/run_amplitude_vqc.py  # Readout ablation and its controls
+│   ├── evaluation/make_figures*.py   # All paper figures, from artefacts
 │   ├── deploy/package_multi.py       # Package model + per-domain thresholds
 │   └── inference/predict.py          # CLI: single pair or CSV batch
-├── tests/                        # 61 tests
+├── paper/                        # Two manuscripts; see paper/README.md
+├── tests/                        # 197 tests
 ├── results/honest/               # Measured metrics (kfold.json is definitive)
 ├── weights/
 │   ├── deploy/kinship_model.pt   # Deployment artifact
 │   └── caches/                   # Precomputed embeddings
 ├── legacy/                       # Superseded work -- see legacy/README.md
 ├── RESULTS_HONEST.md             # Full methodology and results
+├── ENVIRONMENT.md                # Exact versions, hashes, seeds, commands
 └── README.md
 ```
 
@@ -269,7 +277,7 @@ python scripts/evaluation/run_kfold.py        # grouped 5-fold -> results/honest
 python scripts/evaluation/run_kfold.py --no-quantum --tag kfold_noq   # ablation
 python scripts/training/train_multi.py --tag multi_cap8000 --cap-per-dataset 8000
 python scripts/deploy/package_multi.py        # package with per-domain thresholds
-pytest tests/ -q                              # 61 tests
+pytest tests/ -q                              # 197 tests
 ```
 
 ---

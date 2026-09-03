@@ -77,13 +77,17 @@ for s in 101 202 303; do
   python scripts/evaluation/run_amplitude_vqc.py --datasets KinFaceW-I --seed $s --tag amp_seed$s
 done
 
-# readout-width sweep and family-cap sensitivity
-for k in 1 2 4 6 8 10 12; do
+# readout-width sweep (k=12 is the full-vector run in amp_readouts.json)
+for k in 1 2 4 6 8; do
   python scripts/evaluation/run_amplitude_vqc.py --datasets FIW --n-observables $k --tag amp_k$k
 done
-for c in 50 100 200 400 800; do
-  python scripts/evaluation/run_amplitude_vqc.py --datasets FIW --cap-per-family $c --tag amp_cap$c
-done
+
+# family-cap sensitivity -- NOT run; no amp_cap*.json exists. The reported
+# results all use the default --cap-per-family 200. This command is the one
+# to use if a reviewer asks whether conclusions depend on that choice.
+# for c in 50 100 400 800; do
+#   python scripts/evaluation/run_amplitude_vqc.py --datasets FIW --cap-per-family $c --tag amp_cap$c
+# done
 
 # figures
 python scripts/evaluation/make_figures.py

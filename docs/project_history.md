@@ -302,7 +302,7 @@ python scripts/evaluation/run_triadic.py              # triadic arms
 python scripts/evaluation/run_backbone_comparison.py  # cross-backbone replication
 python scripts/evaluation/make_figures.py             # core figures
 FIGDIR=ieee python scripts/evaluation/make_figures_extra.py
-pytest tests/ -q                                      # 138 tests
+pytest tests/ -q                                      # 197 tests
 ```
 
 Every numeric claim in this README and in both manuscripts derives from a JSON

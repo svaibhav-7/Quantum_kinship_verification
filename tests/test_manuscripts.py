@@ -74,7 +74,11 @@ class TestManuscriptTypography(unittest.TestCase):
                     log = c
                     break
             if log is None:
-                self.skipTest("%s not built" % name)
+                # The build log is a local artefact and is gitignored, so a
+                # clean checkout has none. Skipping is correct -- but note the
+                # guard only protects a tree where the papers have been built.
+                self.skipTest("%s not built; run pdflatex to enable this check"
+                              % name)
             n = _read(log).count("Overfull")
             self.assertLessEqual(
                 n, limit,
