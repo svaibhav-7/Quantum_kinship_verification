@@ -336,14 +336,6 @@ replicates 8/8.
 
 ## Citation
 
-```bibtex
-@software{quantum_kinship_2026,
-  title  = {Leakage-free evaluation for facial kinship verification},
-  author = {Vaibhav, Sasi},
-  year   = {2026},
-  url    = {https://github.com/svaibhav-7/Qiskit_kinship_verification}
-}
-```
 
 No peer-reviewed publication is associated with this repository yet; please do
 not cite it as one.
