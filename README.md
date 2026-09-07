@@ -89,7 +89,6 @@ A closed-form product over qubits does *not* work here: the shared CNOT chain
 correlates the Rz phases, so the overlap is not factorizable. The speedup comes
 from removing overhead, not from approximating. Note this is quantum-vs-quantum
 -- simulating a circuit is always slower than the classical path it sits beside.
-
 ---
 
 ## Results
