@@ -1,0 +1,20 @@
+% Corrected TSKinFace width-matched control contrasts only.
+\begin{table*}[!t]
+\centering
+\caption{Corrected TSKinFace Formulation 10 expectation readout against individual width-matched classical controls.}
+\label{tab:tskinface_width_controls}
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Backbone & Control & Quantum AUC & Control AUC & \(\Delta\) & 95\% CI & \(p\) \\
+\midrule
+FaceNet & Linear & 0.6724 & 0.6286 & +0.0438 & [0.0242, 0.0634] & 0.0034 \\
+FaceNet & MLP & 0.6724 & 0.6302 & +0.0422 & [0.0300, 0.0543] & 0.0007 \\
+FaceNet & Random projection & 0.6724 & 0.6235 & +0.0489 & [0.0281, 0.0696] & 0.0028 \\
+\midrule
+ArcFace & Linear & 0.6592 & 0.6473 & +0.0119 & [-0.0369, 0.0607] & 0.5354 \\
+ArcFace & MLP & 0.6592 & 0.6523 & +0.0069 & [-0.0314, 0.0452] & 0.6421 \\
+ArcFace & Random projection & 0.6592 & 0.6420 & +0.0171 & [-0.0277, 0.0620] & 0.3482 \\
+\bottomrule
+\end{tabular}
+\end{table*}
