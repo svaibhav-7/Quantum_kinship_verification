@@ -1,0 +1,9 @@
+backbone,corpus,vector_auc,scalar_auc,delta,status
+FaceNet,FIW,0.633587,0.513727,0.119860,historical
+FaceNet,KinFaceW-I,0.704869,0.539111,0.165757,historical
+FaceNet,KinFaceW-II,0.616115,0.519665,0.096450,historical
+FaceNet,TSKinFace,0.672370,0.597010,0.075360,corrected
+ArcFace,FIW,0.679458,0.519810,0.159649,historical
+ArcFace,KinFaceW-I,0.637502,0.535075,0.102427,historical
+ArcFace,KinFaceW-II,0.531752,0.489808,0.041945,historical
+ArcFace,TSKinFace,0.659176,0.598141,0.061035,corrected

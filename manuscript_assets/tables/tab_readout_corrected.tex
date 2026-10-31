@@ -1,0 +1,27 @@
+% Scalar versus vector readout; hybrid composite provenance explicitly stated.
+\begin{table*}[!t]
+\centering
+\caption{Formulation 10 readout comparison by backbone and corpus. Vector and scalar arms use the same circuit; only the measurement differs. TSKinFace values are corrected, while the other three corpus rows remain historical.}
+\label{tab:readout_corrected}
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Backbone & Corpus & Vector & Scalar & \(\Delta\) & \(p\) & Holm (16) & BH (16) \\
+\midrule
+FaceNet & FIW & 0.6336 & 0.5137 & +0.1199 & 0.0015 & 0.0229 & 0.0075 \\
+FaceNet & KinFaceW-I & 0.7049 & 0.5391 & +0.1658 & 0.0005 & 0.0079 & 0.0075 \\
+FaceNet & KinFaceW-II & 0.6161 & 0.5197 & +0.0965 & 0.0344 & 0.2409 & 0.0551 \\
+FaceNet & TSKinFace$^\dagger$ & 0.6724 & 0.5970 & +0.0754 & 0.0117 & 0.1056 & 0.0235 \\
+\midrule
+ArcFace & FIW & 0.6795 & 0.5198 & +0.1596 & 0.0054 & 0.0542 & 0.0124 \\
+ArcFace & KinFaceW-I & 0.6375 & 0.5351 & +0.1024 & 0.0019 & 0.0260 & 0.0075 \\
+ArcFace & KinFaceW-II & 0.5318 & 0.4898 & +0.0419 & 0.0044 & 0.0489 & 0.0118 \\
+ArcFace & TSKinFace$^\dagger$ & 0.6592 & 0.5981 & +0.0610 & 0.0643 & 0.3857 & 0.0935 \\
+\bottomrule
+\end{tabular}
+\vspace{1mm}
+\begin{minipage}{0.98\textwidth}
+\footnotesize
+\(p\) values are paired-fold tests and are descriptive; folds within a corpus are not independent population draws. Holm and Benjamini--Hochberg (BH) adjustments use the paper-compatible family of 16 comparisons. The composite paired-fold effects are \(+0.1144\) (FaceNet; 95\% CI \([+0.0887,+0.1400]\), \(p=1.60\times10^{-8}\)) and \(+0.0913\) (ArcFace; 95\% CI \([+0.0620,+0.1205]\), \(p=3.00\times10^{-6}\)). These composites replace only TSKinFace folds; other corpus folds remain historical.
+\end{minipage}
+\end{table*}
