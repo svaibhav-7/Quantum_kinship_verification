@@ -61,10 +61,10 @@ def load_positives(cap_per_family, seed):
 
 
 def add_negatives(pos, keyfn, seed):
+    """Build negatives inside one side so the split stays group-disjoint."""
     if keyfn is family_of_ts:
         return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
                                         same_family_negative_ratio=0.5)
-    """Build negatives inside one side so the split stays group-disjoint."""
     import random
 
     rng = random.Random(seed)
