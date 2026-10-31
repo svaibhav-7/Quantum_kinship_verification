@@ -17,14 +17,14 @@ from collections import defaultdict
 
 
 def family_of_ts(path):
-    """`.../FMS-12-F.jpg` -> `FMS-12`."""
+    """`...`FMS-12-F.jpg` -> `FMS-12`."""
     stem = os.path.basename(path).rsplit(".", 1)[0]
     parts = stem.split("-")
     return "-".join(parts[:2]) if len(parts) >= 2 else stem
 
 
 def role_of_ts(path):
-    """`.../FMS-12-F.jpg` -> `F` (F/M father/mother, S/D son/daughter)."""
+    """`...`FMS-12-F.jpg` -> `F` (F/M father/mother, S/D son/daughter)."""
     return os.path.basename(path).rsplit(".", 1)[0].split("-")[-1]
 
 
@@ -94,3 +94,68 @@ def build_tskinface_pairs(root, same_family_negative_ratio=0.5, seed=42,
     pairs = positives + negatives
     rng.shuffle(pairs)
     return pairs
+
+
+def add_tskinface_negatives(positive_pairs, keyfn=family_of_ts, seed=42,
+                            same_family_negative_ratio=0.5):
+    """Add negatives to one already group-disjoint side/fold.
+
+    Preserve father-vs-mother negatives for families assigned to this side.
+    Generate cross-family negatives only from families in this side. This
+    function must be called after a group-disjoint split on positive pairs.
+    """
+    if not 0.0 <= same_family_negative_ratio <= 1.0:
+        raise ValueError("same_family_negative_ratio must be between 0 and 1")
+
+    positives = list(positive_pairs)
+    if any(int(pair[2]) != 1 for pair in positives):
+        raise ValueError("positive_pairs must contain only positive pairs")
+    if not positives:
+        return []
+
+    rng = random.Random(seed)
+    by_family = defaultdict(lambda: {"parents": {}, "children": []})
+    for a, b, _label, _relation_name in positives:
+        family_a, family_b = keyfn(a), keyfn(b)
+        if family_a != family_b:
+            raise ValueError("TSKinFace positive pair spans multiple families")
+        by_family[family_a]["parents"][role_of_ts(a)] = a
+        by_family[family_b]["children"].append(b)
+
+    same_candidates = []
+    for family, members in by_family.items():
+        parents = members["parents"]
+        if "F" in parents and "M" in parents and members["children"]:
+            child_role = role_of_ts(members["children"][0])
+            same_candidates.append((family, parents["F"], parents["M"], child_role))
+    rng.shuffle(same_candidates)
+
+    target_same = int(round(len(positives) * same_family_negative_ratio))
+    negatives = [
+        (father, mother, 0, _relation("F", child_role))
+        for _family, father, mother, child_role
+        in same_candidates[:target_same]
+    ]
+
+    families = sorted(by_family)
+    if len(families) > 1:
+        # Fill the remaining negative budget using only families on this side.
+        parents_by_family = {
+            family: list(members["parents"].items())
+            for family, members in by_family.items()
+        }
+        children_by_family = {
+            family: members["children"]
+            for family, members in by_family.items()
+        }
+        for _ in range(max(0, len(positives) - len(negatives))):
+            family_a = rng.choice(families)
+            family_b = rng.choice([family for family in families
+                                   if family != family_a])
+            parent_role, parent = rng.choice(parents_by_family[family_a])
+            child = rng.choice(children_by_family[family_b])
+            child_role = role_of_ts(child)
+            negatives.append((parent, child, 0,
+                              _relation(parent_role, child_role)))
+
+    return positives + negatives

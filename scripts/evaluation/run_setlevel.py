@@ -35,7 +35,9 @@ from src.identity_sets import (build_identity_sets, features_to_vector,
 from src.kfold import balance_group_sizes, grouped_kfold
 from src.multi_dataset import _kfw_family
 from src.splits import family_of
-from src.ts_pairs import build_tskinface_pairs, family_of_ts
+from src.ts_pairs import (build_tskinface_pairs, family_of_ts,
+                          add_tskinface_negatives)
+from src.run_metadata import collect_run_metadata
 
 CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
 
@@ -73,6 +75,9 @@ def add_negatives(pos, keyfn, seed):
     naive version is O(n * groups) and cost 7.8 s per call on FIW, which
     dominated the whole evaluation.
     """
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     import random
 
     rng = random.Random(seed)
@@ -234,6 +239,7 @@ def main():
             print("\n  MEAN %-12s acc %.2f%%  AUC %.4f"
                   % (arm, float(np.mean(acc)), float(np.mean(vals))))
 
+    summary["_config"] = collect_run_metadata(args, datasets, project_root)
     out = os.path.join(project_root, "results", "honest", args.tag + ".json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(summary, open(out, "w"), indent=2)

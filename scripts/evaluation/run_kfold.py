@@ -25,7 +25,9 @@ from src.kfold import grouped_kfold, balance_group_sizes
 from src.models_hybrid import QuantumAugmentedKinshipClassifier
 from src.multi_dataset import dataset_group_key, _kfw_family
 from src.splits import family_of
-from src.ts_pairs import build_tskinface_pairs, family_of_ts
+from src.ts_pairs import (build_tskinface_pairs, family_of_ts,
+                          add_tskinface_negatives)
+from src.run_metadata import collect_run_metadata
 
 CACHE = os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl")
 PREFIX = {"FIW": "fiw", "TSKinFace": "ts", "KinFaceW-I": "kfw1", "KinFaceW-II": "kfw2"}
@@ -60,6 +62,9 @@ def load_positives(cap_per_family, seed):
 
 def add_negatives(pos, keyfn, seed):
     """Build negatives inside one side so the split stays group-disjoint."""
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     import random
 
     rng = random.Random(seed)
@@ -138,7 +143,23 @@ def main():
                if dataset_group_key(p[0]) in val_g
                and dataset_group_key(p[1]) in val_g]
         if len(val) < 100 or len(fit) < 100:
-            fit, val = train_all[:-300], train_all[-300:]
+            # Repartition by group rather than slicing pair rows; row slicing
+            # can put the same family in both fit and validation.
+            if len(groups) < 2:
+                raise RuntimeError(
+                    "Cannot form group-disjoint fit/validation sets: fewer than 2 groups")
+            n_val_groups = max(1, len(groups) // 5)
+            val_g = set(groups[:n_val_groups])
+            fit = [p for p in train_all
+                   if dataset_group_key(p[0]) not in val_g
+                   and dataset_group_key(p[1]) not in val_g]
+            val = [p for p in train_all
+                   if dataset_group_key(p[0]) in val_g
+                   and dataset_group_key(p[1]) in val_g]
+            if len(val) < 2 or len(fit) < 2:
+                raise RuntimeError(
+                    "Cannot form usable group-disjoint fit/validation sets; "
+                    "increase the number of groups or adjust the fold setup")
 
         torch.manual_seed(args.seed + fi)
         np.random.seed(args.seed + fi)
@@ -241,6 +262,7 @@ def main():
         print("\n  MEAN ACROSS DATASETS: %.2f%% accuracy, %.4f ROC-AUC" % (ma, mu))
         summary["_mean"] = {"accuracy": ma, "roc_auc": mu}
 
+    summary["_config"] = collect_run_metadata(args, datasets, project_root)
     out = os.path.join(project_root, "results", "honest", args.tag + ".json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(summary, open(out, "w"), indent=2)

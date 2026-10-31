@@ -32,7 +32,9 @@ from src.models_vqc import (AmplitudeControl, AmplitudeVQCClassifier,
                             WidthMatchedControl)
 from src.multi_dataset import _kfw_family
 from src.splits import family_of
-from src.ts_pairs import build_tskinface_pairs, family_of_ts
+from src.ts_pairs import (build_tskinface_pairs, family_of_ts,
+                          add_tskinface_negatives)
+from src.run_metadata import collect_run_metadata
 
 CACHES = {
     "facenet": os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl"),
@@ -69,6 +71,9 @@ def load_positives(seed, cap):
 
 
 def add_neg(pos, keyfn, seed):
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     rng = random.Random(seed)
     by = defaultdict(list)
     for a, b, _l, _r in pos:
@@ -278,6 +283,7 @@ def main():
     summary["_config"] = {"qubits_each": args.qubits, "depth": args.depth,
                           "quantum_params": vq.quantum_parameter_count(),
                           "control_params": ct.head_parameter_count()}
+    summary["_config"].update(collect_run_metadata(args, datasets, project_root))
     out = os.path.join(project_root, "results", "honest", args.tag + ".json")
     json.dump(summary, open(out, "w"), indent=2)
     print("\n  saved results/honest/%s.json  (%.0fs)" % (args.tag, time.time() - t0))

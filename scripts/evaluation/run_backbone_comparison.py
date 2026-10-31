@@ -36,7 +36,9 @@ from src.identity_sets import (build_identity_sets, features_to_vector,
 from src.kfold import balance_group_sizes, grouped_kfold
 from src.multi_dataset import _kfw_family
 from src.splits import family_of
-from src.ts_pairs import build_tskinface_pairs, family_of_ts
+from src.ts_pairs import (build_tskinface_pairs, family_of_ts,
+                          add_tskinface_negatives)
+from src.run_metadata import collect_run_metadata
 
 CACHES = {
     "FaceNet": os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl"),
@@ -71,6 +73,9 @@ def load_positives(seed, cap):
 
 
 def add_negatives(pos, keyfn, seed):
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     rng = random.Random(seed)
     by = {}
     for a, b, _l, _r in pos:
@@ -124,10 +129,13 @@ def main():
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--cap-per-family", type=int, default=600)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--tag", default="backbone_comparison",
+                    help="result filename tag; keeps corrected runs separate")
     args = ap.parse_args()
 
     ARMS = ("single", "set", "set+density")
     summary = {}
+    metadata_datasets_by_backbone = {}
     t0 = time.time()
 
     for bb, path in CACHES.items():
@@ -143,6 +151,7 @@ def main():
 
         datasets = {k: cov(v) for k, v in
                     load_positives(args.seed, args.cap_per_family).items()}
+        metadata_datasets_by_backbone[bb] = datasets
         res = {a: defaultdict(list) for a in ARMS}
 
         for name, pos in datasets.items():
@@ -197,9 +206,22 @@ def main():
             if a and b:
                 print(f"    {bb:8s} {d:12s} {b['mean']-a['mean']:+.4f}")
 
-    out = os.path.join(project_root, "results", "honest", "backbone_comparison.json")
+    first_metadata = next(iter(metadata_datasets_by_backbone.values()), {})
+    metadata_source = metadata_datasets_by_backbone.get("FaceNet", first_metadata)
+    run_metadata = collect_run_metadata(args, metadata_source, project_root)
+    run_metadata["backbone_tskinface_coverage"] = {
+        bb: {
+            "positive_pairs_after_embedding_coverage": len(ds.get("TSKinFace", [])),
+            "families_after_embedding_coverage": len({
+                family_of_ts(pair[0]) for pair in ds.get("TSKinFace", [])
+            }),
+        }
+        for bb, ds in metadata_datasets_by_backbone.items()
+    }
+    summary["_config"] = run_metadata
+    out = os.path.join(project_root, "results", "honest", args.tag + ".json")
     json.dump(summary, open(out, "w"), indent=2)
-    print(f"\n  saved results/honest/backbone_comparison.json  ({time.time()-t0:.0f}s)")
+    print(f"\n  saved results/honest/{args.tag}.json  ({time.time()-t0:.0f}s)")
 
 
 if __name__ == "__main__":
