@@ -129,6 +129,8 @@ def main():
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--cap-per-family", type=int, default=600)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--tag", default="backbone_comparison",
+                    help="result filename tag; keeps corrected runs separate")
     args = ap.parse_args()
 
     ARMS = ("single", "set", "set+density")
@@ -206,7 +208,7 @@ def main():
                 print(f"    {bb:8s} {d:12s} {b['mean']-a['mean']:+.4f}")
 
     summary["_config"] = collect_run_metadata(args, metadata_datasets, project_root)
-    out = os.path.join(project_root, "results", "honest", "backbone_comparison.json")
+    out = os.path.join(project_root, "results", "honest", args.tag + ".json")
     json.dump(summary, open(out, "w"), indent=2)
     print(f"\n  saved results/honest/backbone_comparison.json  ({time.time()-t0:.0f}s)")
 
