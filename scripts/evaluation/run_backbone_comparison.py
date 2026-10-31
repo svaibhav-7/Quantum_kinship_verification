@@ -36,7 +36,9 @@ from src.identity_sets import (build_identity_sets, features_to_vector,
 from src.kfold import balance_group_sizes, grouped_kfold
 from src.multi_dataset import _kfw_family
 from src.splits import family_of
-from src.ts_pairs import build_tskinface_pairs, family_of_ts
+from src.ts_pairs import (build_tskinface_pairs, family_of_ts,
+                          add_tskinface_negatives)
+from src.run_metadata import collect_run_metadata
 
 CACHES = {
     "FaceNet": os.path.join(project_root, "weights", "caches", "all_datasets_cache.pkl"),
@@ -71,6 +73,9 @@ def load_positives(seed, cap):
 
 
 def add_negatives(pos, keyfn, seed):
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     rng = random.Random(seed)
     by = {}
     for a, b, _l, _r in pos:
@@ -128,6 +133,7 @@ def main():
 
     ARMS = ("single", "set", "set+density")
     summary = {}
+    metadata_datasets = {}
     t0 = time.time()
 
     for bb, path in CACHES.items():
@@ -143,6 +149,8 @@ def main():
 
         datasets = {k: cov(v) for k, v in
                     load_positives(args.seed, args.cap_per_family).items()}
+        if not metadata_datasets:
+            metadata_datasets = datasets
         res = {a: defaultdict(list) for a in ARMS}
 
         for name, pos in datasets.items():
@@ -197,6 +205,7 @@ def main():
             if a and b:
                 print(f"    {bb:8s} {d:12s} {b['mean']-a['mean']:+.4f}")
 
+    summary["_config"] = collect_run_metadata(args, metadata_datasets, project_root)
     out = os.path.join(project_root, "results", "honest", "backbone_comparison.json")
     json.dump(summary, open(out, "w"), indent=2)
     print(f"\n  saved results/honest/backbone_comparison.json  ({time.time()-t0:.0f}s)")
