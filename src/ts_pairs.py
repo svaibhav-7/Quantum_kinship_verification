@@ -1,8 +1,14 @@
-"""TSKinFace pair construction and split-aware negative sampling.
+"""TSKinFace pair construction with shortcut-free negatives.
 
-Positive pairs are parent-child pairs within a family. Negative pairs combine
-father-vs-mother pairs within a family and parent-child pairs across families.
-The within-family negatives share photo-session cues with the positives.
+The stock loader builds positives entirely within a family and negatives
+entirely across families (measured: 800/800 vs 0/800). A model can then score
+84% by detecting a shared photo session -- lighting, camera, background --
+without learning anything about kinship.
+
+This builds a fraction of the negatives *inside* each family, pairing the
+father against the mother. They are co-photographed, so they share every
+session cue, but they are not parent and child. That removes 'same family' as
+a usable signal while keeping the labels correct.
 """
 
 import os
@@ -11,14 +17,14 @@ from collections import defaultdict
 
 
 def family_of_ts(path):
-    """Return the family key, e.g. .../FMS-12-F.jpg -> FMS-12."""
+    """`...`FMS-12-F.jpg` -> `FMS-12`."""
     stem = os.path.basename(path).rsplit(".", 1)[0]
     parts = stem.split("-")
     return "-".join(parts[:2]) if len(parts) >= 2 else stem
 
 
 def role_of_ts(path):
-    """Return F/M father/mother or S/D son/daughter."""
+    """`...`FMS-12-F.jpg` -> `F` (F/M father/mother, S/D son/daughter)."""
     return os.path.basename(path).rsplit(".", 1)[0].split("-")[-1]
 
 
@@ -30,12 +36,14 @@ def _relation(parent_role, child_role):
 
 def build_tskinface_pairs(root, same_family_negative_ratio=0.5, seed=42,
                           max_families=None):
-    """Return (image1, image2, label, relation) pairs with balanced classes."""
-    if not 0.0 <= same_family_negative_ratio <= 1.0:
-        raise ValueError("same_family_negative_ratio must be between 0 and 1")
+    """Return [(img1, img2, label, relation)] with honest negatives.
 
+    same_family_negative_ratio: share of negatives drawn as father-vs-mother
+    within one family. The rest stay cross-family so both regimes appear.
+    """
     rng = random.Random(seed)
     families = {}
+
     for folder in ("FMS", "FMD"):
         fdir = os.path.join(root, folder)
         if not os.path.isdir(fdir):
@@ -44,7 +52,7 @@ def build_tskinface_pairs(root, same_family_negative_ratio=0.5, seed=42,
         ids = sorted({f.rsplit(".", 1)[0].split("-")[1]
                       for f in os.listdir(fdir) if f.endswith(".jpg")
                       and len(f.rsplit(".", 1)[0].split("-")) == 3})
-        if max_families is not None:
+        if max_families:
             ids = ids[:max_families]
         for fid in ids:
             trio = {r: os.path.join(fdir, f"{folder}-{fid}-{r}.jpg")
@@ -57,20 +65,25 @@ def build_tskinface_pairs(root, same_family_negative_ratio=0.5, seed=42,
         for prole in ("F", "M"):
             positives.append((trio[prole], trio[child_role], 1,
                               _relation(prole, child_role)))
-    if not positives:
-        return []
 
     n_neg = len(positives)
+    n_same = int(n_neg * same_family_negative_ratio)
     fam_keys = sorted(families)
-    n_same_target = int(round(n_neg * same_family_negative_ratio))
+
+    negatives = []
+    # Same-family: father vs mother -- shares the session, not the kinship.
     order = fam_keys[:]
     rng.shuffle(order)
-    negatives = []
-    for fam in order[:min(n_same_target, len(order))]:
+    i = 0
+    while len(negatives) < n_same and order:
+        fam = order[i % len(order)]
         trio, child_role = families[fam]
-        negatives.append((trio["F"], trio["M"], 0,
-                          _relation("F", child_role)))
+        negatives.append((trio["F"], trio["M"], 0, _relation("F", child_role)))
+        i += 1
+        if i > len(order) * 2:
+            break
 
+    # Cross-family: parent from one family, child from another.
     while len(negatives) < n_neg and len(fam_keys) > 1:
         fa, fb = rng.sample(fam_keys, 2)
         ta, _ = families[fa]
@@ -78,64 +91,70 @@ def build_tskinface_pairs(root, same_family_negative_ratio=0.5, seed=42,
         prole = rng.choice(("F", "M"))
         negatives.append((ta[prole], tb[cb], 0, _relation(prole, cb)))
 
-    rng.shuffle(positives)
-    rng.shuffle(negatives)
-    return positives + negatives
+    pairs = positives + negatives
+    rng.shuffle(pairs)
+    return pairs
 
 
 def add_tskinface_negatives(positive_pairs, keyfn=family_of_ts, seed=42,
                             same_family_negative_ratio=0.5):
-    """Create negatives inside one already group-disjoint side/fold.
+    """Add negatives to one already group-disjoint side/fold.
 
-    Same-family father-vs-mother negatives are generated from the family-level
-    parent endpoints present in the positive subset. Cross-family negatives
-    sample parent and child endpoints only from families on this side.
+    Preserve father-vs-mother negatives for families assigned to this side.
+    Generate cross-family negatives only from families in this side. This
+    function must be called after a group-disjoint split on positive pairs.
     """
     if not 0.0 <= same_family_negative_ratio <= 1.0:
         raise ValueError("same_family_negative_ratio must be between 0 and 1")
+
     positives = list(positive_pairs)
-    if any(int(p[2]) != 1 for p in positives):
+    if any(int(pair[2]) != 1 for pair in positives):
         raise ValueError("positive_pairs must contain only positive pairs")
     if not positives:
         return []
 
     rng = random.Random(seed)
     by_family = defaultdict(lambda: {"parents": {}, "children": []})
-    for a, b, _label, _rel in positives:
-        ka, kb = keyfn(a), keyfn(b)
-        if ka != kb:
+    for a, b, _label, _relation_name in positives:
+        family_a, family_b = keyfn(a), keyfn(b)
+        if family_a != family_b:
             raise ValueError("TSKinFace positive pair spans multiple families")
-        role = role_of_ts(a)
-        by_family[ka]["parents"][role] = a
-        by_family[ka]["children"].append((b, role_of_ts(b)))
+        by_family[family_a]["parents"][role_of_ts(a)] = a
+        by_family[family_b]["children"].append(b)
 
     same_candidates = []
-    for fam, data in by_family.items():
-        parents = data["parents"]
-        if "F" in parents and "M" in parents:
-            child_role = data["children"][0][1]
-            same_candidates.append((fam, parents["F"], parents["M"], child_role))
+    for family, members in by_family.items():
+        parents = members["parents"]
+        if "F" in parents and "M" in parents and members["children"]:
+            child_role = role_of_ts(members["children"][0])
+            same_candidates.append((family, parents["F"], parents["M"], child_role))
     rng.shuffle(same_candidates)
 
     target_same = int(round(len(positives) * same_family_negative_ratio))
-    negatives = []
-    for _fam, father, mother, child_role in same_candidates[:target_same]:
-        negatives.append((father, mother, 0, _relation("F", child_role)))
+    negatives = [
+        (father, mother, 0, _relation("F", child_role))
+        for _family, father, mother, child_role
+        in same_candidates[:target_same]
+    ]
 
     families = sorted(by_family)
-    # If no cross-family choice exists, keep the available within-family
-    # negatives rather than fabricating a pair across the split boundary.
     if len(families) > 1:
-        remaining = max(0, len(positives) - len(negatives))
-        for _ in range(remaining):
-            fa = families[rng.randrange(len(families))]
-            fb = rng.choice([fam for fam in families if fam != fa])
-            parent_items = list(by_family[fa]["parents"].items())
-            child_items = by_family[fb]["children"]
-            if not parent_items or not child_items:
-                continue
-            parent_role, parent = rng.choice(parent_items)
-            child, child_role = rng.choice(child_items)
+        # Fill the remaining negative budget using only families on this side.
+        parents_by_family = {
+            family: list(members["parents"].items())
+            for family, members in by_family.items()
+        }
+        children_by_family = {
+            family: members["children"]
+            for family, members in by_family.items()
+        }
+        for _ in range(max(0, len(positives) - len(negatives))):
+            family_a = rng.choice(families)
+            family_b = rng.choice([family for family in families
+                                   if family != family_a])
+            parent_role, parent = rng.choice(parents_by_family[family_a])
+            child = rng.choice(children_by_family[family_b])
+            child_role = role_of_ts(child)
             negatives.append((parent, child, 0,
                               _relation(parent_role, child_role)))
 
