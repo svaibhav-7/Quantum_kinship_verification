@@ -11,7 +11,7 @@ These are **replacement assets** for the corrected-audit manuscript, generated f
 - `data/*.csv`: compact source data for reproducibility.
 
 ## Overleaf use
-Upload the `.tex` snippets and add `\usepackage{pgfplots}`, `\pgfplotsset{compat=1.18}`, `\usepackage{booktabs}`, and `\usepackage{threeparttable}` (if using notes). Insert a figure with `\input{figures/fig_baseline_corrected.tex}` or `\input{figures/fig_readout_corrected.tex}`; insert tables with `\input{tables/<filename>.tex}`.
+Upload the `.tex` snippets and add `\usepackage{pgfplots}\n\\usepgfplotslibrary{groupplots}`, `\pgfplotsset{compat=1.18}`, `\usepackage{booktabs}`, and `\usepackage{threeparttable}` (if using notes). Insert a figure with `\input{figures/fig_baseline_corrected.tex}` or `\input{figures/fig_readout_corrected.tex}`; insert tables with `\input{tables/<filename>.tex}`.
 
 The figure snippets use PGFPlots and are vector-rendered during Overleaf compilation; they are not raster screenshots.
 
