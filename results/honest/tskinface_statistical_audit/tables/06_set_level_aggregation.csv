@@ -1,0 +1,9 @@
+﻿backbone,corpus,status,historical_single_AUC,historical_set_AUC,historical_set_gain,corrected_single_AUC,corrected_set_AUC,corrected_set_gain,change_in_set_gain,fold_p_value,source_historical,source_corrected
+FaceNet,FIW,rerun; non-TSKinFace context,0.749100,0.825399,0.076299,0.749100,0.825399,0.076299,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+FaceNet,KinFaceW-I,rerun; non-TSKinFace context,0.758756,0.758756,0.000000,0.758756,0.758756,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+FaceNet,KinFaceW-II,rerun; non-TSKinFace context,0.777005,0.777005,0.000000,0.777005,0.777005,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+FaceNet,TSKinFace,corrected TSKinFace,0.732595,0.732595,0.000000,0.667538,0.667538,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+ArcFace,FIW,rerun; non-TSKinFace context,0.776399,0.873963,0.097565,0.776399,0.873963,0.097565,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+ArcFace,KinFaceW-I,rerun; non-TSKinFace context,0.754003,0.754003,0.000000,0.754003,0.754003,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+ArcFace,KinFaceW-II,rerun; non-TSKinFace context,0.818990,0.818990,0.000000,0.818990,0.818990,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json
+ArcFace,TSKinFace,corrected TSKinFace,0.846043,0.846043,0.000000,0.756829,0.756829,0.000000,0.000000,NA (fold-level scores not stored),backbone_comparison.json,backbone_comparison_tskinface_corrected.json

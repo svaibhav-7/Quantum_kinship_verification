@@ -1,0 +1,10 @@
+﻿formulation,method,classical_control,historical_manuscript_report,corrected_TSKinFace_status,corrected_TSKinFace_result,source
+1,SWAP fidelity (5 seeds),classical head,p=0.945,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+2,SWAP fidelity (20 folds),classical head,p=0.982,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+3,Density fidelity,mean-pooling,-8.7 AUC,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+4,Interference phase sweep,convex mixture,+0.1 AUC,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+5,Entanglement entropy,cosine,0.514 alone,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+6,POVM head,capacity-matched,-5.5 AUC,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+7,Purity regulariser,decorrelation,-0.9 AUC; p=0.047,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+8,Density fidelity (sets),set features,At most 0.0006 AUC change,Rerun available,FaceNet delta=-0.000193; ArcFace delta=+0.000172 (summary means; fold-level p unavailable),paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json
+9,Phase sweep (triads),convex mixture,-0.0006 AUC; p=0.147,Not rerun,No corrected TSKinFace result artifact,paper/elsevier/quantum_negative.tex; corrected set-density from backbone_comparison_tskinface_corrected.json

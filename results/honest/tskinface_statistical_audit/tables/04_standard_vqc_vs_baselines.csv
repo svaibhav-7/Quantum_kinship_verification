@@ -1,0 +1,6 @@
+﻿dataset,status,contrast,arm_a_mean_AUC,arm_b_mean_AUC,paired_delta,paired_CI95_low,paired_CI95_high,paired_t,raw_p,inference_note,historical_TSKinFace_VQC,source
+TSKinFace,corrected,VQC expectation minus capacity-matched VQC control,0.646164,0.684372,-0.038208,-0.078483,0.002067,-2.633945,0.057946,Same held-out folds and VQC protocol.,No matching artifact found.,vqc_tskinface_corrected.json
+TSKinFace,corrected,VQC fidelity minus capacity-matched VQC control,0.530092,0.684372,-0.154280,-0.219398,-0.089161,-6.577989,0.002765,Same held-out folds and VQC protocol.,No matching artifact found.,vqc_tskinface_corrected.json
+TSKinFace,corrected,VQC expectation minus VQC fidelity,0.646164,0.530092,0.116072,0.035700,0.196443,4.009727,0.016000,Readout contrast on matched held-out folds.,No matching artifact found.,vqc_tskinface_corrected.json
+TSKinFace,corrected,VQC expectation minus global grouped-k-fold baseline,0.646164,0.798230,-0.152066,-0.240459,-0.063674,-4.776449,0.008798,Matched test folds; baseline trained on pooled corpora.,No matching artifact found.,vqc_tskinface_corrected.json
+TSKinFace,corrected,VQC fidelity minus global grouped-k-fold baseline,0.530092,0.798230,-0.268138,-0.350734,-0.185542,-9.013361,0.000839,Matched test folds; baseline trained on pooled corpora.,No matching artifact found.,vqc_tskinface_corrected.json
