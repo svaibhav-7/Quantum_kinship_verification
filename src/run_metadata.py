@@ -5,7 +5,7 @@ import subprocess
 from .ts_pairs import family_of_ts
 
 
-TSKINF_FACE_NEGATIVE_POLICY = (
+TSKINFACE_NEGATIVE_POLICY = (
     "Split positive pairs by family first; within each side retain one "
     "father-vs-mother negative per available family and sample cross-family "
     "parent-child negatives only among families in that side."
@@ -31,7 +31,7 @@ def collect_run_metadata(args, datasets=None, project_root=None):
         "source_commit": commit,
         "cli_args": vars(args).copy() if hasattr(args, "__dict__") else {},
         "tskinface_protocol": {
-            "negative_policy": TSKINF_FACE_NEGATIVE_POLICY,
+            "negative_policy": TSKINFACE_NEGATIVE_POLICY,
             "positive_pairs_after_embedding_coverage": len(ts_pairs),
             "families_after_embedding_coverage": len({
                 family_of_ts(pair[0]) for pair in ts_pairs
