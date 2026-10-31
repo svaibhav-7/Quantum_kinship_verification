@@ -69,15 +69,15 @@ def load_positives(seed, cap_per_family):
 
 
 def add_negatives(pos, keyfn, seed):
-    if keyfn is family_of_ts:
-        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
-                                        same_family_negative_ratio=0.5)
     """One cross-group negative per positive, drawn inside this side only.
 
     Rejection sampling rather than rebuilding the candidate list per pair: the
     naive version is O(n * groups) and cost 7.8 s per call on FIW, which
     dominated the whole evaluation.
     """
+    if keyfn is family_of_ts:
+        return add_tskinface_negatives(pos, keyfn=keyfn, seed=seed,
+                                        same_family_negative_ratio=0.5)
     import random
 
     rng = random.Random(seed)
