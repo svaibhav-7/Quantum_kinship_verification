@@ -1,5 +1,5 @@
 dataset,accuracy_mean,accuracy_95ci_halfwidth,roc_auc_mean,roc_auc_sd,status
-KinFaceW-I,73.00,10.97,0.7988213,0.1582786,historical protocol? see audit composite caveat
-KinFaceW-II,70.85,8.64,0.7613250,0.1228550,corrected audit
+KinFaceW-I,73.00,10.97,0.7988213,0.1582786,corrected grouped-k-fold audit
+KinFaceW-II,70.85,8.64,0.7613250,0.1228550,corrected grouped-k-fold audit
 FIW,67.48,7.21,0.7494552,0.1134801,corrected audit
 TSKinFace,73.9752,4.0313,0.7982300,0.0705091,corrected pairs
