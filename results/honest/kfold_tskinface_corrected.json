@@ -1,0 +1,185 @@
+{
+  "FIW": {
+    "folds": 5,
+    "accuracy_mean": 67.48363116157127,
+    "accuracy_sd": 8.227234227099027,
+    "accuracy_ci95": 7.211488759453695,
+    "roc_auc_mean": 0.7494552071737492,
+    "roc_auc_sd": 0.11348012079083225,
+    "per_fold": [
+      {
+        "accuracy": 71.16165718927701,
+        "roc_auc": 0.7789931326594786,
+        "fpr": 41.38911454102356,
+        "n": 9848
+      },
+      {
+        "accuracy": 68.67886178861788,
+        "roc_auc": 0.8155529942494547,
+        "fpr": 58.333333333333336,
+        "n": 9840
+      },
+      {
+        "accuracy": 53.00446609825416,
+        "roc_auc": 0.5479506357097632,
+        "fpr": 38.93625659764515,
+        "n": 9852
+      },
+      {
+        "accuracy": 72.21544715447155,
+        "roc_auc": 0.7968513698856501,
+        "fpr": 35.65040650406504,
+        "n": 9840
+      },
+      {
+        "accuracy": 72.35772357723577,
+        "roc_auc": 0.8079279033643995,
+        "fpr": 17.520325203252032,
+        "n": 9840
+      }
+    ]
+  },
+  "KinFaceW-I": {
+    "folds": 5,
+    "accuracy_mean": 72.99594427790512,
+    "accuracy_sd": 12.515091095914233,
+    "accuracy_ci95": 10.969961018546092,
+    "roc_auc_mean": 0.798821293036952,
+    "roc_auc_sd": 0.1582785708354418,
+    "per_fold": [
+      {
+        "accuracy": 80.8411214953271,
+        "roc_auc": 0.8684601275220543,
+        "fpr": 30.8411214953271,
+        "n": 214
+      },
+      {
+        "accuracy": 80.37383177570094,
+        "roc_auc": 0.8680234081579177,
+        "fpr": 20.5607476635514,
+        "n": 214
+      },
+      {
+        "accuracy": 50.93457943925234,
+        "roc_auc": 0.5157218971089178,
+        "fpr": 15.887850467289718,
+        "n": 214
+      },
+      {
+        "accuracy": 76.88679245283019,
+        "roc_auc": 0.874065503737985,
+        "fpr": 34.90566037735849,
+        "n": 212
+      },
+      {
+        "accuracy": 75.94339622641509,
+        "roc_auc": 0.8678355286578854,
+        "fpr": 35.84905660377358,
+        "n": 212
+      }
+    ]
+  },
+  "KinFaceW-II": {
+    "folds": 5,
+    "accuracy_mean": 70.85,
+    "accuracy_sd": 9.856152900599705,
+    "accuracy_ci95": 8.639298929890085,
+    "roc_auc_mean": 0.761325,
+    "roc_auc_sd": 0.12285501744943098,
+    "per_fold": [
+      {
+        "accuracy": 75.0,
+        "roc_auc": 0.8174750000000001,
+        "fpr": 25.0,
+        "n": 400
+      },
+      {
+        "accuracy": 74.75,
+        "roc_auc": 0.8200999999999999,
+        "fpr": 24.5,
+        "n": 400
+      },
+      {
+        "accuracy": 53.75,
+        "roc_auc": 0.5430750000000001,
+        "fpr": 34.5,
+        "n": 400
+      },
+      {
+        "accuracy": 78.75,
+        "roc_auc": 0.8329249999999999,
+        "fpr": 27.0,
+        "n": 400
+      },
+      {
+        "accuracy": 72.0,
+        "roc_auc": 0.79305,
+        "fpr": 30.0,
+        "n": 400
+      }
+    ]
+  },
+  "TSKinFace": {
+    "folds": 5,
+    "accuracy_mean": 73.97522522522522,
+    "accuracy_sd": 4.5990627577727015,
+    "accuracy_ci95": 4.031256247993625,
+    "roc_auc_mean": 0.7982300257803998,
+    "roc_auc_sd": 0.07050911591206359,
+    "per_fold": [
+      {
+        "accuracy": 77.00892857142857,
+        "roc_auc": 0.8425342793367347,
+        "fpr": 33.92857142857143,
+        "n": 448
+      },
+      {
+        "accuracy": 75.0,
+        "roc_auc": 0.8249960140306122,
+        "fpr": 31.69642857142857,
+        "n": 448
+      },
+      {
+        "accuracy": 65.84821428571429,
+        "roc_auc": 0.6728117028061225,
+        "fpr": 41.07142857142857,
+        "n": 448
+      },
+      {
+        "accuracy": 75.89285714285714,
+        "roc_auc": 0.8257533482142858,
+        "fpr": 42.857142857142854,
+        "n": 448
+      },
+      {
+        "accuracy": 76.12612612612612,
+        "roc_auc": 0.8250547845142441,
+        "fpr": 36.486486486486484,
+        "n": 444
+      }
+    ]
+  },
+  "_mean": {
+    "accuracy": 71.3262001661754,
+    "roc_auc": 0.7769578814977752
+  },
+  "_config": {
+    "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "cli_args": {
+      "folds": 5,
+      "epochs": 40,
+      "cap_per_family": 1500,
+      "cap_per_dataset": 8000,
+      "seed": 42,
+      "no_quantum": false,
+      "tag": "kfold_tskinface_corrected"
+    },
+    "tskinface_protocol": {
+      "negative_policy": "Split positive pairs by family first; within each side retain one father-vs-mother negative per available family and sample cross-family parent-child negatives only among families in that side.",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false,
+      "cap_note": "TSKinFace is not capped by --cap-per-family in these runners; recorded family count is the post-embedding-coverage count."
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "design": {
+    "backbones": 2,
+    "corpora": 4,
+    "folds_per_corpus": 5,
+    "total_fold_evaluations": 40,
+    "note": "readout arms share one circuit; only the measurement differs"
+  },
+  "per_cell": {
+    "FaceNet": {
+      "FIW": {
+        "vector": 0.6335866133704646,
+        "scalar": 0.5137267508731528,
+        "readout_delta": 0.11985986249731181,
+        "readout_p": 0.001529169941742877,
+        "best_classical": 0.6635902885828873,
+        "quantum_vs_classical_delta": -0.030003675212422466,
+        "quantum_vs_classical_p": 0.3839689293971766
+      },
+      "KinFaceW-I": {
+        "vector": 0.7048685782547464,
+        "scalar": 0.5391112577483483,
+        "readout_delta": 0.16575732050639796,
+        "readout_p": 0.0004962556896069386,
+        "best_classical": 0.5744081442051383,
+        "quantum_vs_classical_delta": 0.13046043404960803,
+        "quantum_vs_classical_p": 0.0018558731777874645
+      },
+      "KinFaceW-II": {
+        "vector": 0.6161150000000001,
+        "scalar": 0.519665,
+        "readout_delta": 0.09645000000000001,
+        "readout_p": 0.03441344155977438,
+        "best_classical": 0.532625,
+        "quantum_vs_classical_delta": 0.08349000000000002,
+        "quantum_vs_classical_p": 0.07841410755674713
+      },
+      "TSKinFace": {
+        "vector": 0.6723701323876276,
+        "scalar": 0.5970104081130565,
+        "readout_delta": 0.07535972427457105,
+        "readout_p": 0.011727923569548607,
+        "best_classical": 0.6361942516194146,
+        "quantum_vs_classical_delta": 0.03617588076821303,
+        "quantum_vs_classical_p": 0.003268163278468498
+      }
+    },
+    "ArcFace": {
+      "FIW": {
+        "vector": 0.67945836095212,
+        "scalar": 0.5198097952050154,
+        "readout_delta": 0.1596485657471048,
+        "readout_p": 0.005423163087908273,
+        "best_classical": 0.664426543329792,
+        "quantum_vs_classical_delta": 0.015031817622328015,
+        "quantum_vs_classical_p": 0.39117930718799704
+      },
+      "KinFaceW-I": {
+        "vector": 0.6375018295105437,
+        "scalar": 0.5350748490970575,
+        "readout_delta": 0.1024269804134863,
+        "readout_p": 0.0018779406968245109,
+        "best_classical": 0.5391829091081749,
+        "quantum_vs_classical_delta": 0.09831892040236886,
+        "quantum_vs_classical_p": 0.014619403444961916
+      },
+      "KinFaceW-II": {
+        "vector": 0.5317525,
+        "scalar": 0.48980750000000006,
+        "readout_delta": 0.04194500000000001,
+        "readout_p": 0.004442723793337767,
+        "best_classical": 0.50243,
+        "quantum_vs_classical_delta": 0.029322499999999994,
+        "quantum_vs_classical_p": 0.14178122563140905
+      },
+      "TSKinFace": {
+        "vector": 0.6591762489099,
+        "scalar": 0.5981409713435685,
+        "readout_delta": 0.06103527756633156,
+        "readout_p": 0.0642823786375357,
+        "best_classical": 0.6542335941369182,
+        "quantum_vs_classical_delta": 0.004942654772981813,
+        "quantum_vs_classical_p": 0.7633477468138399
+      }
+    }
+  },
+  "pooled": {
+    "FaceNet": {
+      "n_folds": 20,
+      "delta": 0.11435672681957021,
+      "ci95": [
+        0.08868708528954214,
+        0.14002636834959828
+      ],
+      "t": 9.324297720977892,
+      "p": 1.6045129125710122e-08,
+      "cohens_dz": 2.0849763546552933
+    },
+    "ArcFace": {
+      "n_folds": 20,
+      "delta": 0.09126395593173067,
+      "ci95": [
+        0.061989551084864994,
+        0.12053836077859635
+      ],
+      "t": 6.525073902092456,
+      "p": 2.998201536431893e-06,
+      "cohens_dz": 1.4590508803288538
+    }
+  },
+  "multiplicity": {
+    "method": "Holm and BH-FDR over 16 tests",
+    "readout_cells_surviving_holm": 4,
+    "quantum_vs_classical_surviving_holm": 2,
+    "readout_cells_surviving_bh_fdr": 6,
+    "quantum_vs_classical_surviving_bh_fdr": 3,
+    "caveat": "Per-corpus tests use five folds and are underpowered; pooled tests are the powered comparisons."
+  },
+  "provenance": {
+    "inputs": {
+      "FaceNet": {
+        "FIW": "amp_widthctl_all.json",
+        "KinFaceW-I": "amp_widthctl.json",
+        "KinFaceW-II": "amp_widthctl_all.json",
+        "TSKinFace": "amplitude_vqc_tskinface_facenet_corrected.json",
+        "corrected_source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5"
+      },
+      "ArcFace": {
+        "FIW": "amp_arcface.json",
+        "KinFaceW-I": "amp_arcface.json",
+        "KinFaceW-II": "amp_arcface.json",
+        "TSKinFace": "amplitude_vqc_tskinface_arcface_corrected.json",
+        "corrected_source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5"
+      }
+    },
+    "method": "Corrected TSKinFace folds replace the historical TSKinFace cells; historical non-TSKinFace fold artifacts are retained.",
+    "limitation": "Historical non-TSKinFace artifacts do not record full CLI provenance. This composite summary is not a full rerun of all 40 fold evaluations.",
+    "original_summary_preserved": "readout_summary.json"
+  }
+}

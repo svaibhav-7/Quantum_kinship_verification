@@ -1,0 +1,78 @@
+{
+  "TSKinFace": {
+    "vqc-fidelity": {
+      "roc_auc_mean": 0.5300920011619968,
+      "roc_auc_sd": 0.049730509778569985,
+      "accuracy_mean": 53.04456241956242,
+      "folds": 5,
+      "per_fold": [
+        0.6146065848214284,
+        0.5,
+        0.5,
+        0.5,
+        0.5358534209885562
+      ]
+    },
+    "vqc-expectation": {
+      "roc_auc_mean": 0.6461636568375981,
+      "roc_auc_sd": 0.02759114317535726,
+      "accuracy_mean": 62.388593951093945,
+      "folds": 5,
+      "per_fold": [
+        0.632065130739796,
+        0.6296037946428572,
+        0.6360411352040816,
+        0.6951729910714286,
+        0.6379352325298271
+      ]
+    },
+    "control": {
+      "roc_auc_mean": 0.6843717196063963,
+      "roc_auc_sd": 0.028614182941050666,
+      "accuracy_mean": 62.03466859716859,
+      "folds": 5,
+      "per_fold": [
+        0.6826969068877551,
+        0.6759207589285715,
+        0.6432557397959183,
+        0.7000558035714286,
+        0.7199293888483078
+      ]
+    }
+  },
+  "_mean": {
+    "vqc-fidelity": 0.5300920011619968,
+    "vqc-expectation": 0.6461636568375981,
+    "control": 0.6843717196063963
+  },
+  "_config": {
+    "qubits_each": 4,
+    "depth": 3,
+    "quantum_params": 48,
+    "control_params": 51,
+    "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "cli_args": {
+      "qubits": 4,
+      "depth": 3,
+      "folds": 5,
+      "epochs": 30,
+      "batch_size": 256,
+      "lr": 0.005,
+      "dropout": 0.3,
+      "patience": 6,
+      "cap_per_family": 300,
+      "seed": 42,
+      "datasets": [
+        "TSKinFace"
+      ],
+      "tag": "vqc_tskinface_corrected"
+    },
+    "tskinface_protocol": {
+      "negative_policy": "Split positive pairs by family first; within each side retain one father-vs-mother negative per available family and sample cross-family parent-child negatives only among families in that side.",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false,
+      "cap_note": "TSKinFace is not capped by --cap-per-family in these runners; recorded family count is the post-embedding-coverage count."
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "FIW": {
+    "single": {
+      "accuracy_mean": 66.04571791016485,
+      "accuracy_ci95": 1.8698343277989409,
+      "roc_auc_mean": 0.7256337515357298,
+      "folds": 5,
+      "mean_set_size": 7.5493408278144924
+    },
+    "set": {
+      "accuracy_mean": 72.43027786855212,
+      "accuracy_ci95": 2.0701359772234085,
+      "roc_auc_mean": 0.8082011209297335,
+      "folds": 5,
+      "mean_set_size": 7.5493408278144924
+    },
+    "set+density": {
+      "accuracy_mean": 72.36316839947474,
+      "accuracy_ci95": 2.0032474255318222,
+      "roc_auc_mean": 0.8081030251058081,
+      "folds": 5,
+      "mean_set_size": 7.5493408278144924
+    }
+  },
+  "KinFaceW-I": {
+    "single": {
+      "accuracy_mean": 63.78857344383707,
+      "accuracy_ci95": 1.1999232283226557,
+      "roc_auc_mean": 0.7210121248780442,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 63.78857344383707,
+      "accuracy_ci95": 1.1999232283226557,
+      "roc_auc_mean": 0.7210121248780442,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 63.97548933168754,
+      "accuracy_ci95": 1.5529379278409063,
+      "roc_auc_mean": 0.7205559498139332,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  },
+  "KinFaceW-II": {
+    "single": {
+      "accuracy_mean": 70.25,
+      "accuracy_ci95": 1.1902058645461295,
+      "roc_auc_mean": 0.76724,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 70.25,
+      "accuracy_ci95": 1.1902058645461295,
+      "roc_auc_mean": 0.76724,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 70.45,
+      "accuracy_ci95": 1.5292396803640687,
+      "roc_auc_mean": 0.76732,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  },
+  "TSKinFace": {
+    "single": {
+      "accuracy_mean": 60.50635456885457,
+      "accuracy_ci95": 1.3411055539213872,
+      "roc_auc_mean": 0.6675379479425991,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set": {
+      "accuracy_mean": 60.50635456885457,
+      "accuracy_ci95": 1.3411055539213872,
+      "roc_auc_mean": 0.6675379479425991,
+      "folds": 5,
+      "mean_set_size": 1.0
+    },
+    "set+density": {
+      "accuracy_mean": 60.90854247104247,
+      "accuracy_ci95": 1.5652851000065187,
+      "roc_auc_mean": 0.6673446373238241,
+      "folds": 5,
+      "mean_set_size": 1.0
+    }
+  },
+  "_config": {
+    "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "cli_args": {
+      "folds": 5,
+      "cap_per_family": 1500,
+      "seed": 42,
+      "tag": "setlevel_tskinface_corrected"
+    },
+    "tskinface_protocol": {
+      "negative_policy": "Split positive pairs by family first; within each side retain one father-vs-mother negative per available family and sample cross-family parent-child negatives only among families in that side.",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false,
+      "cap_note": "TSKinFace is not capped by --cap-per-family in these runners; recorded family count is the post-embedding-coverage count."
+    }
+  }
+}
