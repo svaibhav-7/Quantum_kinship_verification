@@ -1,0 +1,149 @@
+{
+  "TSKinFace": {
+    "amp-expectation": {
+      "roc_auc_mean": 0.6591762489099,
+      "roc_auc_sd": 0.03776341492958688,
+      "accuracy_mean": 60.5087676962677,
+      "per_fold": [
+        0.674724968112245,
+        0.696827168367347,
+        0.6656170280612246,
+        0.5960020727040817,
+        0.6627100073046018
+      ]
+    },
+    "amp-fidelity": {
+      "roc_auc_mean": 0.5981409713435685,
+      "roc_auc_sd": 0.06275686649958374,
+      "accuracy_mean": 56.978362290862286,
+      "per_fold": [
+        0.6694136639030612,
+        0.5579061702806123,
+        0.650390625,
+        0.5187041613520408,
+        0.5942902361821281
+      ]
+    },
+    "control": {
+      "roc_auc_mean": 0.6351409803177418,
+      "roc_auc_sd": 0.012640434249153606,
+      "accuracy_mean": 56.486084298584295,
+      "per_fold": [
+        0.6306202168367345,
+        0.6344268176020409,
+        0.6357023278061225,
+        0.6200573979591837,
+        0.6548981413846279
+      ]
+    },
+    "ctl-width-linear": {
+      "roc_auc_mean": 0.6472752478114145,
+      "roc_auc_sd": 0.018301012839114682,
+      "accuracy_mean": 59.0757722007722,
+      "per_fold": [
+        0.657585299744898,
+        0.6515864158163265,
+        0.6645607461734694,
+        0.6455875318877551,
+        0.6170562454346238
+      ]
+    },
+    "ctl-width-mlp": {
+      "roc_auc_mean": 0.6522525673512038,
+      "roc_auc_sd": 0.011935673572933347,
+      "accuracy_mean": 59.572474259974264,
+      "per_fold": [
+        0.6639827806122449,
+        0.6534000318877551,
+        0.6633051658163265,
+        0.6369379783163266,
+        0.6436368801233666
+      ]
+    },
+    "ctl-width-random": {
+      "roc_auc_mean": 0.6420317489174573,
+      "roc_auc_sd": 0.008713162729897639,
+      "accuracy_mean": 57.78032496782497,
+      "per_fold": [
+        0.6343470982142857,
+        0.6492745535714286,
+        0.6532007334183674,
+        0.6388911033163265,
+        0.6344452560668778
+      ]
+    }
+  },
+  "_test": {
+    "amp-expectation": {
+      "n_folds": 5,
+      "delta": 0.02403526859215821,
+      "t": 1.6050042942459914,
+      "p": 0.18376279556719835
+    },
+    "amp-fidelity": {
+      "n_folds": 5,
+      "delta": -0.037000008974173326,
+      "t": -1.3658403799858887,
+      "p": 0.24374612835738757
+    },
+    "ctl-width-linear": {
+      "n_folds": 5,
+      "delta": 0.012134267493672746,
+      "t": 0.9590028667871242,
+      "p": 0.3918647449671508
+    },
+    "ctl-width-mlp": {
+      "n_folds": 5,
+      "delta": 0.01711158703346205,
+      "t": 2.22519631892587,
+      "p": 0.09009037130058818
+    },
+    "ctl-width-random": {
+      "n_folds": 5,
+      "delta": 0.006890768599715491,
+      "t": 0.9393886876831694,
+      "p": 0.40071748526528056
+    }
+  },
+  "_mean": {
+    "amp-expectation": 0.6591762489099,
+    "amp-fidelity": 0.5981409713435685,
+    "control": 0.6351409803177418,
+    "ctl-width-linear": 0.6472752478114145,
+    "ctl-width-mlp": 0.6522525673512038,
+    "ctl-width-random": 0.6420317489174573
+  },
+  "_config": {
+    "qubits_each": 6,
+    "depth": 4,
+    "quantum_params": 96,
+    "control_params": 131,
+    "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "cli_args": {
+      "qubits": 6,
+      "depth": 4,
+      "folds": 5,
+      "epochs": 25,
+      "batch_size": 256,
+      "lr": 0.003,
+      "dropout": 0.3,
+      "patience": 8,
+      "cap_per_family": 200,
+      "seed": 42,
+      "datasets": [
+        "TSKinFace"
+      ],
+      "n_observables": null,
+      "backbone": "arcface",
+      "shuffle_labels": false,
+      "tag": "amplitude_vqc_tskinface_arcface_corrected"
+    },
+    "tskinface_protocol": {
+      "negative_policy": "Split positive pairs by family first; within each side retain one father-vs-mother negative per available family and sample cross-family parent-child negatives only among families in that side.",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false,
+      "cap_note": "TSKinFace is not capped by --cap-per-family in these runners; recorded family count is the post-embedding-coverage count."
+    }
+  }
+}

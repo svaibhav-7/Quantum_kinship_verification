@@ -1,0 +1,164 @@
+{
+  "FaceNet": {
+    "single": {
+      "FIW": {
+        "mean": 0.7491000760542524,
+        "sd": 0.017015147497050024,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7587564300279964,
+        "sd": 0.0196281579699877,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.7770050000000001,
+        "sd": 0.022584393117814783,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.6675379479425991,
+        "sd": 0.018676444495042976,
+        "folds": 5
+      }
+    },
+    "set": {
+      "FIW": {
+        "mean": 0.8253993413183522,
+        "sd": 0.014584204184341991,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7587564300279964,
+        "sd": 0.0196281579699877,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.7770050000000001,
+        "sd": 0.022584393117814783,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.6675379479425991,
+        "sd": 0.018676444495042976,
+        "folds": 5
+      }
+    },
+    "set+density": {
+      "FIW": {
+        "mean": 0.8250783171283114,
+        "sd": 0.01452946060755803,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7563017780246113,
+        "sd": 0.018924625553467137,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.77666,
+        "sd": 0.02251398593097192,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.6673446373238241,
+        "sd": 0.016901894055663648,
+        "folds": 5
+      }
+    }
+  },
+  "ArcFace": {
+    "single": {
+      "FIW": {
+        "mean": 0.776398580574581,
+        "sd": 0.02502828689128932,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7540031012205413,
+        "sd": 0.028341748660478658,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.81899,
+        "sd": 0.011844257574875712,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.756828957767061,
+        "sd": 0.01903893364910694,
+        "folds": 5
+      }
+    },
+    "set": {
+      "FIW": {
+        "mean": 0.8739632701245922,
+        "sd": 0.015143188440804861,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7540031012205413,
+        "sd": 0.028341748660478658,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.81899,
+        "sd": 0.011844257574875712,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.756828957767061,
+        "sd": 0.01903893364910694,
+        "folds": 5
+      }
+    },
+    "set+density": {
+      "FIW": {
+        "mean": 0.8732892698639094,
+        "sd": 0.01468253840281779,
+        "folds": 5
+      },
+      "KinFaceW-I": {
+        "mean": 0.7533701690854866,
+        "sd": 0.029348701552637448,
+        "folds": 5
+      },
+      "KinFaceW-II": {
+        "mean": 0.8190850000000001,
+        "sd": 0.012001413979194296,
+        "folds": 5
+      },
+      "TSKinFace": {
+        "mean": 0.7570010939950913,
+        "sd": 0.0191368439210277,
+        "folds": 5
+      }
+    }
+  },
+  "_config": {
+    "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "cli_args": {
+      "folds": 5,
+      "cap_per_family": 600,
+      "seed": 42,
+      "tag": "backbone_comparison_tskinface_corrected"
+    },
+    "tskinface_protocol": {
+      "negative_policy": "Split positive pairs by family first; within each side retain one father-vs-mother negative per available family and sample cross-family parent-child negatives only among families in that side.",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false,
+      "cap_note": "TSKinFace is not capped by --cap-per-family in these runners; recorded family count is the post-embedding-coverage count."
+    },
+    "backbone_tskinface_coverage": {
+      "FaceNet": {
+        "positive_pairs_after_embedding_coverage": 1118,
+        "families_after_embedding_coverage": 559
+      },
+      "ArcFace": {
+        "positive_pairs_after_embedding_coverage": 1118,
+        "families_after_embedding_coverage": 559
+      }
+    }
+  }
+}
