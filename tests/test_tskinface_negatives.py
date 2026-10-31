@@ -73,6 +73,10 @@ class TestFoldNegativeBuilder(unittest.TestCase):
         self.assertEqual(len(negatives), len(self.positives))
         self.assertEqual(len(same), 4)
         self.assertEqual(len(cross), 4)
+        allowed_families = {family_of_ts(p[0]) for p in self.positives}
+        self.assertTrue(all(family_of_ts(a) in allowed_families
+                            and family_of_ts(b) in allowed_families
+                            for a, b, _label, _rel in negatives))
         for a, b, _label, _rel in same:
             self.assertEqual({role_of_ts(a), role_of_ts(b)}, {"F", "M"})
 
