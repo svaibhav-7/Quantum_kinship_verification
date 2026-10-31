@@ -1,0 +1,855 @@
+{
+  "provenance": {
+    "corrected_source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+    "corrected_artifacts": [
+      "kfold_tskinface_corrected.json",
+      "vqc_tskinface_corrected.json",
+      "amplitude_vqc_tskinface_facenet_corrected.json",
+      "amplitude_vqc_tskinface_arcface_corrected.json",
+      "setlevel_tskinface_corrected.json",
+      "backbone_comparison_tskinface_corrected.json"
+    ],
+    "historical_artifacts": [
+      "amp_arcface.json",
+      "amp_widthctl.json",
+      "amp_widthctl_all.json",
+      "backbone_comparison.json",
+      "kfold.json",
+      "readout_summary.json",
+      "setlevel.json"
+    ],
+    "test_method": "Two-sided paired Student t tests; 95% t intervals on paired fold differences.",
+    "fold_inference_caveat": "Five folds partition the same corpus and are not independent population draws. Fold-level p-values and intervals are descriptive/optimistic; corpus-level summaries are included as the more conservative unit.",
+    "historical_alignment_caveat": "Historical JSONs do not store source commits or fold manifests. Historical-versus-corrected fold-index pairing assumes the shared seed/order and is exploratory, not independently verified.",
+    "historical_composite_caveat": "The corrected composite replaces only TSKinFace folds. Other corpus folds remain from historical artifacts and were not rerun."
+  },
+  "corrected_metadata_checks": [
+    {
+      "artifact": "kfold_tskinface_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    },
+    {
+      "artifact": "vqc_tskinface_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    },
+    {
+      "artifact": "setlevel_tskinface_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    },
+    {
+      "artifact": "backbone_comparison_tskinface_corrected.json",
+      "source_commit": "a480275269855e3ecffe7b3f922793e9b57d97e5",
+      "positive_pairs_after_embedding_coverage": 1118,
+      "families_after_embedding_coverage": 559,
+      "family_cap_applied": false
+    }
+  ],
+  "fold_metric_checks": [
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "amp-expectation",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6723701323876276,
+      "stored_AUC_mean": 0.6723701323876276,
+      "recomputed_AUC_SD": 0.012976907102140691,
+      "stored_AUC_SD": 0.012976907102140691
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "amp-fidelity",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.5970104081130565,
+      "stored_AUC_mean": 0.5970104081130565,
+      "recomputed_AUC_SD": 0.031227901557940602,
+      "stored_AUC_SD": 0.031227901557940602
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "control",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6235753370277684,
+      "stored_AUC_mean": 0.6235753370277684,
+      "recomputed_AUC_SD": 0.042826068070886,
+      "stored_AUC_SD": 0.042826068070886
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "ctl-width-linear",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6285811953448899,
+      "stored_AUC_mean": 0.6285811953448899,
+      "recomputed_AUC_SD": 0.0085979258390293,
+      "stored_AUC_SD": 0.0085979258390293
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "ctl-width-mlp",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6302073255990064,
+      "stored_AUC_mean": 0.6302073255990064,
+      "recomputed_AUC_SD": 0.013092299396782041,
+      "stored_AUC_SD": 0.013092299396782041
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_facenet_corrected.json",
+      "model": "ctl-width-random",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6235088602072495,
+      "stored_AUC_mean": 0.6235088602072495,
+      "recomputed_AUC_SD": 0.011932596876204992,
+      "stored_AUC_SD": 0.011932596876204992
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "amp-expectation",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6591762489099,
+      "stored_AUC_mean": 0.6591762489099,
+      "recomputed_AUC_SD": 0.03776341492958688,
+      "stored_AUC_SD": 0.03776341492958688
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "amp-fidelity",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.5981409713435685,
+      "stored_AUC_mean": 0.5981409713435685,
+      "recomputed_AUC_SD": 0.06275686649958374,
+      "stored_AUC_SD": 0.06275686649958374
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "control",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6351409803177418,
+      "stored_AUC_mean": 0.6351409803177418,
+      "recomputed_AUC_SD": 0.012640434249153606,
+      "stored_AUC_SD": 0.012640434249153606
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "ctl-width-linear",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6472752478114145,
+      "stored_AUC_mean": 0.6472752478114145,
+      "recomputed_AUC_SD": 0.018301012839114682,
+      "stored_AUC_SD": 0.018301012839114682
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "ctl-width-mlp",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6522525673512038,
+      "stored_AUC_mean": 0.6522525673512038,
+      "recomputed_AUC_SD": 0.011935673572933347,
+      "stored_AUC_SD": 0.011935673572933347
+    },
+    {
+      "artifact": "amplitude_vqc_tskinface_arcface_corrected.json",
+      "model": "ctl-width-random",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6420317489174573,
+      "stored_AUC_mean": 0.6420317489174573,
+      "recomputed_AUC_SD": 0.008713162729897639,
+      "stored_AUC_SD": 0.008713162729897639
+    },
+    {
+      "artifact": "vqc_tskinface_corrected.json",
+      "model": "vqc-fidelity",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.5300920011619968,
+      "stored_AUC_mean": 0.5300920011619968,
+      "recomputed_AUC_SD": 0.049730509778569985,
+      "stored_AUC_SD": 0.049730509778569985
+    },
+    {
+      "artifact": "vqc_tskinface_corrected.json",
+      "model": "vqc-expectation",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6461636568375981,
+      "stored_AUC_mean": 0.6461636568375981,
+      "recomputed_AUC_SD": 0.02759114317535726,
+      "stored_AUC_SD": 0.02759114317535726
+    },
+    {
+      "artifact": "vqc_tskinface_corrected.json",
+      "model": "control",
+      "folds": 5,
+      "recomputed_AUC_mean": 0.6843717196063963,
+      "stored_AUC_mean": 0.6843717196063963,
+      "recomputed_AUC_SD": 0.028614182941050666,
+      "stored_AUC_SD": 0.028614182941050666
+    }
+  ],
+  "summary_checks": [
+    {
+      "artifact": "kfold.json",
+      "corpus": "FIW",
+      "recomputed_AUC_mean": 0.8101361536593489,
+      "stored_AUC_mean": 0.8101361536593489,
+      "recomputed_AUC_SD": 0.01748939568587278,
+      "stored_AUC_SD": 0.01748939568587278,
+      "recomputed_accuracy_mean": 72.21109182559968,
+      "stored_accuracy_mean": 72.21109182559968,
+      "recomputed_accuracy_CI95_halfwidth": 1.5508216120858824,
+      "stored_accuracy_CI95_halfwidth": 1.5508216120858824
+    },
+    {
+      "artifact": "kfold.json",
+      "corpus": "KinFaceW-I",
+      "recomputed_AUC_mean": 0.875213526851369,
+      "stored_AUC_mean": 0.875213526851369,
+      "recomputed_AUC_SD": 0.014552555620481907,
+      "stored_AUC_SD": 0.014552555620481907,
+      "recomputed_accuracy_mean": 76.92382295891377,
+      "stored_accuracy_mean": 76.92382295891377,
+      "recomputed_accuracy_CI95_halfwidth": 2.1852649711593193,
+      "stored_accuracy_CI95_halfwidth": 2.1852649711593193
+    },
+    {
+      "artifact": "kfold.json",
+      "corpus": "KinFaceW-II",
+      "recomputed_AUC_mean": 0.8319699999999999,
+      "stored_AUC_mean": 0.8319699999999999,
+      "recomputed_AUC_SD": 0.0189558895860891,
+      "stored_AUC_SD": 0.0189558895860891,
+      "recomputed_accuracy_mean": 74.25,
+      "stored_accuracy_mean": 74.25,
+      "recomputed_accuracy_CI95_halfwidth": 1.9477114776064752,
+      "stored_accuracy_CI95_halfwidth": 1.9477114776064752
+    },
+    {
+      "artifact": "kfold.json",
+      "corpus": "TSKinFace",
+      "recomputed_AUC_mean": 0.881440687597933,
+      "stored_AUC_mean": 0.881440687597933,
+      "recomputed_AUC_SD": 0.01924599745774937,
+      "stored_AUC_SD": 0.01924599745774937,
+      "recomputed_accuracy_mean": 79.24509330759331,
+      "stored_accuracy_mean": 79.24509330759331,
+      "recomputed_accuracy_CI95_halfwidth": 2.3240782235473207,
+      "stored_accuracy_CI95_halfwidth": 2.3240782235473207
+    },
+    {
+      "artifact": "kfold_tskinface_corrected.json",
+      "corpus": "FIW",
+      "recomputed_AUC_mean": 0.7494552071737492,
+      "stored_AUC_mean": 0.7494552071737492,
+      "recomputed_AUC_SD": 0.11348012079083225,
+      "stored_AUC_SD": 0.11348012079083225,
+      "recomputed_accuracy_mean": 67.48363116157127,
+      "stored_accuracy_mean": 67.48363116157127,
+      "recomputed_accuracy_CI95_halfwidth": 7.211488759453695,
+      "stored_accuracy_CI95_halfwidth": 7.211488759453695
+    },
+    {
+      "artifact": "kfold_tskinface_corrected.json",
+      "corpus": "KinFaceW-I",
+      "recomputed_AUC_mean": 0.798821293036952,
+      "stored_AUC_mean": 0.798821293036952,
+      "recomputed_AUC_SD": 0.1582785708354418,
+      "stored_AUC_SD": 0.1582785708354418,
+      "recomputed_accuracy_mean": 72.99594427790512,
+      "stored_accuracy_mean": 72.99594427790512,
+      "recomputed_accuracy_CI95_halfwidth": 10.969961018546092,
+      "stored_accuracy_CI95_halfwidth": 10.969961018546092
+    },
+    {
+      "artifact": "kfold_tskinface_corrected.json",
+      "corpus": "KinFaceW-II",
+      "recomputed_AUC_mean": 0.761325,
+      "stored_AUC_mean": 0.761325,
+      "recomputed_AUC_SD": 0.12285501744943098,
+      "stored_AUC_SD": 0.12285501744943098,
+      "recomputed_accuracy_mean": 70.85,
+      "stored_accuracy_mean": 70.85,
+      "recomputed_accuracy_CI95_halfwidth": 8.639298929890085,
+      "stored_accuracy_CI95_halfwidth": 8.639298929890085
+    },
+    {
+      "artifact": "kfold_tskinface_corrected.json",
+      "corpus": "TSKinFace",
+      "recomputed_AUC_mean": 0.7982300257803998,
+      "stored_AUC_mean": 0.7982300257803998,
+      "recomputed_AUC_SD": 0.07050911591206359,
+      "stored_AUC_SD": 0.07050911591206359,
+      "recomputed_accuracy_mean": 73.97522522522522,
+      "stored_accuracy_mean": 73.97522522522522,
+      "recomputed_accuracy_CI95_halfwidth": 4.031256247993625,
+      "stored_accuracy_CI95_halfwidth": 4.031256247993625
+    }
+  ],
+  "historical_composite_recalculation": {
+    "FaceNet": {
+      "recomputed_delta": 0.14382188997444287,
+      "stored_delta": 0.14382188997444287,
+      "recomputed_p": 1.869678171422934e-09,
+      "stored_p": 1.869678171422934e-09,
+      "recomputed_ci95": [
+        0.11557602226431407,
+        0.17206775768457166
+      ],
+      "stored_ci95": [
+        0.11557602226431407,
+        0.17206775768457166
+      ]
+    },
+    "ArcFace": {
+      "recomputed_delta": 0.11512642797106606,
+      "stored_delta": 0.11512642797106606,
+      "recomputed_p": 3.244375392923273e-07,
+      "stored_p": 3.2443753929232804e-07,
+      "recomputed_ci95": [
+        0.08362246219246233,
+        0.1466303937496698
+      ],
+      "stored_ci95": [
+        0.08362246219246233,
+        0.1466303937496698
+      ]
+    }
+  },
+  "corrected_composite_readout": {
+    "FaceNet": {
+      "fold_level_paired_test": {
+        "n": 20,
+        "mean_difference": 0.11435672681957021,
+        "sd_difference": 0.05484797300661795,
+        "ci95": [
+          0.08868708528954214,
+          0.14002636834959828
+        ],
+        "t": 9.32429772097789,
+        "p": 1.6045129125710162e-08,
+        "differences": [
+          0.12285113318902863,
+          0.1530912018485397,
+          0.07579620298976675,
+          0.15342914974496824,
+          0.09413162471425585,
+          0.14839723993361875,
+          0.1805834570704864,
+          0.11821993187177926,
+          0.21444464222143111,
+          0.16714133143467425,
+          0.06302499999999989,
+          0.08428750000000007,
+          0.040775000000000006,
+          0.2149875,
+          0.0791750000000001,
+          0.08974410076530615,
+          0.01598373724489799,
+          0.08165258290816335,
+          0.12075494260204078,
+          0.06866325785244698
+        ]
+      },
+      "corpus_level_one_sample_test": {
+        "n": 4,
+        "mean_difference": 0.11435672681957021,
+        "sd_difference": 0.03878884120693896,
+        "ci95": [
+          0.05263502462694055,
+          0.17607842901219986
+        ],
+        "t": 5.896372423681111,
+        "p": 0.009738224192492902,
+        "differences": [
+          0.11985986249731181,
+          0.16575732050639796,
+          0.09645000000000001,
+          0.07535972427457105
+        ]
+      },
+      "corpus_effects": {
+        "FIW": 0.11985986249731181,
+        "KinFaceW-I": 0.16575732050639796,
+        "KinFaceW-II": 0.09645000000000001,
+        "TSKinFace": 0.07535972427457105
+      },
+      "positive_corpus_count": 4,
+      "corpus_count": 4
+    },
+    "ArcFace": {
+      "fold_level_paired_test": {
+        "n": 20,
+        "mean_difference": 0.09126395593173067,
+        "sd_difference": 0.0625502216284334,
+        "ci95": [
+          0.061989551084864994,
+          0.12053836077859635
+        ],
+        "t": 6.525073902092456,
+        "p": 2.998201536431893e-06,
+        "differences": [
+          0.09714185475600656,
+          0.09019796608529129,
+          0.24138098417904674,
+          0.1979029003853322,
+          0.17161912332984708,
+          0.06004891256878331,
+          0.08306402305878241,
+          0.12520744169796494,
+          0.13763794944820218,
+          0.10617657529369873,
+          0.03485000000000005,
+          0.05028749999999993,
+          0.01815,
+          0.045737499999999986,
+          0.06070000000000009,
+          0.005311304209183798,
+          0.13892099808673475,
+          0.01522640306122458,
+          0.0772979113520409,
+          0.06841977112247377
+        ]
+      },
+      "corpus_level_one_sample_test": {
+        "n": 4,
+        "mean_difference": 0.09126395593173066,
+        "sd_difference": 0.0521126996201373,
+        "ci95": [
+          0.008341021749497843,
+          0.1741868901139635
+        ],
+        "t": 3.502561049301871,
+        "p": 0.03940826636054344,
+        "differences": [
+          0.1596485657471048,
+          0.1024269804134863,
+          0.04194500000000001,
+          0.06103527756633156
+        ]
+      },
+      "corpus_effects": {
+        "FIW": 0.1596485657471048,
+        "KinFaceW-I": 0.1024269804134863,
+        "KinFaceW-II": 0.04194500000000001,
+        "TSKinFace": 0.06103527756633156
+      },
+      "positive_corpus_count": 4,
+      "corpus_count": 4
+    }
+  },
+  "multiplicity": {
+    "historical_reference": {
+      "paper_compatible_family_16": {
+        "readout_holm_survivors": 5,
+        "width_control_holm_survivors": 1,
+        "readout_BH_survivors": 7,
+        "width_control_BH_survivors": 3,
+        "manuscript_reported_readout_BH_survivors": 6,
+        "manuscript_reported_width_control_BH_survivors": 2,
+        "manuscript_BH_count_matches_recalculation": false
+      },
+      "all_width_controls_family_32": {
+        "readout_holm_survivors": 4,
+        "width_control_holm_survivors": 6,
+        "readout_BH_survivors": 8,
+        "width_control_BH_survivors": 16
+      }
+    },
+    "paper_compatible_family_16": {
+      "composition": "8 vector-vs-scalar tests + 8 vector-vs-foldwise-best width-control tests",
+      "readout_holm_survivors": 4,
+      "width_control_holm_survivors": 2,
+      "readout_BH_survivors": 6,
+      "width_control_BH_survivors": 3,
+      "note": "The fold-wise maximum selects the strongest observed control within each fold; this is optimistic and should be interpreted as a compatibility check, not an unbiased control-selection test."
+    },
+    "all_width_controls_family_32": {
+      "composition": "8 vector-vs-scalar tests + 24 vector-vs-individual-width-control tests",
+      "readout_holm_survivors": 3,
+      "width_control_holm_survivors": 5,
+      "readout_BH_survivors": 6,
+      "width_control_BH_survivors": 14,
+      "method": "Two-sided paired t-test p-values adjusted over all 32 tests."
+    },
+    "historical_BH_note": "The LaTeX manuscript reports 6/8 readout and 2/8 width-control BH-FDR survivors. Recalculation from the 16 stored raw p-values with standard Benjamini-Hochberg gives 7/8 and 3/8, respectively. Historical Holm counts (5/8 and 1/8) do reproduce."
+  },
+  "eight_cell_readout_conclusion": {
+    "positive_cells": 8,
+    "total_cells": 8,
+    "unadjusted_p_below_0_05": 7,
+    "all_positive": true,
+    "interpretation": "Direction remains positive in all eight backbone-corpus cells. Not all per-cell tests remain significant: corrected ArcFace TSKinFace is positive but its nominal paired p-value exceeds 0.05."
+  },
+  "historical_vs_corrected_TSKinFace": [
+    {
+      "evaluation": "Grouped k-fold baseline",
+      "backbone": "FaceNet",
+      "measure": "roc_auc",
+      "historical_mean": "0.881441",
+      "corrected_mean": "0.798230",
+      "corrected_minus_historical": "-0.083211",
+      "paired_CI95_low": "-0.174015",
+      "paired_CI95_high": "0.007594",
+      "paired_t": "-2.544248",
+      "nominal_p": "0.063693",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "kfold.json",
+      "corrected_source": "kfold_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Grouped k-fold baseline",
+      "backbone": "FaceNet",
+      "measure": "accuracy",
+      "historical_mean": "79.245093",
+      "corrected_mean": "73.975225",
+      "corrected_minus_historical": "-5.269868",
+      "paired_CI95_low": "-12.904939",
+      "paired_CI95_high": "2.365202",
+      "paired_t": "-1.916354",
+      "nominal_p": "0.127807",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "kfold.json",
+      "corrected_source": "kfold_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: amp-expectation",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.737280",
+      "corrected_mean": "0.672370",
+      "corrected_minus_historical": "-0.064910",
+      "paired_CI95_low": "-0.108145",
+      "paired_CI95_high": "-0.021675",
+      "paired_t": "-4.168364",
+      "nominal_p": "0.014050",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: amp-fidelity",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.544060",
+      "corrected_mean": "0.597010",
+      "corrected_minus_historical": "0.052951",
+      "paired_CI95_low": "-0.006657",
+      "paired_CI95_high": "0.112559",
+      "paired_t": "2.466362",
+      "nominal_p": "0.069217",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: control",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.550669",
+      "corrected_mean": "0.623575",
+      "corrected_minus_historical": "0.072906",
+      "paired_CI95_low": "0.017216",
+      "paired_CI95_high": "0.128597",
+      "paired_t": "3.634738",
+      "nominal_p": "0.022067",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-linear",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.514178",
+      "corrected_mean": "0.628581",
+      "corrected_minus_historical": "0.114403",
+      "paired_CI95_low": "0.087640",
+      "paired_CI95_high": "0.141167",
+      "paired_t": "11.868280",
+      "nominal_p": "0.000289",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-mlp",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.699193",
+      "corrected_mean": "0.630207",
+      "corrected_minus_historical": "-0.068986",
+      "paired_CI95_low": "-0.199070",
+      "paired_CI95_high": "0.061099",
+      "paired_t": "-1.472390",
+      "nominal_p": "0.214899",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-random",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.531545",
+      "corrected_mean": "0.623509",
+      "corrected_minus_historical": "0.091964",
+      "paired_CI95_low": "0.070917",
+      "paired_CI95_high": "0.113010",
+      "paired_t": "12.131693",
+      "nominal_p": "0.000265",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_widthctl_all.json",
+      "corrected_source": "amplitude_vqc_tskinface_facenet_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: amp-expectation",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.668222",
+      "corrected_mean": "0.659176",
+      "corrected_minus_historical": "-0.009046",
+      "paired_CI95_low": "-0.120205",
+      "paired_CI95_high": "0.102113",
+      "paired_t": "-0.225946",
+      "nominal_p": "0.832319",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: amp-fidelity",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.511737",
+      "corrected_mean": "0.598141",
+      "corrected_minus_historical": "0.086404",
+      "paired_CI95_low": "-0.003137",
+      "paired_CI95_high": "0.175945",
+      "paired_t": "2.679170",
+      "nominal_p": "0.055276",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: control",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.509666",
+      "corrected_mean": "0.635141",
+      "corrected_minus_historical": "0.125475",
+      "paired_CI95_low": "0.093460",
+      "paired_CI95_high": "0.157490",
+      "paired_t": "10.881710",
+      "nominal_p": "0.000405",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-linear",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.507621",
+      "corrected_mean": "0.647275",
+      "corrected_minus_historical": "0.139654",
+      "paired_CI95_low": "0.103534",
+      "paired_CI95_high": "0.175774",
+      "paired_t": "10.734803",
+      "nominal_p": "0.000427",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-mlp",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.501144",
+      "corrected_mean": "0.652253",
+      "corrected_minus_historical": "0.151108",
+      "paired_CI95_low": "0.123394",
+      "paired_CI95_high": "0.178823",
+      "paired_t": "15.138279",
+      "nominal_p": "0.000111",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Amplitude VQC: ctl-width-random",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.511919",
+      "corrected_mean": "0.642032",
+      "corrected_minus_historical": "0.130113",
+      "paired_CI95_low": "0.096387",
+      "paired_CI95_high": "0.163838",
+      "paired_t": "10.711479",
+      "nominal_p": "0.000430",
+      "pairing_status": "Fold-index pairing; historical fold manifest unavailable.",
+      "historical_source": "amp_arcface.json",
+      "corrected_source": "amplitude_vqc_tskinface_arcface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: single",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.732595",
+      "corrected_mean": "0.667538",
+      "corrected_minus_historical": "-0.065057",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: set",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.732595",
+      "corrected_mean": "0.667538",
+      "corrected_minus_historical": "-0.065057",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: set+density",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.732722",
+      "corrected_mean": "0.667345",
+      "corrected_minus_historical": "-0.065377",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: single",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.846043",
+      "corrected_mean": "0.756829",
+      "corrected_minus_historical": "-0.089214",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: set",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.846043",
+      "corrected_mean": "0.756829",
+      "corrected_minus_historical": "-0.089214",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Backbone comparison: set+density",
+      "backbone": "ArcFace",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.844677",
+      "corrected_mean": "0.757001",
+      "corrected_minus_historical": "-0.087676",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: artifacts store means/SD, not fold scores.",
+      "historical_source": "backbone_comparison.json",
+      "corrected_source": "backbone_comparison_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Set-level evaluation: single",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.734359",
+      "corrected_mean": "0.667538",
+      "corrected_minus_historical": "-0.066821",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: summary-only artifact. Historical mean set size was 169.03 despite one TSKinFace image per identity.",
+      "historical_source": "setlevel.json",
+      "corrected_source": "setlevel_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Set-level evaluation: set",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.761284",
+      "corrected_mean": "0.667538",
+      "corrected_minus_historical": "-0.093746",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: summary-only artifact. Historical mean set size was 169.03 despite one TSKinFace image per identity.",
+      "historical_source": "setlevel.json",
+      "corrected_source": "setlevel_tskinface_corrected.json"
+    },
+    {
+      "evaluation": "Set-level evaluation: set+density",
+      "backbone": "FaceNet",
+      "measure": "ROC-AUC",
+      "historical_mean": "0.761284",
+      "corrected_mean": "0.667345",
+      "corrected_minus_historical": "-0.093939",
+      "paired_CI95_low": "NA",
+      "paired_CI95_high": "NA",
+      "paired_t": "NA",
+      "nominal_p": "NA",
+      "pairing_status": "Not calculable: summary-only artifact. Historical mean set size was 169.03 despite one TSKinFace image per identity.",
+      "historical_source": "setlevel.json",
+      "corrected_source": "setlevel_tskinface_corrected.json"
+    }
+  ],
+  "notes": [
+    "The historical setlevel.json reports a mean identity set size of 169.03 for TSKinFace, although each identity has one image. Treat its set-level comparison as invalid/unreliable; the independent backbone_comparison.json instead reports identical old single and set AUC.",
+    "The corrected backbone comparison artifact stores means and SDs but not fold-level scores, so no paired p-value or CI is calculated for its set-density rows.",
+    "Corrected set-level and backbone-comparison artifacts store summary statistics only; their fold-level CIs/SDs cannot be independently recomputed from those files. Corrected amplitude and standard-VQC ROC-AUC means/SDs were verified against all saved fold scores; amplitude per-fold accuracy scores were not saved.",
+    "No historical TSKinFace standard-VQC result artifact was found; standard VQC corrected values are not compared to an invented historical estimate.",
+    "Historical manuscript formulations 1-7 and 9 are summarized as reported in the LaTeX table only; corrected TSKinFace results are unavailable for those formulations.",
+    "For the corrected composite, historical folds remain in place for FIW and both KinFaceW datasets. This is a mixed-provenance summary rather than a full rerun of 40 folds."
+  ]
+}
