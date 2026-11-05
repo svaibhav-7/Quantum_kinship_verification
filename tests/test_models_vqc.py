@@ -193,6 +193,13 @@ class TestAmplitudeReadouts(unittest.TestCase):
             m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout=readout)
             self.assertEqual(m.measure(e1, e2, r).shape, (6, width))
 
+    def test_dual_readout_combines_fidelity_and_all_expectations(self):
+        from src.models_vqc import AmplitudeVQCClassifier
+        e1, e2, r = _batch()
+        m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout="both")
+        self.assertEqual(m.measure(e1, e2, r).shape, (6, 9))
+        self.assertEqual(m(*_batch()).shape, (6, 1))
+
     def test_fidelity_readout_is_a_probability(self):
         from src.models_vqc import AmplitudeVQCClassifier
         m = AmplitudeVQCClassifier(n_qubits_each=4, depth=2, readout="fidelity")

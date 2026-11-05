@@ -141,7 +141,7 @@ class AmplitudeVQCClassifier(nn.Module):
     def __init__(self, n_qubits_each=6, depth=4, embed_dim=512, dropout=0.3,
                  readout="expectation", n_observables=None):
         super().__init__()
-        if readout not in ("fidelity", "expectation"):
+        if readout not in ("fidelity", "expectation", "both"):
             raise ValueError(f"unknown readout {readout!r}")
         self.readout = readout
         self.n_each = n_qubits_each
@@ -163,7 +163,13 @@ class AmplitudeVQCClassifier(nn.Module):
             self.n_observables = n_observables
         else:
             self.n_observables = full
-        self.head = nn.Linear(1 if readout == "fidelity" else self.n_observables, 1)
+        if readout == "fidelity":
+            readout_dim = 1
+        elif readout == "expectation":
+            readout_dim = self.n_observables
+        else:
+            readout_dim = 1 + 2 * n_qubits_each
+        self.head = nn.Linear(readout_dim, 1)
 
     def joint_state(self, emb1, emb2, rels):
         from .quantum_vqc import amplitude_encode
@@ -188,20 +194,26 @@ class AmplitudeVQCClassifier(nn.Module):
         return state
 
     def measure(self, emb1, emb2, rels):
-        """Both branches of the diagram's "Fidelity / Expectation" box."""
+        """Return the selected circuit readout(s)."""
         s = self.joint_state(emb1, emb2, rels)
-        if self.readout == "fidelity":
-            amp = s[:, 0]
-            return (amp.real ** 2 + amp.imag ** 2).unsqueeze(1).clamp(0.0, 1.0)
-
         probs = s.real ** 2 + s.imag ** 2
         b, n = s.shape[0], self.vqc.n_total
-        outs = []
-        for q in range(n):
-            left, right = 2 ** q, 2 ** (n - q - 1)
-            p = probs.reshape(b, left, 2, right)
-            outs.append(p[:, :, 0, :].sum(dim=(1, 2)) - p[:, :, 1, :].sum(dim=(1, 2)))
-        return torch.stack(outs, dim=1)[:, :self.n_observables]
+        expectation = None
+        if self.readout in ("expectation", "both"):
+            outs = []
+            for q in range(n):
+                left, right = 2 ** q, 2 ** (n - q - 1)
+                p = probs.reshape(b, left, 2, right)
+                outs.append(p[:, :, 0, :].sum(dim=(1, 2)) - p[:, :, 1, :].sum(dim=(1, 2)))
+            expectation = torch.stack(outs, dim=1)
+            if self.readout == "expectation":
+                return expectation[:, :self.n_observables]
+
+        amp = s[:, 0]
+        fidelity = (amp.real ** 2 + amp.imag ** 2).unsqueeze(1).clamp(0.0, 1.0)
+        if self.readout == "fidelity":
+            return fidelity
+        return torch.cat([fidelity, expectation], dim=1)
 
     def forward_logits(self, emb1, emb2, rels):
         return self.head(self.measure(emb1, emb2, rels))

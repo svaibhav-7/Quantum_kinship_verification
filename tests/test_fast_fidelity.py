@@ -1,5 +1,4 @@
-"""A fast fidelity path is only acceptable if it reproduces the reference
-statevector simulator exactly. These tests pin that equivalence."""
+"""Check numerical output and gradient equivalence with the reference simulator."""
 import os, sys, unittest, torch
 
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -39,7 +39,19 @@ class KinshipPredictor:
             self.use_quantum, self.metrics = True, {}
             self.domain_thresholds = {}
 
-        self.model = QuantumAugmentedKinshipClassifier(use_quantum=self.use_quantum)
+        self.model_type = ckpt.get("model_type", "hybrid") if "state_dict" in ckpt else "hybrid"
+        if self.model_type == "fair":
+            from .models_fair import FairKinshipModel
+
+            self.model = FairKinshipModel()
+        elif self.model_type == "relation_free_hybrid":
+            from .models_fair import RelationFreeHybrid
+
+            self.model = RelationFreeHybrid(use_quantum=self.use_quantum)
+        elif self.model_type == "hybrid":
+            self.model = QuantumAugmentedKinshipClassifier(use_quantum=self.use_quantum)
+        else:
+            raise ValueError(f"unsupported checkpoint model_type {self.model_type!r}")
         self.model.load_state_dict(state)
         self.model.to(self.device).eval()
 
@@ -67,11 +79,14 @@ class KinshipPredictor:
         e2 = torch.as_tensor(emb2, dtype=torch.float32).to(self.device)
         if e1.dim() == 1:
             e1, e2 = e1.unsqueeze(0), e2.unsqueeze(0)
-        rels = self._relation_tensor(relations)
-
-        # Kinship is symmetric; average both orders so the answer cannot
-        # depend on which face the caller passed first.
-        p = 0.5 * (self.model(e1, e2, rels) + self.model(e2, e1, rels))
+        if self.model_type == "fair":
+            # Symmetric by construction, and the relation cannot affect it.
+            p = self.model(e1, e2)
+        else:
+            rels = self._relation_tensor(relations)
+            # Kinship is symmetric; average both orders so the answer cannot
+            # depend on which face the caller passed first.
+            p = 0.5 * (self.model(e1, e2, rels) + self.model(e2, e1, rels))
         p = p.view(-1).cpu()
         thr = self.threshold_for(domain)
         return [

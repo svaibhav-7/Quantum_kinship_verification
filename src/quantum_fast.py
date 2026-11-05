@@ -1,9 +1,10 @@
 """Fast, exact SWAP-test fidelity for the Ry -> CNOT-chain -> Rz ansatz.
 
 The reference simulator materialises a 2^n statevector and permutes all n
-dimensions once per qubit. That launches thousands of tiny kernels, so on an
-RTX 5060 the quantum branch ran at 183 pairs/s while the classical path hit
-240k pairs/s -- the GPU was idle, waiting on launch overhead.
+dimensions once per qubit, creating substantial kernel-launch overhead.
+Reproducible forward-throughput measurements and their full settings are
+available from scripts/benchmark_quantum_fast.py and
+results/honest/quantum_fast_benchmark_rtx5060.json.
 
 A closed-form product over qubits does NOT work here: the shared CNOT chain
 correlates the Rz phases, so the overlap is not factorizable. (Verified: with
@@ -14,8 +15,8 @@ So this keeps the exact statevector maths and instead removes the overhead:
   * CNOT chain + Rz applied as one precomputed diagonal phase vector over all
     2^n basis states, so the entangling layer costs a single multiply.
 
-Exactness against the reference simulator is pinned by
-tests/test_fast_fidelity.py, including gradients.
+Numerical output and input-gradient equivalence are tested against the
+reference simulator within explicit tolerances in tests/test_fast_fidelity.py.
 """
 
 import torch

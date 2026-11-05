@@ -1,10 +1,8 @@
 """Deployment inference for the set-level and triadic models.
 
-These are the two components that measured a real gain under grouped k-fold:
-
-  set-level  FIW 0.7296 -> 0.8066 (+0.077); exactly 0.000 on the three
-             single-photograph corpora, by construction
-  triadic    TSKinFace 0.7569 -> 0.7893 (+0.0324, p = 0.0001)
+These components are supplementary research models. Their metrics are
+dataset- and protocol-specific, so deployment artifacts carry their own
+held-out measurements and evaluation caveats.
 
 Both operate on features rather than raw embeddings, so the fitted model is a
 scaler plus a logistic regression -- small enough to ship as a single file and
@@ -54,18 +52,7 @@ def _load(path):
 # Training
 # ---------------------------------------------------------------------------
 
-def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25,
-                    preprocessing="uncropped"):
-    """Fit the set-level model.
-
-    galleries: {identity: (n, d) array}
-    pairs:     [(identity_a, identity_b, label)]
-    """
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.preprocessing import StandardScaler
-
-    from .calibration import calibrate_threshold
-
+def _set_matrix(galleries, pairs):
     X, y = [], []
     for a, b, label in pairs:
         A, B = galleries.get(a), galleries.get(b)
@@ -73,45 +60,73 @@ def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25,
             continue
         X.append(features_to_vector(pair_set_features(A, B)))
         y.append(label)
-    X, y = np.stack(X), np.array(y)
-
-    scaler = StandardScaler().fit(X)
-    clf = LogisticRegression(max_iter=4000, random_state=seed)
-    clf.fit(scaler.transform(X), y)
-
-    # Calibrated on the fitting data here; the evaluation scripts calibrate on
-    # a group-disjoint validation slice, which is what the reported numbers use.
-    s = clf.predict_proba(scaler.transform(X))[:, 1]
-    thr = calibrate_threshold(y, s, objective="accuracy", max_fpr=max_fpr)
-
-    _save({"scaler": scaler, "clf": clf, "threshold": float(thr),
-           "feature_order": list(FEATURE_ORDER), "kind": "set",
-           "preprocessing": preprocessing}, out_path)
-    return out_path
+    return np.stack(X), np.array(y)
 
 
-def train_triad_model(rows, out_path, seed=42, max_fpr=0.25,
-                      preprocessing="uncropped"):
-    """Fit the triadic model. rows: [(F, M, C, label)] as embeddings."""
+def train_set_model(galleries, pairs, out_path, seed=42, max_fpr=0.25,
+                    preprocessing="uncropped", val_galleries=None, val_pairs=None):
+    """Fit the set-level model.
+
+    galleries: {identity: (n, d) array}
+    pairs:     [(identity_a, identity_b, label)]
+    val_galleries, val_pairs: held-out data for the decision threshold. Without
+    them the threshold comes from the fitting data, and the file records that.
+    """
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
 
     from .calibration import calibrate_threshold
 
+    X, y = _set_matrix(galleries, pairs)
+
+    scaler = StandardScaler().fit(X)
+    clf = LogisticRegression(max_iter=4000, random_state=seed)
+    clf.fit(scaler.transform(X), y)
+
+    held_out = val_pairs is not None
+    Xc, yc = _set_matrix(val_galleries, val_pairs) if held_out else (X, y)
+    s = clf.predict_proba(scaler.transform(Xc))[:, 1]
+    thr = calibrate_threshold(yc, s, objective="accuracy", max_fpr=max_fpr)
+
+    _save({"scaler": scaler, "clf": clf, "threshold": float(thr),
+           "calibrated_on_validation": held_out,
+           "feature_order": list(FEATURE_ORDER), "kind": "set",
+           "preprocessing": preprocessing}, out_path)
+    return out_path
+
+
+def _triad_matrix(rows):
     X, y = [], []
     for F, M, C, label in rows:
         f = triad_features(F, M, C)
         X.append([f[k] for k in TRIAD_FEATURE_ORDER])
         y.append(label)
-    X, y = np.array(X, dtype=np.float64), np.array(y)
+    return np.array(X, dtype=np.float64), np.array(y)
+
+
+def train_triad_model(rows, out_path, seed=42, max_fpr=0.25,
+                      preprocessing="uncropped", val_rows=None):
+    """Fit the triadic model. rows: [(F, M, C, label)] as embeddings.
+
+    val_rows: held-out rows for the decision threshold.
+    """
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.preprocessing import StandardScaler
+
+    from .calibration import calibrate_threshold
+
+    X, y = _triad_matrix(rows)
 
     scaler = StandardScaler().fit(X)
     clf = LogisticRegression(max_iter=4000, random_state=seed)
     clf.fit(scaler.transform(X), y)
-    s = clf.predict_proba(scaler.transform(X))[:, 1]
-    thr = calibrate_threshold(y, s, objective="accuracy", max_fpr=max_fpr)
+    held_out = val_rows is not None
+    Xc, yc = _triad_matrix(val_rows) if held_out else (X, y)
+    s = clf.predict_proba(scaler.transform(Xc))[:, 1]
+    thr = calibrate_threshold(yc, s, objective="accuracy", max_fpr=max_fpr)
 
     _save({"scaler": scaler, "clf": clf, "threshold": float(thr),
+           "calibrated_on_validation": held_out,
            "feature_order": list(TRIAD_FEATURE_ORDER), "kind": "triad",
            "preprocessing": preprocessing}, out_path)
     return out_path

@@ -4,10 +4,10 @@
 Single pair (one photo each):
   predict.py --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
 
-Set-level (several photos per person; +0.077 ROC-AUC where sets exist):
+Set-level (several photos per person; performance varies by dataset):
   predict.py --set-a p1.jpg p2.jpg p3.jpg --set-b c1.jpg c2.jpg
 
-Triadic (father + mother + child scored jointly; +0.032 ROC-AUC):
+Triadic (father + mother + child scored jointly; experimental):
   predict.py --father f.jpg --mother m.jpg --child c.jpg
 
 Batch:
@@ -20,7 +20,16 @@ sys.path.insert(0, project_root)
 
 from src.predictor import KinshipPredictor, RELATIONS
 
-DEFAULT_CKPT = os.path.join(project_root, "weights", "deploy", "kinship_model.pt")
+
+
+def _deployed(name):
+    """Prefer the protocol-v2 model; fall back to the earlier one if absent."""
+    current = os.path.join(project_root, "weights", "deploy", "v2", name)
+    return current if os.path.exists(current) else os.path.join(
+        project_root, "weights", "deploy", name)
+
+
+DEFAULT_CKPT = _deployed("kinship_model.pt")
 
 
 def main():
@@ -47,7 +56,7 @@ def main():
             sys.exit("error: triadic scoring needs --father, --mother and --child")
         from src.set_predictor import TriadPredictor
 
-        path = os.path.join(project_root, "weights", "deploy", "triad_model.pkl")
+        path = _deployed("triad_model.pkl")
         if not os.path.exists(path):
             sys.exit("error: triad model missing; run scripts/deploy/package_setlevel.py")
         tp = TriadPredictor(path)
@@ -69,7 +78,7 @@ def main():
             sys.exit("error: set-level scoring needs both --set-a and --set-b")
         from src.set_predictor import SetKinshipPredictor
 
-        path = os.path.join(project_root, "weights", "deploy", "set_model.pkl")
+        path = _deployed("set_model.pkl")
         if not os.path.exists(path):
             sys.exit("error: set model missing; run scripts/deploy/package_setlevel.py")
         sp = SetKinshipPredictor(path)
