@@ -561,6 +561,7 @@ def galleries(pairs, cache):
 def set_matrix(pairs, gallery, cache, mode):
     """Features per photo pair. Identity-level results are memoised per pair."""
     memo = {}
+    shared_memo = {}
     rows, labels, kept = [], [], []
     density = mode == "set+density"
     for index, (first, second, label, _r) in enumerate(pairs):
@@ -577,12 +578,17 @@ def set_matrix(pairs, gallery, cache, mode):
             kept.append(index)
             continue
         key = (identity_of_path(first), identity_of_path(second))
+        shared = None
+        if mode == "set_noshared":
+            if key not in shared_memo:
+                shared_memo[key] = shared_source_photos(
+                    gallery[key[0]], gallery[key[1]])
+            shared = shared_memo[key]
+            if source_photo(first) in shared or source_photo(second) in shared:
+                continue
         if key not in memo:
             A, B = sorted(gallery[key[0]]), sorted(gallery[key[1]])
             if mode == "set_noshared":
-                shared = shared_source_photos(A, B)
-                if source_photo(first) in shared or source_photo(second) in shared:
-                    continue
                 A = [p for p in A if source_photo(p) not in shared]
                 B = [p for p in B if source_photo(p) not in shared]
             memo[key] = None

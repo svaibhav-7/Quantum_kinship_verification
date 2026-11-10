@@ -50,8 +50,11 @@ class TestSetLevelNoShared(unittest.TestCase):
             os.path.join("FIDs", "F0001", "MID2", "P0001_face2.jpg"),
             os.path.join("FIDs", "F0001", "MID2", "P0003_face1.jpg"),
         ]
-        pairs = [(first[0], second[0], 1, "fd"),
-                 (first[1], second[1], 0, "fd")]
+        # A non-shared query for this identity pair comes first and populates
+        # the cached set features; the later shared-source query must still be
+        # removed from both arms.
+        pairs = [(first[1], second[1], 0, "fd"),
+                 (first[0], second[0], 1, "fd")]
         gallery = {
             identity_of_path(first[0]): set(first),
             identity_of_path(second[0]): set(second),
@@ -66,7 +69,7 @@ class TestSetLevelNoShared(unittest.TestCase):
             pairs, gallery, cache, "single_noshared"
         )
 
-        np.testing.assert_array_equal(kept_set, [1])
+        np.testing.assert_array_equal(kept_set, [0])
         np.testing.assert_array_equal(kept_single, kept_set)
         self.assertEqual(source_photo(first[0]), source_photo(second[0]))
 
