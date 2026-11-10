@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(project_root, "scripts", "inference"))
 
 from src.user_input import (InputError, is_url, resolve_inputs,
                             confidence_label)
+import verify_kinship
 
 
 class TestUrlDetection(unittest.TestCase):
@@ -93,6 +94,41 @@ class TestConfidenceLabel(unittest.TestCase):
 
     def test_moderate_distance_is_moderate(self):
         self.assertEqual(confidence_label(0.68, 0.50), "moderate")
+
+
+class TestDatasetSampleSelection(unittest.TestCase):
+    def test_sample_is_reproducible_and_balanced(self):
+        labels = np.array([0] * 20 + [1] * 20)
+        first = verify_kinship._sample_balanced_indices(labels, 11, seed=7)
+        second = verify_kinship._sample_balanced_indices(labels, 11, seed=7)
+
+        np.testing.assert_array_equal(first, second)
+        sampled_labels = labels[first]
+        self.assertEqual(abs(int((sampled_labels == 0).sum())
+                             - int((sampled_labels == 1).sum())), 1)
+
+    def test_sample_rejects_too_many_examples(self):
+        with self.assertRaisesRegex(ValueError, "only 3 are available"):
+            verify_kinship._sample_balanced_indices(np.array([0, 0, 1]), 4, seed=0)
+
+    def test_sample_requires_enough_examples_from_both_classes(self):
+        with self.assertRaisesRegex(ValueError, "examples per class"):
+            verify_kinship._sample_balanced_indices(np.array([0, 0, 0, 1]), 4, seed=0)
+
+    def test_plot_saves_a_pair_comparison_image(self):
+        with tempfile.TemporaryDirectory() as folder:
+            paths = [os.path.join(folder, f"face{i}.jpg") for i in range(2)]
+            for index, path in enumerate(paths):
+                Image.new("RGB", (48, 48), (index * 100, 80, 120)).save(path)
+            output = os.path.join(folder, "samples.png")
+            pairs = [(paths[0], paths[1], 1, "fd")]
+
+            verify_kinship._plot_dataset_samples(
+                "FIW", pairs, np.array([0]), np.array([0.8]), 0.5,
+                fold=0, accuracy=100.0, output_path=output, seed=4)
+
+            self.assertTrue(os.path.isfile(output))
+            self.assertGreater(os.path.getsize(output), 0)
 
 
 class TestFaceExtraction(unittest.TestCase):
