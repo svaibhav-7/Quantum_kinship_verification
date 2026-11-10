@@ -50,8 +50,8 @@ Family-disjoint splits stopped identity leakage but left label leakage:
    weighted paired AUC differences on within-fold ranks. It conditions on the
    fitted models and is not a hypothesis test; no bootstrap p-values or
    Holm/BH adjustments are reported. Fold intervals use Student's t and are
-   descriptive. One negative draw per fold remains a limitation until the
-   planned negative-seed sensitivity rerun is complete.
+   descriptive. Variation across negative-sampling draws is summarized
+   separately and is not folded into the family-bootstrap intervals.
 9. **Provenance.** Every record stores the commit, dirty-tree flag, source-tree
    SHA-256, negative-seed offset and model seed. Fold-level records and scores
    are always saved.
@@ -83,12 +83,19 @@ so they re-test the ideas rather than exactly replicate the historical runs.
 .\.venv\Scripts\python.exe scripts\deploy\build_rfiw_cache.py
 .\.venv\Scripts\python.exe scripts\evaluation\run_protocol_v2.py all --output-dir results\protocol_v2_clean
 .\.venv\Scripts\python.exe scripts\evaluation\summarize_protocol_v2.py --input-dir results\protocol_v2_clean
-# Repeat with a different negative draw; use another fresh directory.
-.\.venv\Scripts\python.exe scripts\evaluation\run_protocol_v2.py all --negative-seed-offset 1000 --output-dir results\protocol_v2_neg1000
+# Repeat the primary reference comparison with independent negative draws.
+.\.venv\Scripts\python.exe scripts\evaluation\run_protocol_v2.py reference --negative-seed-offset 1000 --output-dir results\protocol_v2_neg1000
 .\.venv\Scripts\python.exe scripts\evaluation\summarize_protocol_v2.py --input-dir results\protocol_v2_neg1000
+.\.venv\Scripts\python.exe scripts\evaluation\run_protocol_v2.py reference --negative-seed-offset 2000 --output-dir results\protocol_v2_neg2000
+.\.venv\Scripts\python.exe scripts\evaluation\summarize_protocol_v2.py --input-dir results\protocol_v2_neg2000
+.\.venv\Scripts\python.exe scripts\evaluation\compare_negative_sampling.py results\protocol_v2_clean results\protocol_v2_neg1000 results\protocol_v2_neg2000
+# Stage updated deployment artifacts without replacing the current model.
+.\.venv\Scripts\python.exe scripts\deploy\package_v2.py --output-dir weights\deploy\v2_candidate
 ```
 
 Runs are resumable. Use a fresh output directory after changing protocol code;
 the existing `results/protocol_v2/` artifacts were generated before the
 endpoint-family bootstrap and matched no-shared baseline fixes. Preserve them
 as exploratory rather than overwriting them. `results/honest/` is not modified.
+Review the candidate's `deploy_metrics.json` and load-test all generated
+artifacts before promoting them to the default deployment directory.

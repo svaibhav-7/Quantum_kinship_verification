@@ -284,6 +284,14 @@ def package_triad(cache):
 
 
 def main():
+    global OUT
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", default=OUT,
+                        help="deployment artifact directory; use a new path to stage a candidate")
+    args = parser.parse_args()
+    OUT = os.path.abspath(args.output_dir)
     os.makedirs(OUT, exist_ok=True)
     cache = load_cache("rfiw_track1_cache.pkl")
     sides = rfiw_sides(cache)
@@ -294,10 +302,11 @@ def main():
     print("  set", result["set"], flush=True)
     result["triad"] = package_triad(load_cache("all_datasets_cache.pkl"))
     print("  triad", result["triad"], flush=True)
-    target = os.path.join(ROOT, "results", "protocol_v2", "deploy_metrics.json")
+    target = os.path.join(OUT, "deploy_metrics.json")
     with open(target, "w", encoding="utf-8") as stream:
         json.dump(result, stream, indent=2)
     print("  saved", OUT, flush=True)
+    print("  metrics", target, flush=True)
 
 
 if __name__ == "__main__":
