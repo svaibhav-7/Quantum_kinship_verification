@@ -78,6 +78,17 @@ results/**/*.jpg
 results/**/*.jpeg
 results/**/*.zip
 
+# Raw protocol rows, pair scores, and run logs stay local; publish compact
+# summaries and sensitivity reports instead.
+results/protocol_v2/
+results/protocol_v2_invalidated_20261110/
+results/protocol_v2*/scores/
+results/protocol_v2*/*.jsonl
+results/protocol_v2*/*.jsonl.pre_merge.bak
+results/protocol_v2*/*.log
+results/protocol_v2*/*.err
+results/protocol_v2*/*.npz
+
 # --- python ------------------------------------------------------------------
 __pycache__/
 *.py[cod]

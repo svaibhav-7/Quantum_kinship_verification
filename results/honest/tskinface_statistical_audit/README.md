@@ -33,6 +33,12 @@ manuscript. Re-run it from the repository root with:
   (95% CI [+0.0620,
   +0.1205], p=
   3e-06).
+- A separate corrected TSKinFace rerun now covers reconstructed
+  operationalizations of formulations 1--9. The SWAP-fidelity treatment is
+  +0.0185 AUC over its control (five-fold paired p=0.260); this is exploratory,
+  not evidence of a general quantum advantage. See
+  [`reconstructed_formulations.md`](reconstructed_formulations.md) for all
+  comparisons and the reconstruction caveats.
 - At the more conservative corpus unit (n=4), the mean effects are
   +0.1144
   (p=0.0097) for FaceNet and
@@ -107,6 +113,12 @@ means/SDs do match their saved fold arrays; amplitude per-fold accuracy was
 not saved. No historical TSKinFace standard VQC result was found.
 
 The nine-formulation table in the manuscript is preserved as historical context.
-Only the set-density formulation among formulations 1--9 has a corrected
-TSKinFace result in the available reruns; the other formulations need their own
-reruns before corrected TSKinFace claims can be made.
+An additional corrected-protocol rerun now covers reconstructed
+operationalizations of formulations 1--9 on TSKinFace. Because original source
+implementations and some historical details are unavailable, these are not
+exact replications. The report, assumptions, per-family bootstrap intervals,
+and bounded interpretation are in
+[`reconstructed_formulations.md`](reconstructed_formulations.md); full
+predictions and configuration are in the linked JSON artifact. Treat these
+results as exploratory and do not use them to claim a general quantum
+advantage.

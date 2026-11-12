@@ -27,28 +27,25 @@ are:
   negative is cross-family (800/800 vs 0/800), so a model can score ~84% by
   recognising a shared photo session rather than kinship. Closing it costs
   about **9 ROC-AUC points**.
-- **A negative result, and its cause.** A quantum-inspired SWAP-test fidelity
-  module adds **nothing measurable** over standard pair features (20 paired
-  folds, p = 0.158 accuracy, p = 0.982 AUC) while costing 6-14x runtime.
-  Ten formulations were tested; nine fail against capacity-matched controls,
-  and all nine read the quantum state out as a **single scalar**. Holding the
-  circuit, folds and parameter budget fixed and changing only that readout to
-  a per-qubit expectation vector recovers **+0.144 ROC-AUC** (FaceNet) and
-  **+0.115** (ArcFace), positive in all 8 backbone x corpus cells over 40
-  grouped folds. The information was in the state; the scalar discarded it.
-  A width sweep locates the constraint precisely: one observable scores 0.547
-  on FIW against 0.514 for scalar fidelity, **two** reach 0.631, and the
-  remaining ten add nothing. The bottleneck is the single number, not readout
-  width in any graded sense.
+- **Protocol correction and evidence scope.** The existing grouped 5-fold
+  reference evaluation gives a macro-mean ROC-AUC of **0.7770** across the
+  four corpora (0.7982 on corrected TSKinFace), below the earlier historical
+  mean of 0.8497. Reconstructed formulations 2--9 have also been run on
+  corrected TSKinFace as a **separate sensitivity analysis**; these are not
+  exact replications and use a different negative construction from protocol
+  v2. Formulation 1 is descriptive. See
+  [the reconstructed-formulation report](results/honest/tskinface_statistical_audit/reconstructed_formulations.md).
+- **Readout is an experimental question, not a superiority claim.** In the
+  completed protocol-v2 results across all four corpora and both backbones,
+  expectation vectors exceed scalar fidelity and log-fidelity in 16/16
+  comparisons by family-bootstrap intervals; against SWAP, 3/16 intervals
+  favor SWAP and the rest include zero. Against width-matched controls,
+  expectation exceeds the MLP control in 12/16 comparisons. These are
+  unadjusted comparison intervals, not a general quantum-advantage claim.
 
-Under corrected grouped 5-fold evaluation, a 1.9M-parameter classifier reaches
-**75.66% mean accuracy / 0.8497 mean ROC-AUC** across four datasets.
-
-Two things the readout result does **not** show, stated plainly: it is not a
-quantum advantage -- classical controls matched on readout width match or
-exceed the circuit on the largest corpus -- and it is not a speedup, the
-simulated circuit being ~73x slower at inference than the classical path.
-The contribution is a caution about how such components are evaluated.
+The corrected grouped 5-fold reference results are **71.33% macro-mean
+accuracy / 0.7770 macro-mean ROC-AUC**. This report distinguishes them from
+historical experiments.
 
 Full methodology, per-fold numbers and audit results: **[RESULTS_HONEST.md](RESULTS_HONEST.md)**.
 
@@ -64,45 +61,61 @@ Full methodology, per-fold numbers and audit results: **[RESULTS_HONEST.md](RESU
 4. **Quantum-inspired branch** (optional): embeddings are projected to 8
    rotation angles and compared by an exact simulated SWAP-test fidelity,
    supplied to the classifier as **one additional feature**. It is switchable
-   (`use_quantum=False`) so its contribution is measurable rather than assumed
-   -- and measurement shows it contributes nothing.
+   (`use_quantum=False`) so its contribution is measurable rather than assumed.
+   The available 20-fold ablation is historical; it predates the TSKinFace
+   pair-construction correction and is not a corrected-protocol conclusion.
 5. **Per-domain thresholds** calibrated on a group-disjoint validation split,
    never on test.
 
 The architecture is deliberately conventional: it serves as a control, so the
 protocol findings above cannot be attributed to architectural tricks.
 
-### Exact simulation, 380x faster
+### Exact SWAP-fidelity simulation
 
 The reference simulator built a 2^n statevector and permuted every dimension
-once per qubit, leaving the GPU idle on kernel-launch overhead.
-`src/quantum_fast.py` keeps the mathematics exact -- equivalence and gradients
-are pinned by tests -- while removing the permutes and precomputing the
-entangling layer as a single diagonal phase vector:
+once per qubit. `src/quantum_fast.py` removes those permutes and precomputes
+the entangling layer as a diagonal phase vector. Output and input-gradient
+equivalence are tested with explicit numerical tolerances; bitwise identity is
+not claimed.
 
-| | reference | fast | speedup |
-|---|---|---|---|
-| CPU | 161 pairs/s | 21,618 pairs/s | 134x |
-| GPU (RTX 5060) | 192 pairs/s | 73,094 pairs/s | **380x** |
+Reproduce the forward-only GPU benchmark (preallocated inputs, batch size 256,
+six qubits, depth one, three warmups, thirty timed repeats, CUDA synchronization
+around each measurement):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_quantum_fast.py `
+  --device cuda --batch-size 256 --qubits 6 --depth 1 `
+  --warmup 3 --repeats 30
+```
+
+| Device | Reference | Optimized | Speedup |
+|---|---:|---:|---:|
+| RTX 5060 Laptop GPU | 1,570 pairs/s | 46,316 pairs/s | 29.5x |
 
 A closed-form product over qubits does *not* work here: the shared CNOT chain
 correlates the Rz phases, so the overlap is not factorizable. The speedup comes
-from removing overhead, not from approximating. Note this is quantum-vs-quantum
--- simulating a circuit is always slower than the classical path it sits beside.
+from removing overhead, not from approximating. This measured 29.5x replaces
+the earlier 380x figure, whose batch size and timing procedure were not
+preserved. The output and gradient equivalence metrics are saved in
+`results/honest/quantum_fast_benchmark_rtx5060.json`. This is quantum-vs-quantum;
+simulating a circuit is still slower than the classical path it sits beside.
+See [ENVIRONMENT.md](ENVIRONMENT.md) for hardware, software versions, and
+numerical tolerances.
 ---
 
 ## Results
 
-Grouped 5-fold cross-validation, every family tested exactly once. No family
-or identity appears in both training and test.
+Corrected grouped 5-fold reference evaluation, every family tested exactly
+once. Accuracy intervals are the runner's 1.96-SE values; ROC-AUC uncertainty
+is the standard deviation across folds.
 
-| Dataset | Accuracy (95% CI) | ROC-AUC |
+| Dataset | Accuracy (mean ± 1.96 SE) | ROC-AUC (mean ± fold SD) |
 | :--- | ---: | ---: |
-| KinFaceW-I | **76.92% ± 2.19** | 0.875 |
-| KinFaceW-II | **74.25% ± 1.95** | 0.832 |
-| FIW | **72.21% ± 1.55** | 0.810 |
-| TSKinFace (shortcut-free) | **79.25% ± 2.32** | 0.881 |
-| **Mean** | **75.66%** | **0.8497** |
+| KinFaceW-I | **73.00% ± 10.97** | 0.7988 ± 0.1583 |
+| KinFaceW-II | **70.85% ± 8.64** | 0.7613 ± 0.1229 |
+| FIW | **67.48% ± 7.21** | 0.7495 ± 0.1135 |
+| TSKinFace (corrected pairs) | **73.98% ± 4.03** | 0.7982 ± 0.0705 |
+| **Macro mean** | **71.33%** | **0.7770** |
 
 Fold integrity was verified directly: zero folds with train/test group
 overlap, every family tested exactly once, no duplicates (95/95 FIW,
@@ -129,12 +142,15 @@ Baseline rows are quoted from their source papers under their own protocols
 and are **not** directly comparable to our grouped-k-fold numbers; they are
 included for scale, not for ranking. Our model is ~170x smaller than ViT-Base.
 
-### Ablation: does the quantum module help?
+### Historical ablation: does the quantum module help?
+
+This 20-fold ablation predates the TSKinFace pair-construction correction;
+the p-values below are not corrected-protocol estimates.
 
 | | Accuracy | ROC-AUC |
 | :--- | ---: | ---: |
-| Quantum ON | 75.66% | 0.8497 |
-| Quantum OFF | 76.34% | 0.8496 |
+| Quantum ON (historical) | 75.66% | 0.8497 |
+| Quantum OFF (historical) | 76.34% | 0.8496 |
 | Difference | -0.68 pts | +0.0001 |
 | Paired t-test (20 folds) | p = 0.158 | p = 0.982 |
 
@@ -159,7 +175,7 @@ Quantum_kinship/
 │   ├── ts_pairs.py               # Shortcut-free TSKinFace negatives
 │   ├── multi_dataset.py          # Unified protocol across all 4 datasets
 │   ├── models_hybrid.py          # QuantumAugmentedKinshipClassifier
-│   ├── quantum_fast.py           # Exact SWAP-test fidelity, 380x faster
+│   ├── quantum_fast.py           # Optimized SWAP-test fidelity
 │   ├── calibration.py            # FPR-constrained threshold calibration
 │   ├── predictor.py              # Deployment inference, per-domain thresholds
 │   ├── quantum_core.py           # Reference simulator (validates quantum_fast)
@@ -172,14 +188,14 @@ Quantum_kinship/
 ├── scripts/
 │   ├── deploy/build_all_caches.py    # Extract FaceNet embeddings (GPU)
 │   ├── training/train_multi.py       # Train on all 4 datasets pooled
-│   ├── evaluation/run_kfold.py       # Grouped 5-fold evaluation
-│   ├── evaluation/run_amplitude_vqc.py  # Readout ablation and its controls
+│   ├── evaluation/run_kfold.py       # Historical evaluation; not protocol v2
+│   ├── evaluation/run_amplitude_vqc.py  # Historical readout ablation
 │   ├── evaluation/make_figures*.py   # All paper figures, from artefacts
 │   ├── deploy/package_multi.py       # Package model + per-domain thresholds
 │   └── inference/predict.py          # CLI: single pair or CSV batch
 ├── paper/                        # Two manuscripts; see paper/README.md
-├── tests/                        # 197 tests
-├── results/honest/               # Measured metrics (kfold.json is definitive)
+├── tests/                        # 290 tests
+├── results/honest/               # Measured metrics and correction audit
 ├── weights/
 │   ├── deploy/kinship_model.pt   # Deployment artifact
 │   └── caches/                   # Precomputed embeddings
@@ -210,7 +226,7 @@ python verify_kinship.py
 # two people, one photo each
 python verify_kinship.py --person-a mum.jpg --person-b me.jpg
 
-# several photos each (more accurate: +0.077 ROC-AUC where sets exist)
+# several photos each (set-level model; performance varies by dataset)
 python verify_kinship.py --person-a dad1.jpg dad2.jpg --person-b kid1.jpg kid2.jpg
 
 # folders and URLs work too
@@ -229,6 +245,19 @@ an uncropped photograph embeds at cosine **0.027** against its cropped version
 Photos without a detectable face are reported and skipped, not silently
 dropped.
 
+### Visualize random dataset examples
+
+```bash
+python verify_kinship.py --dataset-samples --dataset FIW --samples 12 --fold 1 --seed 42
+```
+
+This trains the protocol-v2 fair reference on family-disjoint fit and validation
+splits, constructs relation-matched negatives after splitting, and scores only
+the selected held-out fold. The PNG is saved under `results/demo/` by default.
+Choose `KinFaceW-I`, `KinFaceW-II`, or `TSKinFace` with `--dataset` to sample
+another available dataset. The displayed examples are illustrative, not a
+benchmark estimate; this mode trains a corpus-specific demo model.
+
 ### Predict
 
 ```bash
@@ -236,11 +265,11 @@ dropped.
 python scripts/inference/predict.py \
     --img1 parent.jpg --img2 child.jpg --relation fs --domain fiw
 
-# set-level: several photos per person (+0.077 ROC-AUC where sets exist)
+# set-level: several photos per person (performance varies by dataset)
 python scripts/inference/predict.py \
     --set-a p1.jpg p2.jpg p3.jpg --set-b c1.jpg c2.jpg
 
-# triadic: father + mother + child scored jointly (+0.032 ROC-AUC)
+# triadic: father + mother + child scored jointly (experimental)
 python scripts/inference/predict.py \
     --father f.jpg --mother m.jpg --child c.jpg
 
@@ -252,7 +281,7 @@ Relations: `fd` father-daughter, `fs` father-son, `md` mother-daughter,
 `ms` mother-son. `--domain` selects the calibrated operating point
 (`fiw`, `kinfacew-i`, `kinfacew-ii`, `tskinface`).
 
-Shipped models, each scored on a held-out family-disjoint fold:
+Historical shipped-artifact scores (not corrected-protocol reference results):
 
 | Model | Accuracy | ROC-AUC | Use when |
 |---|---:|---:|---|
@@ -260,24 +289,33 @@ Shipped models, each scored on a held-out family-disjoint fold:
 | set-level | 73.40% | 0.8228 | several photos per person |
 | triadic | 76.58% | 0.8382 | both parents and a child |
 
-The pairwise row averages four datasets under grouped 5-fold; the other two are
-single held-out folds on the corpora that support them, so the rows are not
-directly comparable. The like-for-like comparison on identical folds is in
-`RESULTS_HONEST.md`.
+The pairwise row averages four datasets under the earlier grouped 5-fold
+protocol, including the uncorrected TSKinFace pairs; the other two are single
+held-out folds on the corpora that support them, so the rows are not directly
+comparable. The corrected reference baseline is reported above; the
+like-for-like historical comparison on identical folds is in `RESULTS_HONEST.md`.
 
 Passing one photo per person to the set interface reproduces the single-image
 path exactly, so the set interface is always safe to use.
 
-### Reproduce every number
+### Reproduce current protocol-v2 results
 
 ```bash
-python scripts/deploy/build_all_caches.py     # FaceNet embeddings, all datasets
-python scripts/evaluation/run_kfold.py        # grouped 5-fold -> results/honest/kfold.json
-python scripts/evaluation/run_kfold.py --no-quantum --tag kfold_noq   # ablation
-python scripts/training/train_multi.py --tag multi_cap8000 --cap-per-dataset 8000
-python scripts/deploy/package_multi.py        # package with per-domain thresholds
-pytest tests/ -q                              # 197 tests
+.\.venv\Scripts\python.exe scripts\deploy\build_rfiw_cache.py
+.\.venv\Scripts\python.exe scripts\evaluation\run_protocol_v2.py all --output-dir results\protocol_v2_clean
+.\.venv\Scripts\python.exe scripts\evaluation\summarize_protocol_v2.py --input-dir results\protocol_v2_clean
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
+
+The standalone `run_kfold.py`, `run_vqc.py`, `run_amplitude_vqc.py`,
+`run_triadic.py`, `run_setlevel.py`, `run_backbone_comparison.py`, and
+`run_scaling.py` scripts are historical evaluations, not protocol-v2
+reproduction commands. Existing
+`results/protocol_v2/` outputs were generated before the endpoint-family
+bootstrap and matched no-shared baseline fixes; retain them as exploratory.
+Run the current protocol from a clean source commit into a new output
+directory, and do not describe the rerun as complete until its artifacts and
+summary have been checked.
 
 ---
 

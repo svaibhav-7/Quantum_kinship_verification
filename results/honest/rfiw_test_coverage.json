@@ -1,0 +1,91 @@
+{
+  "split": "Official RFIW Track-I test",
+  "total_pairs": 39743,
+  "covered_pairs": 29357,
+  "uncovered_pairs": 10386,
+  "overall_coverage_rate": 0.7386709609239362,
+  "by_label": {
+    "0": {
+      "total": 19853,
+      "covered": 13520,
+      "coverage_rate": 0.6810053896136604
+    },
+    "1": {
+      "total": 19890,
+      "covered": 15837,
+      "coverage_rate": 0.7962292609351432
+    }
+  },
+  "by_relation": {
+    "bb": {
+      "total": 7375,
+      "covered": 5624,
+      "coverage_rate": 0.7625762711864407
+    },
+    "fd": {
+      "total": 6057,
+      "covered": 4368,
+      "coverage_rate": 0.7211490837048044
+    },
+    "fs": {
+      "total": 6550,
+      "covered": 4787,
+      "coverage_rate": 0.7308396946564886
+    },
+    "gfgd": {
+      "total": 443,
+      "covered": 329,
+      "coverage_rate": 0.7426636568848759
+    },
+    "gfgs": {
+      "total": 245,
+      "covered": 185,
+      "coverage_rate": 0.7551020408163265
+    },
+    "gmgd": {
+      "total": 269,
+      "covered": 102,
+      "coverage_rate": 0.379182156133829
+    },
+    "gmgs": {
+      "total": 179,
+      "covered": 137,
+      "coverage_rate": 0.7653631284916201
+    },
+    "md": {
+      "total": 6182,
+      "covered": 4570,
+      "coverage_rate": 0.7392429634422517
+    },
+    "ms": {
+      "total": 4989,
+      "covered": 3506,
+      "coverage_rate": 0.7027460412908398
+    },
+    "sibs": {
+      "total": 1707,
+      "covered": 1338,
+      "coverage_rate": 0.7838312829525483
+    },
+    "ss": {
+      "total": 5747,
+      "covered": 4411,
+      "coverage_rate": 0.7675308856794849
+    }
+  },
+  "kin_vs_nonkin": {
+    "kin_coverage_rate": 0.7962292609351432,
+    "nonkin_coverage_rate": 0.6810053896136604,
+    "difference_percentage_points": 11.522387132148282,
+    "ci_low_percentage_points": 8.673665810143326,
+    "ci_high_percentage_points": 14.838257355651821,
+    "families": 190,
+    "valid_bootstrap_replicates": 2000,
+    "bootstrap": "two-endpoint family pigeonhole; percentile 95% CI"
+  },
+  "provenance": {
+    "test_pairs_csv_sha256": "36786532c8c3c42a18d3417d1f0456957ce0e86209501eb21de98527d717680a",
+    "embedding_cache_sha256": "77986dc9ccc4d8083009bad4fecac9fc1afa599a8e9d8c596e8b2d3a3ff3de46"
+  },
+  "interpretation": "Coverage differs by label in this test split. The available subset is therefore not a neutral random sample; results apply to the covered pairs only. Rates are descriptive and the interval accounts for repeated family endpoints, but not other sources of selection."
+}

@@ -1,0 +1,39 @@
+﻿{
+  "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "python": "3.11.9",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "torch": "2.11.0+cu128",
+  "cuda_build": "12.8",
+  "settings": {
+    "mode": "forward-only; tensors preallocated on device",
+    "batch_size": 256,
+    "qubits": 6,
+    "depth": 1,
+    "warmup_batches": 3,
+    "timed_repeats": 30,
+    "latency_statistic": "median wall-clock time per batch",
+    "synchronize_cuda_before_and_after_each_timed_call": true
+  },
+  "equivalence": {
+    "output_atol": 1e-05,
+    "output_rtol": 0.0001,
+    "output_max_abs_error": 3.2782554626464844e-07,
+    "gradient_atol": 0.0001,
+    "gradient_rtol": 0.001,
+    "gradient_max_abs_error_by_input": [
+      1.4901161193847656e-07,
+      1.4901161193847656e-07,
+      3.069639205932617e-06,
+      3.2186508178710938e-06
+    ]
+  },
+  "reference": {
+    "median_seconds_per_batch": 0.1630628999992041,
+    "pairs_per_second": 1569.9463213351996
+  },
+  "optimized": {
+    "median_seconds_per_batch": 0.005527299999812385,
+    "pairs_per_second": 46315.56094452798
+  },
+  "speedup": 29.501365948064876
+}

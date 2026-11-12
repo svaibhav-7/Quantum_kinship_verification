@@ -1,9 +1,91 @@
-# Honest Evaluation Results
+# Evaluation Results: Historical and Corrected Evidence
 
-All numbers below are measured on **family-disjoint** FIW splits: no family,
-and therefore no identity, appears in both training and test. They are **not**
-comparable to earlier figures in this repo, which were measured with complete
-identity leakage.
+This report preserves results from several experiment generations; its
+historical sections are not all corrected-protocol estimates. After correcting
+TSKinFace negative-pair construction, the grouped-five-fold reference macro
+mean is ROC-AUC **0.77696** (not the earlier 0.8497). Of formulations 1--9,
+reconstructed formulations 2--9 have corrected-TSKinFace sensitivity runs;
+they are not exact replications and use a different negative construction
+from protocol v2. Formulation 1 is descriptive. The readout analysis has
+corrected TSKinFace folds only, while its other-corpus cells remain historical.
+Fold-based p-values are not treated as calibrated evidence. Consult
+[`results/honest/tskinface_statistical_audit/README.md`](results/honest/tskinface_statistical_audit/README.md)
+for provenance, corrected values, and inferential limitations; see also the
+[reconstructed-formulation sensitivity report](results/honest/tskinface_statistical_audit/reconstructed_formulations.md).
+The sections below are a historical record except where
+explicitly marked corrected.
+
+## Final corrected protocol-v2 experiments (2026-11-12)
+
+This section summarizes the final grouped-family protocol-v2 run. The complete
+tables and per-comparison intervals are in
+[`SUMMARY.md`](results/protocol_v2_corrected_20261110/SUMMARY.md). It contains
+all 360 reference records per backbone, all 480 readout records per backbone,
+and zero incomplete comparisons. Fold summaries use descriptive Student-t
+half-widths; paired AUC differences use two-endpoint family-bootstrap
+confidence intervals. No bootstrap p-values are reported.
+
+### Main comparisons
+
+| Comparison | Corrected result |
+|---|---|
+| FIW set vs single, FaceNet | Δ AUC +0.0734; 95% family-bootstrap CI [+0.0559, +0.0911] |
+| FIW set vs single, ArcFace | Δ AUC +0.0957; 95% CI [+0.0792, +0.1128] |
+| FIW set vs single with shared-source pairs excluded, FaceNet | Δ AUC +0.0781; 95% CI [-0.0081, +0.1634] |
+| FIW set vs single with shared-source pairs excluded, ArcFace | Δ AUC +0.0703; 95% CI [-0.0136, +0.1472] |
+| TSKinFace triadic vs best parent, FaceNet | Δ AUC +0.0341; 95% CI [+0.0137, +0.0548] |
+| TSKinFace triadic vs best parent, ArcFace | Δ AUC +0.0287; 95% CI [+0.0159, +0.0420] |
+
+The no-shared-source set-level intervals include zero for both backbones, so
+the point-estimate gains do not establish a shared-photo-independent gain.
+The hybrid quantum-on/off comparison is also not uniform: all eight FaceNet
+intervals include zero; for ArcFace, the FIW intervals include zero while the
+KinFaceW-I, KinFaceW-II, and TSKinFace intervals favor quantum-on. Treat these
+as separate comparisons, not as multiplicity-adjusted tests.
+
+For the readout ablation, expectation readout beats scalar fidelity and
+log-fidelity in all 16 backbone/corpus/view comparisons by the reported
+family-bootstrap intervals. Against SWAP, only 3 of 16 intervals exclude zero.
+Against width-matched controls, expectation beats the linear control in 16/16
+comparisons, the MLP control in 12/16, and the random control in 16/16. The
+full intervals and deltas are in the generated summary.
+
+### Negative-sampling sensitivity and limitations
+
+The two additional reference draws use offsets 1000 and 2000, with fixed model
+seeds and folds, and share one protocol source fingerprint. Their descriptive
+comparison covers 80 common AUC-difference rows. Across the 64 reference
+comparisons, the mean SD across these two draws is 0.0051 AUC (maximum 0.0145);
+across the 16 quantum-on/off formulation comparisons, it is 0.0054 (maximum
+0.0207). These are two-draw sensitivity summaries, not inferential intervals.
+The original offset-0 run is reported separately because it has a different
+full source fingerprint after the bootstrap implementation was optimized.
+See
+[`negative_sampling_sensitivity.md`](results/protocol_v2_sensitivity_20261112_offset1000_parallel/negative_sampling_sensitivity.md)
+and the per-draw
+[`offset-1000 summary`](results/protocol_v2_sensitivity_20261112_offset1000_parallel/SUMMARY.md)
+and
+[`offset-2000 summary`](results/protocol_v2_sensitivity_20261112_offset2000_parallel/SUMMARY.md).
+
+Thirty of 75 ArcFace model fits and 10 of 75 FaceNet fits were flagged for
+validation AUC below their untrained cosine baseline. These are completed
+fits that underperformed the validation baseline, not crashed runs; the
+comparison is documented in the full summary.
+
+The official RFIW test result is based on the 29,357 of 39,743 pairs covered
+by the local face files and embedding cache (73.9%). Coverage is 79.6% for kin
+pairs and 68.1% for non-kin pairs; the kin-minus-non-kin difference is +11.52
+percentage points (95% two-endpoint family-cluster CI [+8.67, +14.84]).
+Availability also varies by relation (for example, 37.9% for grandmother-
+granddaughter pairs). Thus RFIW findings apply to the covered subset; missing
+pairs are not a neutral random sample. The full audit is in
+[`rfiw_test_coverage.md`](results/honest/rfiw_test_coverage.md).
+
+The numbered sections that follow retain historical results and corrections;
+do not treat them as protocol-v2 estimates unless explicitly stated.
+
+The original FIW leakage analysis uses **family-disjoint** splits: no family,
+and therefore no identity, appears in both training and test.
 
 ## 1. The leak that invalidated prior numbers
 
@@ -105,22 +187,29 @@ and weight decay 1e-2->5e-3 cost ~8 points (76% -> 68% mean over 3 seeds).
 The reported settings are dropout 0.5, weight decay 1e-2, early stopping on a
 family-disjoint validation split.
 
-## 5. Performance
+## 5. SWAP-fidelity simulation throughput
 
 The reference simulator built a 2^n statevector and permuted all n dimensions
-per qubit, launching thousands of tiny kernels -- so the GPU sat idle.
-`src/quantum_fast.py` keeps the exact same maths (equivalence and gradients
-pinned by tests) with no permutes and a single precomputed phase vector:
+per qubit. The updated benchmark measures forward inference only, with inputs
+preallocated on-device, three warm-up batches, thirty timed calls, median
+wall-clock latency, and CUDA synchronization around each call. Outputs and
+input gradients are checked with tolerances (`rtol=1e-4, atol=1e-5` and
+`rtol=1e-3, atol=1e-4`, respectively); bitwise identity is not claimed.
 
-| | reference | fast | speedup |
-|---|---|---|---|
-| CPU | 161 pairs/s | 21,618 pairs/s | 134x |
-| GPU (RTX 5060) | 192 pairs/s | 73,094 pairs/s | **380x** |
+| Device | Batch | Qubits / depth | Reference | Fast | Speedup |
+|---|---:|---:|---:|---:|---:|
+| RTX 5060 Laptop GPU | 256 | 6 / 1 | 1,570 pairs/s | 46,316 pairs/s | 29.5x |
 
 Note: a closed-form product over qubits does *not* work here -- the shared
 CNOT chain correlates the Rz phases, so the overlap is not factorizable.
 (Verified: with Rz disabled a product form matches exactly; with distinct Rz
 it diverges.) The speedup comes from removing overhead, not from approximating.
+Reproduce with
+`.\.venv\Scripts\python.exe scripts\benchmark_quantum_fast.py --device cuda --batch-size 256 --qubits 6 --depth 1 --warmup 3 --repeats 30`.
+Hardware/software versions and full output are recorded in
+[`ENVIRONMENT.md`](ENVIRONMENT.md) and
+`results/honest/quantum_fast_benchmark_rtx5060.json`. This replaces the earlier
+380x figure, whose benchmark settings were not preserved.
 
 ## 6. Multi-dataset results (final)
 
@@ -176,38 +265,32 @@ reported here use the harder, shortcut-free pairs.
 ## 7. README claims corrected
 
 
-## 8. Grouped k-fold (definitive numbers)
+## 8. Corrected grouped k-fold reference numbers
 
 Single group-disjoint splits were unstable: accuracy ranged 61.7%-84.1%
 across seeds because FIW's test side was effectively two families, one of
 which (F0282) held 95% of its pairs. Grouped 5-fold puts **every family in
 the test set exactly once** and caps any family at 1,500 pairs.
 
-| Dataset | Folds | Accuracy (95% CI) | ROC-AUC |
+| Dataset | Folds | Accuracy (mean ± 1.96 SE) | ROC-AUC (mean ± fold SD) |
 |---|---:|---:|---:|
-| FIW | 5 | 72.21% ± 1.55 | 0.8101 ± 0.0175 |
-| KinFaceW-I | 5 | 76.92% ± 2.19 | 0.8752 ± 0.0146 |
-| KinFaceW-II | 5 | 74.25% ± 1.95 | 0.8320 ± 0.0190 |
-| TSKinFace | 5 | 79.25% ± 2.32 | 0.8814 ± 0.0192 |
+| FIW | 5 | 67.48% ± 7.21 | 0.7495 ± 0.1135 |
+| KinFaceW-I | 5 | 73.00% ± 10.97 | 0.7988 ± 0.1583 |
+| KinFaceW-II | 5 | 70.85% ± 8.64 | 0.7613 ± 0.1229 |
+| TSKinFace (corrected pairs) | 5 | 73.98% ± 4.03 | 0.7982 ± 0.0705 |
 
-**Mean across datasets: 75.66% accuracy, 0.8497 ROC-AUC.**
+**Macro mean across datasets: 71.33% accuracy, 0.77696 ROC-AUC.**
 
-Stability, single-split vs k-fold (accuracy range):
+Fold integrity was verified directly: 0 folds with train/test group overlap,
+every family tested exactly once, no duplicates (95/95 FIW, 533/533 KFW-I,
+1000/1000 KFW-II, 559/559 TSKinFace). Fold intervals are descriptive:
+the folds partition the same identity pool and are not independent population
+samples.
 
-| Dataset | Single-split | k-fold |
-|---|---|---|
-| FIW | 61.7-75.9% (14.2) | 69.8-74.4% (4.6) |
-| KinFaceW-I | 70.3-78.8% (8.5) | 72.9-79.4% (6.5) |
-| KinFaceW-II | 69.0-77.8% (8.8) | 71.0-77.0% (6.0) |
-| TSKinFace | 75.1-84.1% (9.0) | 75.7-81.9% (6.2) |
+### Historical quantum ablation under k-fold
 
-Overall spread fell from 22.5 points to 12.1. Fold integrity was verified
-directly: 0 folds with train/test group overlap, every family tested exactly
-once, no duplicates (95/95 FIW, 533/533 KFW-I, 1000/1000 KFW-II, 559/559 TS).
-
-### Quantum ablation under k-fold
-
-20 paired observations (4 datasets x 5 folds):
+The following 20-fold ablation predates the TSKinFace correction and is not a
+corrected-protocol comparison:
 
 | | Accuracy | ROC-AUC |
 |---|---:|---:|
@@ -216,9 +299,9 @@ once, no duplicates (95/95 FIW, 533/533 KFW-I, 1000/1000 KFW-II, 559/559 TS).
 | Difference | -0.68 pts | +0.0001 |
 | Paired t-test | p = 0.158 | p = 0.982 |
 
-The quantum module contributes **nothing measurable**, confirming the earlier
-5-seed result (p = 0.945) on a far more stable protocol. It is retained as a
-documented ablation, not as the mechanism behind performance.
+This historical ablation does not show a measurable contribution (p = 0.982),
+but its TSKinFace result predates the pair-construction correction. It is not
+confirmation under the corrected protocol.
 
 ### Audit findings
 
@@ -230,7 +313,7 @@ documented ablation, not as the mechanism behind performance.
   unscoped group key merged them. Now dataset-scoped.
 
 
-## 10. Set-level and triadic representations
+## 10. Historical set-level and triadic representations
 
 Two ways the task is conventionally *posed* discard available evidence.
 
@@ -246,6 +329,9 @@ median of five per identity.
 | TSKinFace | 1.00 | 0.7306 | 0.7306 | 0.0000 |
 | **FIW** | **7.30** | 0.7296 | **0.8066** | **+0.0771** |
 
+The TSKinFace pairwise row and the results in this section predate the
+pair-construction correction; they are retained as historical measurements.
+
 The gain appears only where photo sets exist. The three single-photograph
 corpora are bit-identical to the baseline, which is the degradation guarantee
 holding exactly. `+0.0771` closely matches the untrained probe estimate of
@@ -255,7 +341,7 @@ model capacity.
 **This is a large gain on one benchmark and exactly zero on three.** Any
 average over the four obscures that, so we report per dataset.
 
-### Triadic scoring (TSKinFace)
+### Historical triadic scoring (TSKinFace)
 
 | Arm | Accuracy (95% CI) | ROC-AUC |
 |---|---:|---:|
@@ -276,16 +362,22 @@ exactly one. `identity_of_path` was FIW-specific and returned the *directory*
 on other datasets, collapsing all 533 KinFaceW-I people into 4 buckets. The
 key is now dataset-aware, pinned by four tests.
 
-### Formulations 8 and 9
+### Historical formulations 8 and 9
 
 | Formulation | Control | Result |
 |---|---|---|
 | Density fidelity on photo sets | set features | -0.0006, -0.0005, +0.0001, -0.0006 |
 | Interference phase sweep on triads | convex mixture | -0.0006, p = 0.147 |
 
-Nine formulations, none beating its classical control.
+These are historical values. Separately, reconstructed formulations 2--9
+were evaluated on corrected TSKinFace pairs as a sensitivity analysis. They
+use a different negative construction from protocol v2 and are not exact
+replications. Their family-bootstrap intervals condition on the fitted
+models; the report deliberately presents intervals only, not fold-based
+p-values or multiplicity adjustments. See
+[`reconstructed_formulations.md`](results/honest/tskinface_statistical_audit/reconstructed_formulations.md).
 
-### Shipped deployment models
+### Historical shipped deployment models
 
 Both new components are packaged and wired into the CLI. Each was fitted on a
 family-disjoint training split, calibrated on a family-disjoint validation
@@ -302,4 +394,3 @@ two are **not** comparable: the pairwise figure averages four datasets under
 grouped 5-fold, while set-level is a single held-out FIW fold — FIW being the
 only corpus with photo sets, and the hardest of the four. The like-for-like
 comparison on identical folds is Section 10: FIW 0.7296 → 0.8066.
-

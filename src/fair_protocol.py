@@ -183,6 +183,34 @@ def t_interval(values, confidence=0.95):
     return mean, float(critical * se)
 
 
+def _weighted_auc_plan(labels, scores):
+    """Precompute tie groups so repeated weighted AUCs avoid sorting again."""
+    order = np.argsort(scores, kind="mergesort")
+    sorted_scores = scores[order]
+    starts = np.r_[True, sorted_scores[1:] != sorted_scores[:-1]]
+    group_ids = np.cumsum(starts, dtype=np.int64) - 1
+    positive = labels[order] == np.max(labels)
+    return order, group_ids, positive, int(group_ids[-1]) + 1
+
+
+def _weighted_auc_from_plan(plan, weights):
+    order, group_ids, sorted_positive, group_count = plan
+    sorted_weights = weights[order]
+    positive = np.bincount(
+        group_ids, weights=sorted_weights * sorted_positive,
+        minlength=group_count)
+    negative = np.bincount(
+        group_ids, weights=sorted_weights * ~sorted_positive,
+        minlength=group_count)
+    positive_total, negative_total = positive.sum(), negative.sum()
+    denominator = positive_total * negative_total
+    if denominator <= 0:
+        return float("nan")
+    negative_before = np.cumsum(negative) - negative
+    numerator = np.sum(positive * (negative_before + 0.5 * negative))
+    return float(numerator / denominator)
+
+
 def bootstrap_auc_delta(y, scores_a, scores_b, groups_a, groups_b=None,
                         n_boot=2000, seed=0):
     """ROC-AUC difference with a two-endpoint family-cluster percentile CI.
@@ -216,6 +244,8 @@ def bootstrap_auc_delta(y, scores_a, scores_b, groups_a, groups_b=None,
     lookup = {group: index for index, group in enumerate(keys.tolist())}
     index_a = np.asarray([lookup[group] for group in groups_a], dtype=np.int64)
     index_b = np.asarray([lookup[group] for group in groups_b], dtype=np.int64)
+    plan_a = _weighted_auc_plan(y, scores_a)
+    plan_b = _weighted_auc_plan(y, scores_b)
 
     rng = np.random.default_rng(seed)
     deltas = []
@@ -226,15 +256,11 @@ def bootstrap_auc_delta(y, scores_a, scores_b, groups_a, groups_b=None,
         weights = counts[index_a] * counts[index_b]
         same_family = index_a == index_b
         weights[same_family] = counts[index_a[same_family]]
-        selected = weights > 0
-        if len(np.unique(y[selected])) < 2:
+        auc_a = _weighted_auc_from_plan(plan_a, weights)
+        auc_b = _weighted_auc_from_plan(plan_b, weights)
+        if not (np.isfinite(auc_a) and np.isfinite(auc_b)):
             continue
-        deltas.append(
-            roc_auc_score(y[selected], scores_a[selected],
-                          sample_weight=weights[selected])
-            - roc_auc_score(y[selected], scores_b[selected],
-                            sample_weight=weights[selected])
-        )
+        deltas.append(auc_a - auc_b)
     if len(deltas) < max(100, n_boot // 2):
         raise RuntimeError(
             f"Only {len(deltas)}/{n_boot} valid family-bootstrap samples"

@@ -25,9 +25,37 @@ code needs; this file records what it was actually measured under.
 | VRAM | 8.0 GiB |
 | Compute capability | 12.0 |
 
-Every experiment also runs on CPU. Absolute timings in the manuscripts
-(73.5x inference, 55x training) are GPU measurements; the ratio between
-arms is the reported quantity, not the wall-clock.
+Every experiment also runs on CPU. Earlier manuscript claims of 73.5x
+inference and 55x training cost were GPU measurements, but their batch sizes
+and timing procedures were not recorded. They should be treated as historical
+measurements, not as independently reproducible timing claims.
+
+## Reproducible SWAP-fidelity microbenchmark
+
+The forward-only microbenchmark is reproducible with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_quantum_fast.py `
+  --device cuda --batch-size 256 --qubits 6 --depth 1 `
+  --warmup 3 --repeats 30
+```
+
+Inputs are generated once and transferred to the selected device before
+timing. Three batches warm each implementation; thirty timed calls are measured
+with `time.perf_counter`, using the median wall-clock latency per batch.
+CUDA is synchronized before and after each timed call. The benchmark measures
+forward inference only; it excludes input generation, host-to-device transfer,
+and gradient computation. It first checks output equivalence
+(`rtol=1e-4`, `atol=1e-5`) and input-gradient equivalence
+(`rtol=1e-3`, `atol=1e-4`), reporting maximum absolute errors.
+
+On the RTX 5060 Laptop GPU with Python 3.11.9, PyTorch 2.11.0+cu128, and CUDA
+12.8, a reproduced run produced 1,570 pairs/s for the reference and 46,316
+pairs/s for the optimized implementation (29.50x). The complete machine-readable
+output is saved in
+`results/honest/quantum_fast_benchmark_rtx5060.json`. This replaces the earlier
+380x headline, whose benchmark configuration was not preserved. Re-run the
+script on the target device rather than treating one GPU's timing as portable.
 
 ## Input artefacts
 

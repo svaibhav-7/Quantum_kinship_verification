@@ -6,6 +6,8 @@ import numpy as np
 from sklearn.metrics import roc_auc_score
 
 from src.fair_protocol import (
+    _weighted_auc_from_plan,
+    _weighted_auc_plan,
     adjust_pvalues,
     bootstrap_auc_delta,
     build_side,
@@ -218,6 +220,51 @@ class TestTInterval(unittest.TestCase):
 
 
 class TestBootstrapAucDelta(unittest.TestCase):
+    def test_precomputed_weighted_auc_matches_sklearn_with_ties(self):
+        labels = np.array([-1, 1, -1, 1, 1, -1])
+        scores = np.array([0.2, 0.4, 0.4, 0.4, 0.9, 0.2])
+        weights = np.array([2, 1, 3, 0, 4, 1])
+        actual = _weighted_auc_from_plan(
+            _weighted_auc_plan(labels, scores), weights)
+        expected = roc_auc_score(labels, scores, sample_weight=weights)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_optimized_bootstrap_matches_direct_weighted_auc_resampling(self):
+        rng = np.random.default_rng(8)
+        labels = np.tile([0, 1], 10)
+        scores_a = rng.integers(0, 5, len(labels)).astype(float)
+        scores_b = rng.integers(0, 5, len(labels)).astype(float)
+        groups_a = np.repeat(np.arange(5), 4)
+        groups_b = np.roll(groups_a, 2)
+        n_boot, seed = 300, 17
+        actual = bootstrap_auc_delta(
+            labels, scores_a, scores_b, groups_a, groups_b,
+            n_boot=n_boot, seed=seed)
+
+        keys = np.unique(np.concatenate((groups_a, groups_b)))
+        lookup = {group: index for index, group in enumerate(keys.tolist())}
+        index_a = np.array([lookup[group] for group in groups_a])
+        index_b = np.array([lookup[group] for group in groups_b])
+        same_family = index_a == index_b
+        random = np.random.default_rng(seed)
+        deltas = []
+        for _ in range(n_boot):
+            counts = np.bincount(
+                random.integers(0, len(keys), len(keys)), minlength=len(keys))
+            weights = counts[index_a] * counts[index_b]
+            weights[same_family] = counts[index_a[same_family]]
+            selected = weights > 0
+            if len(np.unique(labels[selected])) < 2:
+                continue
+            deltas.append(
+                roc_auc_score(labels[selected], scores_a[selected],
+                              sample_weight=weights[selected])
+                - roc_auc_score(labels[selected], scores_b[selected],
+                                sample_weight=weights[selected]))
+        expected = np.percentile(deltas, [2.5, 97.5])
+        self.assertAlmostEqual(actual["ci_low"], expected[0])
+        self.assertAlmostEqual(actual["ci_high"], expected[1])
+
     def setUp(self):
         rng = np.random.default_rng(0)
         self.groups = np.repeat(np.arange(200), 2)
